@@ -11,14 +11,17 @@
             "id": "b38e4f83e137caef",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "Architecture/window_server/window_server.md",
-                "mode": "source",
-                "source": false
+                "file": "Architecture/Root.canvas",
+                "viewState": {
+                  "x": -243.5,
+                  "y": 546.3333333333334,
+                  "zoom": -1.0780025120012733
+                }
               },
-              "icon": "lucide-file",
-              "title": "window_server"
+              "icon": "lucide-layout-dashboard",
+              "title": "Root"
             }
           },
           {
