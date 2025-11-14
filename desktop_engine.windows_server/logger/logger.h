@@ -84,10 +84,16 @@ void logger_log(log_level_t level, log_module_t module, const char* file, int li
 #define SERVER_ERROR(...)    LOG_ERROR(LOG_MODULE_SERVER, __VA_ARGS__)
 #define SERVER_FATAL(...)    LOG_FATAL(LOG_MODULE_SERVER, __VA_ARGS__)
 
-#define IPC_DEBUG(...)       LOG_DEBUG(LOG_MODULE_IPC, __VA_ARGS__)
-#define IPC_INFO(...)        LOG_INFO(LOG_MODULE_IPC, __VA_ARGS__)
-#define IPC_WARN(...)        LOG_WARN(LOG_MODULE_IPC, __VA_ARGS__)
-#define IPC_ERROR(...)       LOG_ERROR(LOG_MODULE_IPC, __VA_ARGS__)
-#define IPC_FATAL(...)       LOG_FATAL(LOG_MODULE_IPC, __VA_ARGS__)
+#define IPC_GET_DEBUG(...)       LOG_DEBUG(LOG_MODULE_IPC_GET, __VA_ARGS__)
+#define IPC_GET_INFO(...)        LOG_INFO(LOG_MODULE_IPC_GET, __VA_ARGS__)
+#define IPC_GET_WARN(...)        LOG_WARN(LOG_MODULE_IPC_GET, __VA_ARGS__)
+#define IPC_GET_ERROR(...)       LOG_ERROR(LOG_MODULE_IPC_GET, __VA_ARGS__)
+#define IPC_GET_FATAL(...)       LOG_FATAL(LOG_MODULE_IPC_GET, __VA_ARGS__)
+
+#define IPC_SEND_DEBUG(...)       LOG_DEBUG(LOG_MODULE_IPC_SEND, __VA_ARGS__)
+#define IPC_SEND_INFO(...)        LOG_INFO(LOG_MODULE_IPC_SEND, __VA_ARGS__)
+#define IPC_SEND_WARN(...)        LOG_WARN(LOG_MODULE_IPC_SEND, __VA_ARGS__)
+#define IPC_SEND_ERROR(...)       LOG_ERROR(LOG_MODULE_IPC_SEND, __VA_ARGS__)
+#define IPC_SEND_FATAL(...)       LOG_FATAL(LOG_MODULE_IPC_SEND, __VA_ARGS__)
 
 #endif
