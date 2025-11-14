@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"d26efbd7696b4e36","type":"text","text":"# Remote rendering\nПрототип архитектуры для реализации wayland сервера, удаленного рендеринга для windows,  ipc коммуникаций между модулями\n","x":-360,"y":-220,"width":400,"height":160},
+		{"id":"c9ae3e5210e94508","type":"text","text":"## Windows (Renderer)","x":-800,"y":90,"width":320,"height":66},
+		{"id":"304310380877d122","type":"text","text":"## Linux (Window server)","x":120,"y":90,"width":388,"height":70},
+		{"id":"28887a5da30f3628","x":-1043,"y":268,"width":250,"height":60,"type":"text","text":"**Render**"},
+		{"id":"340664ca63c612dd","x":-765,"y":268,"width":250,"height":60,"type":"text","text":"**Input**"},
+		{"id":"7731da3ad2ea5f65","x":-932,"y":400,"width":278,"height":220,"type":"text","text":"**IPC**\n\nПолучает данные окон с wayland сервера, передает их в Render;\n\nОтправляет данные из input на wayland server;"},
+		{"id":"67829b3ea9e323cc","x":-22,"y":257,"width":250,"height":60,"type":"text","text":"**Wayland server**\n"},
+		{"id":"0bcfa776c9bbb892","x":314,"y":257,"width":242,"height":199,"type":"text","text":"**IPC**\nПередает данные окон на другую машину;\n\nПолучает input данные с другой машины и отдает из окнам;"}
+	],
+	"edges":[
+		{"id":"117e36336bc26a74","fromNode":"d26efbd7696b4e36","fromSide":"bottom","toNode":"c9ae3e5210e94508","toSide":"top"},
+		{"id":"49161fb84706fded","fromNode":"d26efbd7696b4e36","fromSide":"bottom","toNode":"304310380877d122","toSide":"top"},
+		{"id":"914d68166777a33e","fromNode":"c9ae3e5210e94508","fromSide":"bottom","toNode":"28887a5da30f3628","toSide":"top"},
+		{"id":"b7a4ab887703aa76","fromNode":"c9ae3e5210e94508","fromSide":"bottom","toNode":"340664ca63c612dd","toSide":"top"},
+		{"id":"4b1ba540427dcd5b","fromNode":"340664ca63c612dd","fromSide":"bottom","toNode":"7731da3ad2ea5f65","toSide":"top"},
+		{"id":"96f54e80cb2ea91d","fromNode":"7731da3ad2ea5f65","fromSide":"top","toNode":"28887a5da30f3628","toSide":"bottom"},
+		{"id":"aaf21b77dbcc9338","fromNode":"304310380877d122","fromSide":"bottom","toNode":"67829b3ea9e323cc","toSide":"top"},
+		{"id":"1fbaa0edc071238c","fromNode":"304310380877d122","fromSide":"bottom","toNode":"0bcfa776c9bbb892","toSide":"top"}
+	]
+}
