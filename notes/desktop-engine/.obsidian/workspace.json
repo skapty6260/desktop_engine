@@ -13,15 +13,33 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "readme.md",
+                "file": "Architecture/window_server/window_server.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "readme"
+              "title": "window_server"
+            }
+          },
+          {
+            "id": "bf48584ce80b8277",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Architecture/Root.canvas",
+                "viewState": {
+                  "x": -243.5,
+                  "y": 350,
+                  "zoom": -1.0780025120012733
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Root"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -94,7 +112,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "readme.md",
+                "file": "Architecture/Root.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +122,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for readme"
+              "title": "Backlinks for Root"
             }
           },
           {
@@ -113,12 +131,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "readme.md",
+                "file": "Architecture/Root.canvas",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from readme"
+              "title": "Outgoing links from Root"
             }
           },
           {
@@ -156,13 +174,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "readme.md",
+                "file": "Architecture/Root.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of readme"
+              "title": "Outline of Root"
             }
           }
         ]
@@ -183,11 +201,12 @@
       "bases:Create new base": false
     }
   },
-  "active": "4eb1c5dd4248023f",
+  "active": "bf48584ce80b8277",
   "lastOpenFiles": [
-    "Architecture/window_server",
+    "Architecture/window_server/window_server.md",
     "Architecture/Root.canvas",
     "readme.md",
+    "Architecture/window_server",
     "Схема работы.canvas",
     "Architecture",
     "Welcome.md"

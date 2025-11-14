@@ -5,9 +5,10 @@ Ipc bridge (Should send clients info, should receive input events)
 */
 #include <stdio.h>
 #include <server.h>
+#include "logger/logger.h"
 
-int main(int argc, char **argv) {
-    printf("Hello world");
+int main(void) {
+    log_message(LOG_LEVEL_INFO, "App started.");
 
     return 0;
 }

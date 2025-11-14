@@ -11,12 +11,10 @@ project('desktop_engine_windows_server', 'c',
 wayland_server = dependency('wayland-server', required: true)
 # wayland_protocols = dependency('wayland_protocols', required: true)
 
-inc_dir = include_directories('include')
-
 executable('desktop_engine_win_server',
     sources: [
         'src/main.c',
-        'src/server.c',
+        'logger/logger.c'
     ],
     include_directories: inc_dir,
     dependencies: [wayland_server],
