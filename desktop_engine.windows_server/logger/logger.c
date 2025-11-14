@@ -151,7 +151,7 @@ static void process_message(const log_message_t* message) {
     if (message->level == LOG_LEVEL_FATAL) {
         fprintf(stderr, "FATAL error occurred. Terminating application.\n");
         logger_cleanup();
-        kill(getpid(), SIGTERM);
+        // kill(getpid(), SIGTERM);
         exit(EXIT_FAILURE);
     }
 }
@@ -167,7 +167,7 @@ static void* worker_thread(void* arg) {
             process_message(&message);
         } else {
             // Очередь пуста - небольшая пауза
-            usleep(1000); // 1ms
+            sleep(1000); // 1ms
         }
     }
     
