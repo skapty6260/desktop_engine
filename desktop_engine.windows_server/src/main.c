@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     // Имитация работы
     for (int i = 0; i < 5; i++) {
         LOG_INFO(LOG_MODULE_SERVER, "Processing request %d", i);
-        sleep(100000); // 100ms
+        sleep(100);
     }
     
     LOG_INFO(LOG_MODULE_CORE, "Application finished");

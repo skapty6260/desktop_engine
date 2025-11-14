@@ -25,17 +25,14 @@
             "id": "bf48584ce80b8277",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "Architecture/Root.canvas",
-                "viewState": {
-                  "x": -243.5,
-                  "y": 350,
-                  "zoom": -1.0780025120012733
-                }
+                "file": "Architecture/window_server/window_server.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Root"
+              "icon": "lucide-file",
+              "title": "window_server"
             }
           }
         ],
@@ -112,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Architecture/Root.canvas",
+                "file": "Architecture/window_server/window_server.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -122,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Root"
+              "title": "Backlinks for window_server"
             }
           },
           {
@@ -131,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Architecture/Root.canvas",
+                "file": "Architecture/window_server/window_server.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Root"
+              "title": "Outgoing links from window_server"
             }
           },
           {
@@ -174,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Architecture/Root.canvas",
+                "file": "Architecture/window_server/window_server.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Root"
+              "title": "Outline of window_server"
             }
           }
         ]
@@ -203,8 +200,8 @@
   },
   "active": "bf48584ce80b8277",
   "lastOpenFiles": [
-    "Architecture/window_server/window_server.md",
     "Architecture/Root.canvas",
+    "Architecture/window_server/window_server.md",
     "readme.md",
     "Architecture/window_server",
     "Схема работы.canvas",
