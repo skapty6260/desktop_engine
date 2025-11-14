@@ -9,7 +9,7 @@ project('desktop_engine_windows_server', 'c',
 )
 
 wayland_server = dependency('wayland-server', required: true)
-wayland_protocols = dependency('wayland_protocols', required: true)
+# wayland_protocols = dependency('wayland_protocols', required: true)
 
 inc_dir = include_directories('include')
 
@@ -19,6 +19,6 @@ executable('desktop_engine_win_server',
         'src/server.c',
     ],
     include_directories: inc_dir,
-    dependencies: [wayland_server, wayland_protocols],
+    dependencies: [wayland_server],
     install: true
 )
