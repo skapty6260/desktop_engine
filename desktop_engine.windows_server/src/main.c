@@ -3,8 +3,8 @@ Basic wayland server (Open clients, create surfaces)
 Logger (Should work with logfiles, ipc logging)
 Ipc bridge (Should send clients info, should receive input events)
 */
-#include "logger.h"
-#include "logger_config.h"
+#include "logger/logger.h"
+#include "logger/logger_config.h"
 #include <unistd.h>
 
 // Пример функций сервера
