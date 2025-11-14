@@ -51,12 +51,6 @@ int main(int argc, char **argv) {
     LOG_WARN(LOG_MODULE_CORE, "Warning message");
     LOG_ERROR(LOG_MODULE_CORE, "Error message");
     
-    // Имитация работы
-    for (int i = 0; i < 5; i++) {
-        LOG_INFO(LOG_MODULE_SERVER, "Processing request %d", i);
-        sleep(100);
-    }
-    
     LOG_INFO(LOG_MODULE_CORE, "Application finished");
     
     // Очистка ресурсов
