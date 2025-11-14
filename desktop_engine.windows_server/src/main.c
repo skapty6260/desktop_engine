@@ -18,10 +18,10 @@ void server_function(void) {
 
 // Пример функций IPC
 void ipc_function(void) {
-    IPC_DEBUG("IPC module initializing");
-    IPC_INFO("IPC message queue created");
-    IPC_WARN("IPC buffer 80%% full");
-    IPC_ERROR("IPC connection timeout");
+    IPC_GET_DEBUG("IPC module initializing");
+    IPC_SEND_INFO("IPC message queue created");
+    IPC_GET_WARN("IPC buffer 80%% full");
+    IPC_SEND_ERROR("IPC connection timeout");
 }
 
 int main(int argc, char **argv) {
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     // Имитация работы
     for (int i = 0; i < 5; i++) {
         LOG_INFO(LOG_MODULE_SERVER, "Processing request %d", i);
-        usleep(100000); // 100ms
+        sleep(100000); // 100ms
     }
     
     LOG_INFO(LOG_MODULE_CORE, "Application finished");
