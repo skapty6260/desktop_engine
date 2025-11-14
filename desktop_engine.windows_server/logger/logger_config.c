@@ -16,18 +16,18 @@ void logger_config_default(logger_config_t* config) {
 
 // Парсинг уровня логирования из строки
 static log_level_t parse_log_level(const char* level_str) {
-    if (strcasecmp(level_str, "debug") == 0) return LOG_LEVEL_DEBUG;
-    if (strcasecmp(level_str, "info") == 0) return LOG_LEVEL_INFO;
-    if (strcasecmp(level_str, "warn") == 0) return LOG_LEVEL_WARN;
-    if (strcasecmp(level_str, "error") == 0) return LOG_LEVEL_ERROR;
-    if (strcasecmp(level_str, "fatal") == 0) return LOG_LEVEL_FATAL;
+    if (strcmp(level_str, "debug") == 0) return LOG_LEVEL_DEBUG;
+    if (strcmp(level_str, "info") == 0) return LOG_LEVEL_INFO;
+    if (strcmp(level_str, "warn") == 0) return LOG_LEVEL_WARN;
+    if (strcmp(level_str, "error") == 0) return LOG_LEVEL_ERROR;
+    if (strcmp(level_str, "fatal") == 0) return LOG_LEVEL_FATAL;
     return LOG_LEVEL_INFO; // По умолчанию
 }
 
 // Парсинг булевого значения
 static int parse_boolean(const char* value) {
-    if (strcasecmp(value, "true") == 0 || strcasecmp(value, "yes") == 0 || 
-        strcasecmp(value, "1") == 0 || strcasecmp(value, "on") == 0) {
+    if (strcmp(value, "true") == 0 || strcmp(value, "yes") == 0 || 
+        strcmp(value, "1") == 0 || strcmp(value, "on") == 0) {
         return 1;
     }
     return 0;
@@ -70,25 +70,25 @@ int logger_config_read(const char* config_path, logger_config_t* config) {
             trim_string(key);
             trim_string(value);
             
-            if (strcasecmp(key, "log_level") == 0) {
+            if (strcmp(key, "log_level") == 0) {
                 config->level = parse_log_level(value);
             }
-            else if (strcasecmp(key, "use_colors") == 0) {
+            else if (strcmp(key, "use_colors") == 0) {
                 config->use_colors = parse_boolean(value);
             }
-            else if (strcasecmp(key, "log_to_file") == 0) {
+            else if (strcmp(key, "log_to_file") == 0) {
                 config->log_to_file = parse_boolean(value);
             }
-            else if (strcasecmp(key, "log_to_console") == 0) {
+            else if (strcmp(key, "log_to_console") == 0) {
                 config->log_to_console = parse_boolean(value);
             }
-            else if (strcasecmp(key, "log_file_path") == 0) {
+            else if (strcmp(key, "log_file_path") == 0) {
                 strncpy(config->log_file_path, value, sizeof(config->log_file_path) - 1);
             }
-            else if (strcasecmp(key, "async_enabled") == 0) {
+            else if (strcmp(key, "async_enabled") == 0) {
                 config->async_enabled = parse_boolean(value);
             }
-            else if (strcasecmp(key, "flush_immediately") == 0) {
+            else if (strcmp(key, "flush_immediately") == 0) {
                 config->flush_immediately = parse_boolean(value);
             }
         }

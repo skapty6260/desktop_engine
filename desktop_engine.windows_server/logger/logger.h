@@ -24,6 +24,7 @@ typedef enum {
     LOG_MODULE_SERVER,
     LOG_MODULE_IPC_GET,
     LOG_MODULE_IPC_SEND,
+    LOG_MODULE_CORE,
 } log_module_t;
 
 // Цвета для терминала

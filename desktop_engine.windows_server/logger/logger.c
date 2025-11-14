@@ -32,6 +32,7 @@ static const char* module_to_string(log_module_t module) {
         case LOG_MODULE_SERVER:    return "SERVER";
         case LOG_MODULE_IPC_GET:  return "IPC_GET";
         case LOG_MODULE_IPC_SEND:return "IPC_SEND";
+        case LOG_MODULE_CORE:        return "CORE";
         default: return "UNKNOWN";
     }
 }
