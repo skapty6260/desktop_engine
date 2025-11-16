@@ -5,24 +5,8 @@ Ipc bridge (Should send clients info, should receive input events)
 */
 #include "logger/logger.h"
 #include "logger/logger_config.h"
+#include "server.h"
 #include <unistd.h>
-
-// Пример функций сервера
-void server_function(void) {
-    SERVER_DEBUG("Server starting initialization");
-    SERVER_INFO("Server listening on port 8080");
-    SERVER_WARN("High memory usage detected");
-    SERVER_ERROR("Failed to accept client connection");
-    // SERVER_FATAL("Critical server failure"); // Раскомментировать для теста FATAL
-}
-
-// Пример функций IPC
-void ipc_function(void) {
-    IPC_GET_DEBUG("IPC module initializing");
-    IPC_SEND_INFO("IPC message queue created");
-    IPC_GET_WARN("IPC buffer 80%% full");
-    IPC_SEND_ERROR("IPC connection timeout");
-}
 
 int main(int argc, char **argv) {
     logger_config_t config;
@@ -39,21 +23,20 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    LOG_INFO(LOG_MODULE_CORE, "Application started");
+    LOG_INFO(LOG_MODULE_CORE, "Starting windows server");
+
+    // Wayland server and ipc
+    struct server *server = calloc(1, sizeof(struct server));
+    if (!server) {
+        LOG_FATAL(LOG_MODULE_CORE, "Failed to allocate memory for wayland server");
+    }
+
+    server_init(server);
     
-    // Демонстрация работы модулей
-    server_function();
-    ipc_function();
+    LOG_FATAL(LOG_MODULE_CORE, "Testing fatal");
+
+    LOG_INFO(LOG_MODULE_CORE, "Exiting windows server");
     
-    // Демонстрация разных уровней логирования
-    LOG_DEBUG(LOG_MODULE_CORE, "Debug message with value: %d", 42);
-    LOG_INFO(LOG_MODULE_CORE, "Info message with string: %s", "test");
-    LOG_WARN(LOG_MODULE_CORE, "Warning message");
-    LOG_ERROR(LOG_MODULE_CORE, "Error message");
-    
-    LOG_INFO(LOG_MODULE_CORE, "Application finished");
-    
-    // Очистка ресурсов
     logger_cleanup();
 
     return 0;
