@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     // }
 
     if (!getenv("XDG_RUNTIME_DIR")) {
-        SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.")
+        SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
     }
 
     server_init(&server);
