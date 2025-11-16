@@ -9,6 +9,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <signal.h>
+#include <errno.h>
+#include <fcntl.h>
 
 #include "server.h"
 #include "logger/logger.h"
