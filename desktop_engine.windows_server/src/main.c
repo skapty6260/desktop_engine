@@ -9,7 +9,7 @@ Ipc bridge (Should send clients info, should receive input events)
 #include <unistd.h>
 
 static struct server_config {
-    const char* startup_cmd;
+    char* startup_cmd;
 };
 
 void parse_args(int argc, char **argv, logger_config_t *logger_config, struct server_config *server_config) {
