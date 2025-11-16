@@ -4,7 +4,7 @@
 #include "logger/logger.h"
 #include "src/server.h"
 
-void parse_args(int argc, char **argv);
+void parse_args(int argc, char **argv, logger_config_t *logger_config, server_config_t *server_config);
 
 /* Read logger config from file */
 int logger_config_read(const char* config_path, logger_config_t* config);
