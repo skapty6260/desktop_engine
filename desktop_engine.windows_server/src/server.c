@@ -18,12 +18,19 @@ static struct server *global_server = NULL;
 static int signal_fd[2] = {-1, -1};
 
 static void signal_handler(int signal) {
+    // Просто записываем в pipe
+    int saved_errno = errno;
     write(signal_fd[1], &signal, sizeof(signal));
+    errno = saved_errno;
 }
 
 static int handle_signal_event(int fd, uint32_t mask, void *data) {
     int signal;
-    read(fd, &signal, sizeof(signal));
+    ssize_t result = read(fd, &signal, sizeof(signal));
+    
+    if (result != sizeof(signal)) {
+        return 1;
+    }
     
     LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
     
@@ -35,11 +42,17 @@ static int handle_signal_event(int fd, uint32_t mask, void *data) {
 }
 
 static void setup_signal_handlers(void) {
-    // Создаем pipe для коммуникации между signal handler и event loop
+    // Создаем pipe для коммуникации
     if (pipe(signal_fd) == -1) {
         perror("pipe");
-        return;
+        exit(1);
     }
+    
+    // Делаем pipe неблокирующим
+    int flags = fcntl(signal_fd[0], F_GETFL, 0);
+    fcntl(signal_fd[0], F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl(signal_fd[1], F_GETFL, 0);
+    fcntl(signal_fd[1], F_SETFL, flags | O_NONBLOCK);
     
     struct sigaction sa = {
         .sa_handler = signal_handler,
@@ -84,8 +97,14 @@ void server_run(struct server *server) {
 
 void server_cleanup(struct server *server) {
     /* Close signal pipe */
-    if (signal_fd[0] != -1) close(signal_fd[0]);
-    if (signal_fd[1] != -1) close(signal_fd[1]);
+    if (signal_fd[0] != -1) {
+        close(signal_fd[0]);
+        signal_fd[0] = -1;
+    }
+    if (signal_fd[1] != -1) {
+        close(signal_fd[1]);
+        signal_fd[1] = -1;
+    }
 
     if (server->display) {
         wl_display_destroy(server->display);
