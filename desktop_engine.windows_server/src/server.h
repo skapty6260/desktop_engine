@@ -9,7 +9,7 @@
 */
 
 struct server {
-    struct wl_display *wl_display;
+    struct wl_display *display;
     struct wl_list client;
     struct wl_global *compositor_global;
     const char* socket;

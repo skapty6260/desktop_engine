@@ -32,8 +32,8 @@ int main(int argc, char **argv) {
         SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.")
     }
 
-    server_init(server);
-    server_run(server);
+    server_init(&server);
+    server_run(&server);
     
     LOG_FATAL(LOG_MODULE_CORE, "Testing fatal");
 
