@@ -27,6 +27,7 @@ void server_init(struct server *server) {
     setenv("WAYLAND_DISPLAY", server->socket, true);
 
     SERVER_DEBUG("Added socket to wayland display");
+    printf("Server socket: %s\n", server->socket);
 }
 
 void server_run(struct server *server) {
