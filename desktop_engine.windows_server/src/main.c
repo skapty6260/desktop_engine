@@ -10,6 +10,18 @@ Ipc bridge (Should send clients info, should receive input events)
 #include "server.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
+
+static struct server *global_server = NULL;
+
+static void signal_handler(int signal) {
+    printf("Received stop signal...\n");
+    LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
+    
+    if (global_server && global_server->display) {
+        wl_display_terminate(global_server->display);
+    }
+}
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
@@ -29,6 +41,10 @@ int main(int argc, char **argv) {
     }
 
     server_init(&server);
+    global_server = &server;
+
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
 
     server.socket = wl_display_add_socket_auto(server.display);
     if (!server.socket) {
