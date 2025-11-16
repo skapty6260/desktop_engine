@@ -139,16 +139,16 @@ void parse_args(int argc, char **argv, logger_config_t *logger_config, server_co
         else if (strcmp(argv[i], "--file-only") == 0) {
             logger_config->log_to_console = 0;
         }
-        else if (strcmp(argv[i], "--startup") == 0) {
-            if (i + 1 < argc) {
-                i++;
-                snprintf(server_config->startup_cmd, sizeof(server_config->startup_cmd), 
-                        "%s", argv[i]); // snprintf всегда добавляет нуль-терминатор
-            } else {
-                fprintf(stderr, "Error: --startup requires an argument\n");
-                exit(1);
-            }
-        } 
+        // else if (strcmp(argv[i], "--startup") == 0) {
+        //     if (i + 1 < argc) {
+        //         i++;
+        //         snprintf(server_config->startup_cmd, sizeof(server_config->startup_cmd), 
+        //                 "%s", argv[i]); // snprintf всегда добавляет нуль-терминатор
+        //     } else {
+        //         fprintf(stderr, "Error: --startup requires an argument\n");
+        //         exit(1);
+        //     }
+        // } 
         else if (strcmp(argv[i], "--help") == 0) {
             log_help(argv);
         }

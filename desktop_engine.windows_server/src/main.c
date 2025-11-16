@@ -10,7 +10,7 @@ Ipc bridge (Should send clients info, should receive input events)
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
-    struct server_config server_config;
+    server_config_t server_config;
     struct server server = {0};
     
     /* Logger initialization */
