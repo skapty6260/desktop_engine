@@ -10,34 +10,6 @@ Ipc bridge (Should send clients info, should receive input events)
 #include "server.h"
 #include <unistd.h>
 #include <stdlib.h>
-#include <signal.h>
-
-static struct server *global_server = NULL;
-
-static void signal_handler(int signal) {
-    LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
-    
-    if (global_server && global_server->display) {
-        wl_display_terminate(global_server->display);
-    }
-}
-
-static void setup_signal_handlers(void) {
-    struct sigaction sa = {
-        .sa_handler = signal_handler,
-        .sa_flags = 0
-    };
-    
-    sigemptyset(&sa.sa_mask);
-    
-    /* Handle SIGINT and SIGTERM */
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
-    
-    /* Ignore SIGPIPE to avoid termination on broken pipe */
-    sa.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &sa, NULL);
-}
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
@@ -59,8 +31,6 @@ int main(int argc, char **argv) {
     }
 
     server_init(&server);
-    // Set global reference for signal handler
-    global_server = &server;
 
     server.socket = wl_display_add_socket_auto(server.display);
     if (!server.socket) {
