@@ -14,6 +14,7 @@ wayland_server = dependency('wayland-server', required: true)
 executable('desktop_engine_win_server',
     sources: [
         'src/main.c',
+        'src/server.c',
         'logger/logger.c',
         'logger/logger_config.c',
     ],
