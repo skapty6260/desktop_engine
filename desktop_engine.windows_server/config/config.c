@@ -31,6 +31,10 @@ void logger_config_default(logger_config_t* config) {
     strcpy(config->log_file_path, "application.log");
 }
 
+void server_config_default(server_config_t* config) {
+    config->startup_cmd = "";
+}
+
 static log_level_t parse_log_level(const char* level_str) {
     if (strcmp(level_str, "debug") == 0) return LOG_LEVEL_DEBUG;
     if (strcmp(level_str, "info") == 0) return LOG_LEVEL_INFO;

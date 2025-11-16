@@ -10,5 +10,7 @@ void parse_args(int argc, char **argv, logger_config_t *logger_config, server_co
 int logger_config_read(const char* config_path, logger_config_t* config);
 /* Load default logger config */
 void logger_config_default(logger_config_t* config);
+/* Load default server config */
+void server_config_default(server_config_t* config);
 
 #endif
