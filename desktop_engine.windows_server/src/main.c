@@ -39,16 +39,16 @@ int main(int argc, char **argv) {
     server_init(&server);
 
     /* Add UNIX socket and try use startup cmd. */
-    server->socket = wl_display_add_socket_auto(server->display);
-    if (!server->socket) {
-        wl_display_destroy(server->display);
+    server.socket = wl_display_add_socket_auto(server.display);
+    if (!server.socket) {
+        wl_display_destroy(server.display);
         SERVER_FATAL("Failed to add socket for Wayland display");
     }
-    setenv("WAYLAND_DISPLAY", server->socket, true);
+    setenv("WAYLAND_DISPLAY", server.socket, true);
 
     if (server_config.startup_cmd) {
         if (fork() == 0) {
-			execl("/bin/sh", "/bin/sh", "-c", server_config->startup_cmd, (void *)NULL);
+			execl("/bin/sh", "/bin/sh", "-c", server_config.startup_cmd, (void *)NULL);
 		}
     }
 
