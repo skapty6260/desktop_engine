@@ -10,11 +10,46 @@ Ipc bridge (Should send clients info, should receive input events)
 #include "server.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
+
+static struct server global_server = NULL;
+
+static void signal_handler(int signal) {
+    LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
+    
+    if (global_server && global_server->display) {
+        wl_display_terminate(global_server->display);
+    }
+}
+
+static void signal_handler(int signal) {
+    LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
+    running = 0;
+}
+
+static void setup_signal_handlers(void) {
+    struct sigaction sa = {
+        .sa_handler = signal_handler,
+        .sa_flags = 0
+    };
+    
+    sigemptyset(&sa.sa_mask);
+    
+    /* Handle SIGINT and SIGTERM */
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    
+    /* Ignore SIGPIPE to avoid termination on broken pipe */
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &sa, NULL);
+}
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
     server_config_t server_config;
     struct server server = {0};
+
+    setup_signal_handlers();
     
     /* Logger and config initialization */
     load_default_config(&logger_config, &server_config);
@@ -28,10 +63,10 @@ int main(int argc, char **argv) {
         SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
     }
 
-    LOG_DEBUG(LOG_MODULE_CORE, "Running alongs server: %s\n", server_config.startup_cmd);
     server_init(&server);
+    // Set global reference for signal handler
+    global_server = &server;
 
-    /* Add UNIX socket and try use startup cmd. */
     server.socket = wl_display_add_socket_auto(server.display);
     if (!server.socket) {
         wl_display_destroy(server.display);
@@ -39,15 +74,20 @@ int main(int argc, char **argv) {
     }
     setenv("WAYLAND_DISPLAY", server.socket, true);
 
+    /* Test bed (test client) */
     if (server_config.startup_cmd) {
+        LOG_DEBUG(LOG_MODULE_CORE, "TESTBED startup cmd: %s", server_config.startup_cmd);
         if (fork() == 0) {
 			execl("/bin/sh", "/bin/sh", "-c", server_config.startup_cmd, (void *)NULL);
 		}
     }
 
-    server_run(&server);
+    LOG_INFO(LOG_MODULE_CORE, "Wayland server started on socket: %s", server.socket);
+    LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
-    LOG_INFO(LOG_MODULE_CORE, "Exiting windows server");
+    server_run(&server, &running);
+
+    LOG_INFO(LOG_MODULE_CORE, "Wayland server shutdown complete");
     
     server_cleanup(&server);
     logger_cleanup();

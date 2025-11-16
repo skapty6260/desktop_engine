@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "server.h"
 #include "logger/logger.h"
@@ -21,11 +22,15 @@ void server_init(struct server *server) {
 
 void server_run(struct server *server) {
     SERVER_INFO("Wayland server is running");
+
     wl_display_run(server->display);
+
+    SERVER_INFO("Wayland server event loop stopped");
 }
 
 void server_cleanup(struct server *server) {
     if (server->display) {
         wl_display_destroy(server->display);
+        server->display = NULL;
     }
 }
