@@ -141,6 +141,7 @@ void parse_args(int argc, char **argv, logger_config_t *logger_config, server_co
         }
         else if (strcmp(argv[i], "--startup") == 0) {
             printf("Startup cmd: %s", argv[i]);
+            server_config->startup_cmd = "";
             //     if (i + 1 < argc) {
         //         i++;
         //         snprintf(server_config->startup_cmd, sizeof(server_config->startup_cmd), 
