@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     /* Logger initialization */
     logger_config_default(&logger_config);
     parse_args(argc, argv, &logger_config, &server_config);
-    if (!logger_init(&config)) {
+    if (!logger_init(&logger_config)) {
         fprintf(stderr, "Failed to initialize logger\n");
         return 1;
     }
