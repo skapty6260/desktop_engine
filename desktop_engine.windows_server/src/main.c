@@ -8,6 +8,8 @@ Ipc bridge (Should send clients info, should receive input events)
 #include "config/config.h"
 #include "server.h"
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
@@ -46,7 +48,7 @@ int main(int argc, char **argv) {
 
     if (server_config.startup_cmd) {
         if (fork() == 0) {
-			execl("/bin/sh", "/bin/sh", "-c", startup_cmd, (void *)NULL);
+			execl("/bin/sh", "/bin/sh", "-c", server_config->startup_cmd, (void *)NULL);
 		}
     }
 
