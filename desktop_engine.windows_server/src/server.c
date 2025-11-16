@@ -1,6 +1,7 @@
 #include "server.h"
 #include "logger/logger.h"
 #include <wayland-server.h>
+#include <stdlib.h>
 
 void server_init(struct server *server) {
     SERVER_DEBUG("Initializing wayland server...");
