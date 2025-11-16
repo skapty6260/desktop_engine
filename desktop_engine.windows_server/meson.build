@@ -5,7 +5,7 @@ project('desktop_engine_windows_server', 'c',
         'c_std=c11',
         'warning_level=3',
         'werror=true',
-        'c_args=-Wno-unused-parameter -Wno-unused-variable -Wno-unused-function'
+        'c_args=-Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable'
     ]
 )
 

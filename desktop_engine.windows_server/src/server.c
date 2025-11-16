@@ -1,4 +1,7 @@
 #define _POSIX_C_SOURCE 200112L
+#define _GNU_SOURCE
+#include <sys/signalfd.h>
+#include <signal.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdlib.h>
