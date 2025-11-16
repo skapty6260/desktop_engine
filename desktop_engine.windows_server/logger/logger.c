@@ -1,5 +1,6 @@
 #include "logger.h"
 #include <errno.h>
+#include <signal.h>
 
 // Глобальные переменные
 static logger_config_t g_config;

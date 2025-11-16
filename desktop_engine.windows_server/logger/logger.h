@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <signal.h>
 
 typedef enum {
     LOG_LEVEL_DEBUG,
