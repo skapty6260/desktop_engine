@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
         SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
     }
 
-    printf("Startup cmd: %s\n", argv[i]);
+    printf("Startup cmd: %s\n", server_config.startup_cmd);
     server_init(&server);
     server_run(&server);
 
