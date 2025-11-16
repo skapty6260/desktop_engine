@@ -21,18 +21,17 @@ static void log_help(char **argv) {
     exit(0);
 }
 
-void logger_config_default(logger_config_t* config) {
-    config->level = LOG_LEVEL_INFO;
-    config->use_colors = 1;
-    config->log_to_file = 0;
-    config->log_to_console = 1;
-    config->async_enabled = 1;
-    config->flush_immediately = 0;
-    strcpy(config->log_file_path, "application.log");
-}
-
-void server_config_default(server_config_t* config) {
-    config->startup_cmd = NULL;
+void load_default_config(logger_config_t* logger_config, server_config_t* server_config) {
+    /* Logger config*/
+    logger_config->level = LOG_LEVEL_INFO;
+    logger_config->use_colors = 1;
+    logger_config->log_to_file = 0;
+    logger_config->log_to_console = 1;
+    logger_config->async_enabled = 1;
+    logger_config->flush_immediately = 0;
+    strcpy(logger_config->log_file_path, "application.log");
+    /* Server config */
+    server_config->startup_cmd = NULL;
 }
 
 static log_level_t parse_log_level(const char* level_str) {

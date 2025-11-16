@@ -16,26 +16,19 @@ int main(int argc, char **argv) {
     server_config_t server_config;
     struct server server = {0};
     
-    /* Logger initialization */
-    logger_config_default(&logger_config);
-    server_config_default(&server_config);
+    /* Logger and config initialization */
+    load_default_config(&logger_config, &server_config);
     parse_args(argc, argv, &logger_config, &server_config);
     if (!logger_init(&logger_config)) {
         fprintf(stderr, "Failed to initialize logger\n");
         return 1;
     }
 
-    /* Wayland server initialization */
-    // struct server *server = calloc(1, sizeof(struct server));
-    // if (!server) {
-    //     LOG_FATAL(LOG_MODULE_CORE, "Failed to allocate memory for wayland server");
-    // }
-
     if (!getenv("XDG_RUNTIME_DIR")) {
         SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
     }
 
-    printf("Startup cmd: %s\n", server_config.startup_cmd);
+    LOG_DEBUG(LOG_MODULE_CORE, "Running alongs server: %s\n", server_config.startup_cmd);
     server_init(&server);
 
     /* Add UNIX socket and try use startup cmd. */
