@@ -8,7 +8,7 @@ Ipc bridge (Should send clients info, should receive input events)
 #include "server.h"
 #include <unistd.h>
 
-static struct server_config {
+struct server_config {
     char* startup_cmd;
 };
 
