@@ -10,25 +10,26 @@ Ipc bridge (Should send clients info, should receive input events)
 
 int main(int argc, char **argv) {
     logger_config_t config;
+    struct server server = {0};
     
-    // Конфигурация по умолчанию
+    /* Logger initialization */
+    // Default logger config
     logger_config_default(&config);
-    
-    // Парсинг аргументов командной строки
+    // Parse args and pass to logger config
     logger_config_parse_args(argc, argv, &config);
-    
-    // Инициализация логгера
     if (!logger_init(&config)) {
         fprintf(stderr, "Failed to initialize logger\n");
         return 1;
     }
-    
-    LOG_INFO(LOG_MODULE_CORE, "Starting windows server");
 
-    // Wayland server and ipc
-    struct server *server = calloc(1, sizeof(struct server));
-    if (!server) {
-        LOG_FATAL(LOG_MODULE_CORE, "Failed to allocate memory for wayland server");
+    /* Wayland server initialization */
+    // struct server *server = calloc(1, sizeof(struct server));
+    // if (!server) {
+    //     LOG_FATAL(LOG_MODULE_CORE, "Failed to allocate memory for wayland server");
+    // }
+
+    if (!getenv("XDG_RUNTIME_DIR")) {
+        SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.")
     }
 
     server_init(server);

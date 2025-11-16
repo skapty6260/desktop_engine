@@ -5,7 +5,7 @@
 		{"id":"28887a5da30f3628","type":"text","text":"**Render**","x":-1043,"y":268,"width":250,"height":60},
 		{"id":"340664ca63c612dd","type":"text","text":"**Input**","x":-765,"y":268,"width":250,"height":60},
 		{"id":"7731da3ad2ea5f65","type":"text","text":"**IPC**\n\nПолучает данные окон с wayland сервера, передает их в Render;\n\nОтправляет данные из input на wayland server;","x":-932,"y":400,"width":278,"height":220},
-		{"id":"f28587c3206cc002","type":"file","file":"Architecture/window_server/window_server.md","x":-360,"y":56,"width":674,"height":864},
+		{"id":"f28587c3206cc002","type":"file","file":"Architecture/window_server/window_server.md","x":-360,"y":56,"width":674,"height":1344},
 		{"id":"0bcfa776c9bbb892","type":"text","text":"**IPC**\nПередает данные окон на другую машину;\n\nПолучает input данные с другой машины и отдает из окнам;","x":314,"y":56,"width":242,"height":199}
 	],
 	"edges":[
