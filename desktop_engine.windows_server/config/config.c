@@ -32,7 +32,7 @@ void logger_config_default(logger_config_t* config) {
 }
 
 void server_config_default(server_config_t* config) {
-    config->startup_cmd = "";
+    config->startup_cmd = NULL;
 }
 
 static log_level_t parse_log_level(const char* level_str) {

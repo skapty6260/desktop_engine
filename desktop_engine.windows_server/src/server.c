@@ -17,17 +17,6 @@ void server_init(struct server *server) {
     if (!server->display) {
         SERVER_FATAL("Failed to create Wayland display");
     }
-
-    /* Add socket. This should be last steps */
-    server->socket = wl_display_add_socket_auto(server->display);
-    if (!server->socket) {
-        wl_display_destroy(server->display);
-        SERVER_FATAL("Failed to add socket for Wayland display");
-    }
-    setenv("WAYLAND_DISPLAY", server->socket, true);
-
-    SERVER_DEBUG("Added socket to wayland display");
-    printf("Server socket: %s\n", server->socket);
 }
 
 void server_run(struct server *server) {

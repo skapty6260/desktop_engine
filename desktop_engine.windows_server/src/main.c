@@ -35,6 +35,21 @@ int main(int argc, char **argv) {
 
     printf("Startup cmd: %s\n", server_config.startup_cmd);
     server_init(&server);
+
+    /* Add UNIX socket and try use startup cmd. */
+    server->socket = wl_display_add_socket_auto(server->display);
+    if (!server->socket) {
+        wl_display_destroy(server->display);
+        SERVER_FATAL("Failed to add socket for Wayland display");
+    }
+    setenv("WAYLAND_DISPLAY", server->socket, true);
+
+    if (server_config.startup_cmd) {
+        if (fork() == 0) {
+			execl("/bin/sh", "/bin/sh", "-c", startup_cmd, (void *)NULL);
+		}
+    }
+
     server_run(&server);
 
     LOG_INFO(LOG_MODULE_CORE, "Exiting windows server");
