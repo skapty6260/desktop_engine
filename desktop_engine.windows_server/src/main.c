@@ -4,11 +4,12 @@ Signal handler for good exiting and cleanup
 Logger (Should work with logfiles, ipc logging)
 Ipc bridge (Should send clients info, should receive input events)
 */
+#define _POSIX_C_SOURCE 200112L
 #include "logger/logger.h"
 #include "config/config.h"
 #include "server.h"
 #include <unistd.h>
-#include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
