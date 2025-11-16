@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <ctype.h>
 
-static void log_help() {
+static void log_help(char **argv) {
     printf("Usage: %s [OPTIONS]\n", argv[0]);
     printf("Options:\n");
     printf("  --startup COMMAND   Startup command for server\n");
@@ -146,7 +146,7 @@ void parse_args(int argc, char **argv, logger_config_t *logger_config, server_co
             }
         } 
         else if (strcmp(argv[i], "--help") == 0) {
-            log_help();
+            log_help(argv);
         }
     }
 }
