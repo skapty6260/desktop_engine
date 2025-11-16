@@ -12,7 +12,7 @@ Ipc bridge (Should send clients info, should receive input events)
 #include <stdlib.h>
 #include <signal.h>
 
-static struct server global_server = NULL;
+static struct server *global_server = NULL;
 
 static void signal_handler(int signal) {
     LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     LOG_INFO(LOG_MODULE_CORE, "Wayland server started on socket: %s", server.socket);
     LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
-    server_run(&server, &running);
+    server_run(&server);
 
     LOG_INFO(LOG_MODULE_CORE, "Wayland server shutdown complete");
     
