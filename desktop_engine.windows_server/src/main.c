@@ -2,6 +2,8 @@
 Basic wayland server (Open clients, create surfaces)
 Signal handler for good exiting and cleanup
 Logger (Should work with logfiles, ipc logging)
+-- In logger_fatal not just cleaning up, but work with shutdown requests
+
 Ipc bridge (Should send clients info, should receive input events)
 */
 #define _POSIX_C_SOURCE 200112L
@@ -13,10 +15,14 @@ Ipc bridge (Should send clients info, should receive input events)
 #include <signal.h>
 
 static struct server *global_server = NULL;
+static volatile sig_atomic_t g_shutdown_requested = 0;
 
 static void signal_handler(int signal) {
-    printf("Received stop signal...\n");
-    LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
+    g_shutdown_requested = 1;
+    g_logger_graceful_shutdown = 1;
+    
+    const char* msg = "terminated\n";
+    write(STDOUT_FILENO, msg, strlen(msg));
     
     if (global_server && global_server->display) {
         wl_display_terminate(global_server->display);
@@ -41,10 +47,16 @@ int main(int argc, char **argv) {
     }
 
     server_init(&server);
-    global_server = &server;
 
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    /* Signal handling for graceful shutdown */
+    global_server = &server;
+    struct sigaction sa = {
+        .sa_handler = signal_handler,
+        .sa_flags = 0  // SA_RESTART
+    };
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
 
     server.socket = wl_display_add_socket_auto(server.display);
     if (!server.socket) {

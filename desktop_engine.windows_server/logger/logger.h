@@ -7,29 +7,25 @@
 #include <time.h>
 #include <pthread.h>
 #include <stdarg.h>
-#include <signal.h>
 #include <unistd.h>
 
-// Уровни логирования
 typedef enum {
-    LOG_LEVEL_DEBUG = 0,
+    LOG_LEVEL_DEBUG,
     LOG_LEVEL_INFO,
     LOG_LEVEL_WARN,
     LOG_LEVEL_ERROR,
     LOG_LEVEL_FATAL
 } log_level_t;
 
-// Модули приложения
 typedef enum {
     LOG_MODULE_SERVER,
     LOG_MODULE_IPC_GET,
     LOG_MODULE_IPC_SEND,
-    LOG_MODULE_CORE,
+    LOG_MODULE_CORE
 } log_module_t;
 
-// Цвета для терминала
 typedef enum {
-    LOG_COLOR_RESET = 0,
+    LOG_COLOR_BLACK = 30,
     LOG_COLOR_RED = 31,
     LOG_COLOR_GREEN = 32,
     LOG_COLOR_YELLOW = 33,
@@ -37,45 +33,43 @@ typedef enum {
     LOG_COLOR_MAGENTA = 35,
     LOG_COLOR_CYAN = 36,
     LOG_COLOR_WHITE = 37,
-    LOG_COLOR_BRIGHT_RED = 91,
-    LOG_COLOR_BRIGHT_GREEN = 92
+    LOG_COLOR_BRIGHT_RED = 91
 } log_color_t;
 
-// Структура сообщения лога
 typedef struct {
     log_level_t level;
     log_module_t module;
     const char* file;
     int line;
     const char* function;
-    char message[1024];
     time_t timestamp;
+    char message[1024];
 } log_message_t;
 
-// Структура конфигурации
 typedef struct {
     log_level_t level;
     int use_colors;
     int log_to_file;
     int log_to_console;
-    char log_file_path[256];
     int async_enabled;
     int flush_immediately;
+    char log_file_path[256];
 } logger_config_t;
 
-// Инициализация логгера
-int logger_init(const logger_config_t* config);
-// Освобождение ресурсов
-void logger_cleanup(void);
-// Основная функция логирования
-void logger_log(log_level_t level, log_module_t module, const char* file, int line, const char* function, const char* format, ...);
+// Добавляем флаг graceful shutdown
+extern volatile sig_atomic_t g_logger_graceful_shutdown;
 
-// Макросы для удобного использования
-#define LOG_DEBUG(module, ...)   logger_log(LOG_LEVEL_DEBUG, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_INFO(module, ...)    logger_log(LOG_LEVEL_INFO, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_WARN(module, ...)    logger_log(LOG_LEVEL_WARN, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_ERROR(module, ...)   logger_log(LOG_LEVEL_ERROR, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_FATAL(module, ...)   logger_log(LOG_LEVEL_FATAL, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
+int logger_init(const logger_config_t* config);
+void logger_cleanup(void);
+void logger_log(log_level_t level, log_module_t module, const char* file, int line, 
+                const char* function, const char* format, ...);
+
+// Макросы для удобства
+#define LOG_DEBUG(module, ...) logger_log(LOG_LEVEL_DEBUG, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_INFO(module, ...)  logger_log(LOG_LEVEL_INFO, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_WARN(module, ...)  logger_log(LOG_LEVEL_WARN, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_ERROR(module, ...) logger_log(LOG_LEVEL_ERROR, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_FATAL(module, ...) logger_log(LOG_LEVEL_FATAL, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 // Макросы для конкретных модулей
 #define SERVER_DEBUG(...)    LOG_DEBUG(LOG_MODULE_SERVER, __VA_ARGS__)

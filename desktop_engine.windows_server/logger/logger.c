@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <errno.h>
 
 // Глобальные переменные
 static logger_config_t g_config;
@@ -6,13 +7,16 @@ static FILE* g_log_file = NULL;
 static pthread_mutex_t g_log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int g_logger_initialized = 0;
 
-// Очередь сообщений (упрощенная реализация)
+// Очередь сообщений
 static log_message_t g_message_queue[1000];
 static int g_queue_head = 0;
 static int g_queue_tail = 0;
 static int g_queue_size = 0;
 static pthread_t g_worker_thread;
-static int g_worker_running = 0;
+static volatile sig_atomic_t g_worker_running = 0;
+
+// Глобальный флаг graceful shutdown
+volatile sig_atomic_t g_logger_graceful_shutdown = 0;
 
 // Получение строкового представления уровня
 static const char* level_to_string(log_level_t level) {
@@ -71,11 +75,15 @@ static void format_timestamp(char* buffer, size_t size, time_t timestamp) {
 
 // Добавление сообщения в очередь
 static int enqueue_message(const log_message_t* message) {
+    if (g_logger_graceful_shutdown) {
+        return 0; // Не принимаем новые сообщения во время shutdown
+    }
+    
     pthread_mutex_lock(&g_log_mutex);
     
     if (g_queue_size >= 1000) {
         pthread_mutex_unlock(&g_log_mutex);
-        return 0; // Очередь переполнена
+        return 0;
     }
     
     g_message_queue[g_queue_tail] = *message;
@@ -160,21 +168,19 @@ static void process_message(const log_message_t* message) {
 static void* worker_thread(void* arg) {
     (void)arg;
     
-    while (g_worker_running) {
+    while (g_worker_running || g_queue_size > 0) {
         log_message_t message;
         
         if (dequeue_message(&message)) {
             process_message(&message);
         } else {
+            // Если очередь пуста и идет shutdown - выходим
+            if (g_logger_graceful_shutdown) {
+                break;
+            }
             // Очередь пуста - небольшая пауза
-            sleep(1000); // 1ms
+            sleep(1000);
         }
-    }
-    
-    // Обработка оставшихся сообщений
-    log_message_t message;
-    while (dequeue_message(&message)) {
-        process_message(&message);
     }
     
     return NULL;
@@ -219,12 +225,20 @@ int logger_init(const logger_config_t* config) {
 void logger_cleanup(void) {
     if (!g_logger_initialized) return;
     
-    LOG_INFO(LOG_MODULE_CORE, "Logger shutting down");
+    // Устанавливаем флаг graceful shutdown
+    g_logger_graceful_shutdown = 1;
     
     // Остановка рабочего потока
     if (g_config.async_enabled && g_worker_running) {
         g_worker_running = 0;
-        pthread_join(g_worker_thread, NULL);
+        
+        // Даем worker thread время на завершение (максимум 1 секунда)
+        struct timespec timeout;
+        clock_gettime(CLOCK_REALTIME, &timeout);
+        timeout.tv_sec += 1;
+        
+        pthread_timedjoin_np(g_worker_thread, NULL, &timeout);
+        // Если не удалось присоединиться, продолжаем без него
     }
     
     // Закрытие файла
@@ -234,6 +248,7 @@ void logger_cleanup(void) {
     }
     
     g_logger_initialized = 0;
+    g_logger_graceful_shutdown = 0; // Сбрасываем флаг
 }
 
 // Основная функция логирования

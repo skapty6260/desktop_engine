@@ -22,10 +22,7 @@ void server_init(struct server *server) {
 
 void server_run(struct server *server) {
     SERVER_INFO("Wayland server is running");
-
     wl_display_run(server->display);
-
-    SERVER_INFO("Wayland server event loop stopped");
 }
 
 void server_cleanup(struct server *server) {
