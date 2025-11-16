@@ -142,8 +142,7 @@ void parse_args(int argc, char **argv, logger_config_t *logger_config, server_co
         else if (strcmp(argv[i], "--startup") == 0) {
             if (i + 1 < argc) {
                 i++;
-                printf("Startup cmd: %s", argv[i]);
-                server_config->startup_cmd = "";
+                server_config->startup_cmd = argv[i];
             } else {
                 fprintf(stderr, "Error: --startup requires an argument\n");
                 exit(1);
