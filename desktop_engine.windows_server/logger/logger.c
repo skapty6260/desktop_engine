@@ -179,8 +179,7 @@ static void* worker_thread(void* arg) {
             if (g_logger_graceful_shutdown) {
                 break;
             }
-            // Очередь пуста - небольшая пауза
-            usleep(1000); // 1ms
+            sleep(0);
         }
     }
     
