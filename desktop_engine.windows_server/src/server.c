@@ -9,11 +9,11 @@ void server_init(struct server *server) {
     if (!server->display) {
         SERVER_FATAL("Failed to create Wayland display");
     }
-};
+}
 
 void server_run(struct server *server) {
     SERVER_DEBUG("Running up wayland server...");
     wl_display_run(server->display);
 }
 
-void server_cleanup(struct server *server) {}
+// void server_cleanup(struct server *server) {}
