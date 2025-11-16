@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     }
 
     server_init(server);
+    server_run(server);
     
     LOG_FATAL(LOG_MODULE_CORE, "Testing fatal");
 
