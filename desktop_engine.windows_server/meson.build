@@ -19,6 +19,12 @@ executable('desktop_engine_win_server',
         'logger/logger.c',
         'config/config.c',
     ],
+    c_args: [
+        '-Wno-error=unused-parameter',
+        '-Wno-error=unused-variable',
+        '-Wno-error=unused-function',
+        '-Wno-error=unused-but-set-variable',
+    ],
     dependencies: [wayland_server],
     install: true
 )
