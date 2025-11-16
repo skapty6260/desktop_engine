@@ -21,7 +21,7 @@ struct client_state {
 };
 
 typedef struct server_config {
-    const char* statup_cmd;
+    const char* startup_cmd;
 } server_config_t;
 
 void server_init(struct server *server);
