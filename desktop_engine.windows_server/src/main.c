@@ -1,5 +1,6 @@
 /* TODO
 Basic wayland server (Open clients, create surfaces)
+Signal handler for good exiting and cleanup
 Logger (Should work with logfiles, ipc logging)
 Ipc bridge (Should send clients info, should receive input events)
 */
@@ -35,12 +36,10 @@ int main(int argc, char **argv) {
     printf("Startup command %s\n", server_config.startup_cmd);
     server_init(&server);
     server_run(&server);
-    
-    LOG_FATAL(LOG_MODULE_CORE, "Testing fatal");
 
     LOG_INFO(LOG_MODULE_CORE, "Exiting windows server");
     
-    server_cleanup();
+    server_cleanup(&server);
     logger_cleanup();
 
     return 0;

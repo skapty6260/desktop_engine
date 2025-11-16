@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main(int argc, char *argv[]) {
+int main() {
     const char *socket_name = getenv("WAYLAND_DISPLAY");
     if (!socket_name) {
         socket_name = "wayland-0"; // default socket name
