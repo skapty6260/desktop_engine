@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200112L
 #include "logger.h"
 #include <errno.h>
 #include <signal.h>
@@ -160,7 +161,6 @@ static void process_message(const log_message_t* message) {
     if (message->level == LOG_LEVEL_FATAL) {
         fprintf(stderr, "FATAL error occurred. Terminating application.\n");
         logger_cleanup();
-        // kill(getpid(), SIGTERM);
         exit(EXIT_FAILURE);
     }
 }
@@ -180,7 +180,7 @@ static void* worker_thread(void* arg) {
                 break;
             }
             // Очередь пуста - небольшая пауза
-            sleep(1000);
+            usleep(1000); // 1ms
         }
     }
     
@@ -222,7 +222,7 @@ int logger_init(const logger_config_t* config) {
     return 1;
 }
 
-// Освобождение ресурсов
+// Освобождение ресурсов (упрощенная версия)
 void logger_cleanup(void) {
     if (!g_logger_initialized) return;
     
@@ -233,13 +233,8 @@ void logger_cleanup(void) {
     if (g_config.async_enabled && g_worker_running) {
         g_worker_running = 0;
         
-        // Даем worker thread время на завершение (максимум 1 секунда)
-        struct timespec timeout;
-        clock_gettime(CLOCK_REALTIME, &timeout);
-        timeout.tv_sec += 1;
-        
-        pthread_timedjoin_np(g_worker_thread, NULL, &timeout);
-        // Если не удалось присоединиться, продолжаем без него
+        // Простая версия - ждем завершения потока без таймаута
+        pthread_join(g_worker_thread, NULL);
     }
     
     // Закрытие файла
