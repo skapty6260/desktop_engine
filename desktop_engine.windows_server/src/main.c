@@ -22,11 +22,6 @@ static void signal_handler(int signal) {
     }
 }
 
-static void signal_handler(int signal) {
-    LOG_INFO(LOG_MODULE_CORE, "Received signal %d, initiating graceful shutdown...", signal);
-    running = 0;
-}
-
 static void setup_signal_handlers(void) {
     struct sigaction sa = {
         .sa_handler = signal_handler,
