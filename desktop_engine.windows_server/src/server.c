@@ -1,7 +1,9 @@
 #include "server.h"
 #include "logger/logger.h"
 #include <wayland-server.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 void server_init(struct server *server) {
     SERVER_DEBUG("Initializing wayland server...");
@@ -12,7 +14,7 @@ void server_init(struct server *server) {
     }
 
     /* Add socket. This should be last steps */
-    server->socket = wl_display_add_socket_auto(server->wl_display);
+    server->socket = wl_display_add_socket_auto(server->display);
     if (!server->socket) {
         wl_display_destroy(server->display);
         SERVER_FATAL("Failed to add socket for Wayland display");
