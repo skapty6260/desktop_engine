@@ -20,6 +20,10 @@ struct client_state {
     struct wl_link *link;
 };
 
+typedef struct server_config {
+    const char* statup_cmd;
+} server_config_t;
+
 void server_init(struct server *server);
 void server_run(struct server *server);
 void server_cleanup(struct server *server);

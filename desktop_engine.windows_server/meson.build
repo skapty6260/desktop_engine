@@ -16,7 +16,7 @@ executable('desktop_engine_win_server',
         'src/main.c',
         'src/server.c',
         'logger/logger.c',
-        'logger/logger_config.c',
+        'config/config.c',
     ],
     dependencies: [wayland_server],
     install: true

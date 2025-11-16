@@ -1,9 +1,20 @@
-#include "logger_config.h"
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include "config.h"
 
-// Конфигурация по умолчанию
+static void log_help() {
+    printf("Usage: %s [OPTIONS]\n", argv[0]);
+    printf("Options:\n");
+    printf("  --startup COMMAND   Startup command for server\n");
+    printf("  --log-config FILE   Load configuration from file\n");
+    printf("  --log-level LEVEL   Set log level (debug, info, warn, error, fatal)\n");
+    printf("  --log-file FILE     Log to specified file\n");
+    printf("  --no-colors         Disable colored output\n");
+    printf("  --no-async          Disable asynchronous logging\n");
+    printf("  --console-only      Log only to console\n");
+    printf("  --file-only         Log only to file\n");
+    printf("  --help              Show this help message\n");
+    exit(0);
+}
+
 void logger_config_default(logger_config_t* config) {
     config->level = LOG_LEVEL_INFO;
     config->use_colors = 1;
@@ -14,7 +25,6 @@ void logger_config_default(logger_config_t* config) {
     strcpy(config->log_file_path, "application.log");
 }
 
-// Парсинг уровня логирования из строки
 static log_level_t parse_log_level(const char* level_str) {
     if (strcmp(level_str, "debug") == 0) return LOG_LEVEL_DEBUG;
     if (strcmp(level_str, "info") == 0) return LOG_LEVEL_INFO;
@@ -24,7 +34,6 @@ static log_level_t parse_log_level(const char* level_str) {
     return LOG_LEVEL_INFO; // По умолчанию
 }
 
-// Парсинг булевого значения
 static int parse_boolean(const char* value) {
     if (strcmp(value, "true") == 0 || strcmp(value, "yes") == 0 || 
         strcmp(value, "1") == 0 || strcmp(value, "on") == 0) {
@@ -33,7 +42,6 @@ static int parse_boolean(const char* value) {
     return 0;
 }
 
-// Удаление пробелов в начале и конце строки
 static void trim_string(char* str) {
     char* end;
     
@@ -48,8 +56,7 @@ static void trim_string(char* str) {
     *(end + 1) = '\0';
 }
 
-// Чтение конфигурации из файла
-int logger_config_read(const char* config_path, logger_config_t* config) {
+static int logger_config_read(const char* config_path, logger_config_t* config) {
     FILE* file = fopen(config_path, "r");
     if (!file) {
         return 0;
@@ -98,43 +105,37 @@ int logger_config_read(const char* config_path, logger_config_t* config) {
     return 1;
 }
 
-// Парсинг аргументов командной строки
-void logger_config_parse_args(int argc, char* argv[], logger_config_t* config) {
+void parse_args(int argc, char **argv, logger_config_t *logger_config, server_config_t *server_config) {
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--config") == 0 && i + 1 < argc) {
-            logger_config_read(argv[++i], config);
+        if (strcmp(argv[i], "--log-config") == 0 && i + 1 < argc) {
+            logger_config_read(argv[++i], logger_config);
         }
         else if (strcmp(argv[i], "--log-level") == 0 && i + 1 < argc) {
-            config->level = parse_log_level(argv[++i]);
+            logger_config->level = parse_log_level(argv[++i]);
         }
         else if (strcmp(argv[i], "--log-file") == 0 && i + 1 < argc) {
-            strncpy(config->log_file_path, argv[++i], sizeof(config->log_file_path) - 1);
-            config->log_to_file = 1;
+            strncpy(logger_config->log_file_path, argv[++i], sizeof(logger_config->log_file_path) - 1);
+            logger_config->log_to_file = 1;
         }
         else if (strcmp(argv[i], "--no-colors") == 0) {
-            config->use_colors = 0;
+            logger_config->use_colors = 0;
         }
         else if (strcmp(argv[i], "--no-async") == 0) {
-            config->async_enabled = 0;
+            logger_config->async_enabled = 0;
         }
         else if (strcmp(argv[i], "--console-only") == 0) {
-            config->log_to_file = 0;
+            logger_config->log_to_file = 0;
         }
         else if (strcmp(argv[i], "--file-only") == 0) {
-            config->log_to_console = 0;
+            logger_config->log_to_console = 0;
         }
+        else if (strcmp(argv[i], "--startup") == 0 && i + 1 < argc) {
+            i++; // увеличиваем индекс ДО использования
+            strncpy(server_config->startup_cmd, argv[i], sizeof(server_config->startup_cmd) - 1);
+            server_config->startup_cmd[sizeof(server_config->startup_cmd) - 1] = '\0'; // гарантируем нуль-терминатор
+        } 
         else if (strcmp(argv[i], "--help") == 0) {
-            printf("Usage: %s [OPTIONS]\n", argv[0]);
-            printf("Options:\n");
-            printf("  --config FILE       Load configuration from file\n");
-            printf("  --log-level LEVEL   Set log level (debug, info, warn, error, fatal)\n");
-            printf("  --log-file FILE     Log to specified file\n");
-            printf("  --no-colors         Disable colored output\n");
-            printf("  --no-async          Disable asynchronous logging\n");
-            printf("  --console-only      Log only to console\n");
-            printf("  --file-only         Log only to file\n");
-            printf("  --help              Show this help message\n");
-            exit(0);
+            log_help();
         }
     }
 }

@@ -4,37 +4,9 @@ Logger (Should work with logfiles, ipc logging)
 Ipc bridge (Should send clients info, should receive input events)
 */
 #include "logger/logger.h"
-#include "logger/logger_config.h"
+#include "config/config.h"
 #include "server.h"
 #include <unistd.h>
-
-struct server_config {
-    char* startup_cmd;
-};
-
-void parse_args(int argc, char **argv, logger_config_t *logger_config, struct server_config *server_config) {
-    logger_config_parse_args(argc, argv, logger_config);
-
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--startup") == 0 && i + 1 < argc) {
-            strncpy(server_config->startup_cmd, argv[++i], sizeof(server_config->startup_cmd) - 1);
-        } 
-        else if (strcmp(argv[i], "--help") == 0) {
-            printf("Usage: %s [OPTIONS]\n", argv[0]);
-            printf("Options:\n");
-            printf("  --startup COMMAND   Startup command for server\n");
-            printf("  --log-config FILE   Load configuration from file\n");
-            printf("  --log-level LEVEL   Set log level (debug, info, warn, error, fatal)\n");
-            printf("  --log-file FILE     Log to specified file\n");
-            printf("  --no-colors         Disable colored output\n");
-            printf("  --no-async          Disable asynchronous logging\n");
-            printf("  --console-only      Log only to console\n");
-            printf("  --file-only         Log only to file\n");
-            printf("  --help              Show this help message\n");
-            exit(0);
-        }
-    }
-}
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
