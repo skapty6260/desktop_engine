@@ -9,6 +9,7 @@ project('desktop_engine_windows_server', 'c',
 )
 
 wayland_server = dependency('wayland-server', required: true)
+wayland_client = dependency('wayland-client')
 # wayland_protocols = dependency('wayland_protocols', required: true)
 
 executable('desktop_engine_win_server',
@@ -17,7 +18,8 @@ executable('desktop_engine_win_server',
         'src/server.c',
         'logger/logger.c',
         'config/config.c',
+        'test-client/main.c'
     ],
-    dependencies: [wayland_server],
+    dependencies: [wayland_server, wayland_client],
     install: true
 )

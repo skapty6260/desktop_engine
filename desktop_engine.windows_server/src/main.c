@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
 
     LOG_INFO(LOG_MODULE_CORE, "Exiting windows server");
     
+    server_cleanup();
     logger_cleanup();
 
     return 0;
