@@ -21,23 +21,23 @@ void parse_args(int argc, char **argv, logger_config_t *logger_config, struct se
             strncpy(server_config->startup_cmd, argv[++i], sizeof(server_config->startup_cmd) - 1);
         } 
         else if (strcmp(argv[i], "--log-level") == 0 && i + 1 < argc) {
-            config->level = parse_log_level(argv[++i]);
+            logger_config->level = parse_log_level(argv[++i]);
         }
         else if (strcmp(argv[i], "--log-file") == 0 && i + 1 < argc) {
-            strncpy(config->log_file_path, argv[++i], sizeof(config->log_file_path) - 1);
-            config->log_to_file = 1;
+            strncpy(logger_config->log_file_path, argv[++i], sizeof(logger_config->log_file_path) - 1);
+            logger_config->log_to_file = 1;
         }
         else if (strcmp(argv[i], "--no-colors") == 0) {
-            config->use_colors = 0;
+            logger_config->use_colors = 0;
         }
         else if (strcmp(argv[i], "--no-async") == 0) {
-            config->async_enabled = 0;
+            logger_config->async_enabled = 0;
         }
         else if (strcmp(argv[i], "--console-only") == 0) {
-            config->log_to_file = 0;
+            logger_config->log_to_file = 0;
         }
         else if (strcmp(argv[i], "--file-only") == 0) {
-            config->log_to_console = 0;
+            logger_config->log_to_console = 0;
         }
         else if (strcmp(argv[i], "--help") == 0) {
             printf("Usage: %s [OPTIONS]\n", argv[0]);
