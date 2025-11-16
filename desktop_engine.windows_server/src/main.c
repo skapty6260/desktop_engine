@@ -8,8 +8,7 @@ Ipc bridge (Should send clients info, should receive input events)
 #include "config/config.h"
 #include "server.h"
 #include <unistd.h>
-#include <stdlib.h>
-#include <getopt.h>
+#include <stdio.h>
 
 int main(int argc, char **argv) {
     logger_config_t logger_config;
