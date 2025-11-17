@@ -1,7 +1,6 @@
 /* TODO
 Basic wayland server (Open clients, create surfaces)
-Signal handler for good exiting and cleanup
-Logger (Should work with logfiles, ipc logging)
+
 -- In logger_fatal not just cleaning up, but work with shutdown requests
 
 Ipc bridge (Should send clients info, should receive input events)

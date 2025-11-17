@@ -10,14 +10,21 @@
 
 struct server {
     struct wl_display *display;
-    struct wl_list client;
-    struct wl_global *compositor_global;
     const char* socket;
+
+    struct wl_listener client_created_listener;
+
+    struct wl_global *compositor_global;
+    struct wl_global *shell_global;
+    struct wl_global *shm_global;
+
+    struct wl_list clients;
 };
 
-struct client_state {
-    struct wl_resource *resource;
+struct client {
+    struct wl_client *wl_client;
     struct wl_link *link;
+    pid_t pid;
 };
 
 typedef struct server_config {
