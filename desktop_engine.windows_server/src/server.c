@@ -15,18 +15,7 @@ static void handle_client_created(struct wl_listener *listener, void *data) {
     struct server *server = wl_container_of(listener, server, client_created_listener);
     struct wl_client *wl_client = data;
 
-    struct client *client = malloc(sizeof(*client));
-    if (!client) {
-        SERVER_ERROR("Failed to allocate client structure");
-        return;
-    }
-
-    client->wl_client = wl_client;
-    client->pid = wl_client_get_credentials(wl_client, NULL, NULL, NULL);
-
-    wl_list_insert(&server->clients, &client->link);
-
-    SERVER_INFO("New client connected (PID: %d)", client->pid);
+    SERVER_INFO("New client connected");
 }
 
 void server_init(struct server *server) {
