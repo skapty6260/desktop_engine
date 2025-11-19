@@ -28,14 +28,17 @@
             "id": "bf48584ce80b8277",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "readme.md",
-                "mode": "source",
-                "source": false
+                "file": "Architecture/Main scheme.canvas",
+                "viewState": {
+                  "x": -144,
+                  "y": 560,
+                  "zoom": -1.6374299206152918
+                }
               },
-              "icon": "lucide-file",
-              "title": "readme"
+              "icon": "lucide-layout-dashboard",
+              "title": "Main scheme"
             }
           }
         ],
@@ -203,9 +206,13 @@
   },
   "active": "bf48584ce80b8277",
   "lastOpenFiles": [
+    "Architecture/communication/Untitled.md",
+    "Architecture/Main scheme.canvas",
+    "Architecture/window_server/architecture.md",
     "Architecture/window_server/window_server.md",
-    "Architecture/Root.canvas",
+    "Architecture/Communication system scheme.canvas",
     "readme.md",
+    "Architecture/communication",
     "Architecture/window_server",
     "Схема работы.canvas",
     "Architecture",

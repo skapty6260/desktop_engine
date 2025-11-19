@@ -4,9 +4,20 @@ project('desktop_engine_windows_server', 'c',
     default_options: [
         'c_std=c11',
         'warning_level=3',
-        'werror=true',
-        'c_args=-Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable'
+        'werror=true'
     ]
+)
+
+add_project_arguments(
+    [
+        '-D_POSIX_C_SOURCE=200809L',
+
+        '-Wno-unused-parameter',
+        '-Wno-unused-variable',
+        '-Wno-unused-function',
+        '-Wno-unused-but-set-variable',
+    ],
+    language: 'c'
 )
 
 wayland_server = dependency('wayland-server', required: true)
@@ -21,12 +32,6 @@ executable('desktop_engine_win_server',
         'logger/logger.c',
         'config/config.c',
     ],
-    c_args: [
-        '-Wno-error=unused-parameter',
-        '-Wno-error=unused-variable',
-        '-Wno-error=unused-function',
-        '-Wno-error=unused-but-set-variable',
-    ],
-    dependencies: [wayland_server],
+    dependencies: [wayland_server, wayland_protocols],
     install: true
 )

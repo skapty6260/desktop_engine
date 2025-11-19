@@ -1,0 +1,21 @@
+{
+	"nodes":[
+		{"id":"c9ae3e5210e94508","type":"text","text":"## Windows (Renderer)","x":-1203,"y":56,"width":320,"height":66},
+		{"id":"340664ca63c612dd","type":"text","text":"**Input**","x":-1057,"y":186,"width":250,"height":60},
+		{"id":"28887a5da30f3628","type":"text","text":"**Render**","x":-1328,"y":186,"width":250,"height":60},
+		{"id":"7731da3ad2ea5f65","type":"text","text":"**IPC**\n\nПолучает данные окон с wayland сервера, передает их в Render;\n\nОтправляет данные из input на wayland server;","x":-1196,"y":320,"width":278,"height":220},
+		{"id":"d26efbd7696b4e36","type":"text","text":"# Remote rendering\nПрототип архитектуры для реализации wayland сервера, удаленного рендеринга для windows,  ipc коммуникаций между модулями\n","x":-560,"y":-280,"width":400,"height":160},
+		{"id":"f28587c3206cc002","type":"file","file":"Architecture/window_server/window_server.md","x":-697,"y":56,"width":674,"height":1344},
+		{"id":"0bcfa776c9bbb892","type":"text","text":"**IPC**\nПередает данные окон на другую машину;\n\nПолучает input данные с другой машины и отдает из окнам;","x":-265,"y":56,"width":242,"height":199},
+		{"id":"b25805750459504b","x":140,"y":56,"width":900,"height":564,"type":"text","text":"## Communication Module\n\nСервер-сервер\n\nВсе модули могут как принимать, так и отдавать данные\nУ каждого комуникационного модуля есть свой heading, который нужно так-же передавать\n\nПодключение через сокеты и dbus\nСначала делаю только сокеты, dbus потом\n\nСервера должны стримить данные broadcast\nПринимающие сервера должны фильтровать нужные им данные\n\n**Wayland сервер**\nДолжен передавать surfaces.\nДолжен принимать input.\n\n**Windows renderer**\nДолжен принимать буферы для surfaces\nДолжен отдавать glfw input\n\n**По хорошему это все должно работать через передачу дескрипторов памяти surface или dma-buf**, но реализовать это на винде невозможно, поэтому делается через **D3D11 shared textures + Vulkan interop** (Потом сделаю поддержку dma-buf и прямые дескрипторы памяти)"}
+	],
+	"edges":[
+		{"id":"117e36336bc26a74","fromNode":"d26efbd7696b4e36","fromSide":"bottom","toNode":"c9ae3e5210e94508","toSide":"top"},
+		{"id":"914d68166777a33e","fromNode":"c9ae3e5210e94508","fromSide":"bottom","toNode":"28887a5da30f3628","toSide":"top"},
+		{"id":"b7a4ab887703aa76","fromNode":"c9ae3e5210e94508","fromSide":"bottom","toNode":"340664ca63c612dd","toSide":"top"},
+		{"id":"4b1ba540427dcd5b","fromNode":"340664ca63c612dd","fromSide":"bottom","toNode":"7731da3ad2ea5f65","toSide":"top"},
+		{"id":"96f54e80cb2ea91d","fromNode":"7731da3ad2ea5f65","fromSide":"top","toNode":"28887a5da30f3628","toSide":"bottom"},
+		{"id":"5e6a5333923a08d6","fromNode":"d26efbd7696b4e36","fromSide":"bottom","toNode":"f28587c3206cc002","toSide":"top"},
+		{"id":"929dc4779a16e5e1","fromNode":"d26efbd7696b4e36","fromSide":"bottom","toNode":"b25805750459504b","toSide":"top"}
+	]
+}
