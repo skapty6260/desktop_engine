@@ -10,7 +10,7 @@ project('desktop_engine_windows_server', 'c',
 )
 
 wayland_server = dependency('wayland-server', required: true)
-wayland_protocols = dependency('wayland_protocols', required: true)
+wayland_protocols = dependency('wayland-protocols', required: true)
 
 subdir('protocols')
 
