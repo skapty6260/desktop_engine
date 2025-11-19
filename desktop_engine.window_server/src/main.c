@@ -5,7 +5,7 @@ Basic wayland server (Open clients, create surfaces)
 
 Ipc bridge (Should send clients info, should receive input events)
 */
-#define _POSIX_C_SOURCE 200112L
+// #define _POSIX_C_SOURCE 200112L
 #include "logger/logger.h"
 #include "config/config.h"
 #include "server.h"
