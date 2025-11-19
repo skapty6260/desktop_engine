@@ -1,4 +1,4 @@
-#define _POSIX_C_SOURCE 200112L
+// #define _POSIX_C_SOURCE 200112L
 #include "logger.h"
 #include <errno.h>
 #include <signal.h>
