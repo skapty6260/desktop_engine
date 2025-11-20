@@ -11,13 +11,6 @@
 #include "logger/logger.h"
 #include <wayland-server.h>
 
-static void handle_client_created(struct wl_listener *listener, void *data) {
-    struct server *server = wl_container_of(listener, server, client_created_listener);
-    struct wl_client *wl_client = data;
-
-    SERVER_INFO("New client connected");
-}
-
 static void bind_xdg_wm_base(struct wl_client *client, void *data,
                             uint32_t version, uint32_t id) {
     struct server *server = data;
@@ -34,6 +27,28 @@ static void bind_xdg_wm_base(struct wl_client *client, void *data,
     SERVER_DEBUG("XDG shell bound to client");
 }
 
+static void bind_shm(struct wl_client *client, void *data,
+                            uint32_t version, uint32_t id) {
+    struct server *server = data;
+    
+    struct wl_resource *resource = wl_resource_create(
+        client, &wl_shm_interface, version, id);
+    
+    if (!resource) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+    SERVER_DEBUG("SHM bound to client");
+}
+
+static void handle_client_created(struct wl_listener *listener, void *data) {
+    struct server *server = wl_container_of(listener, server, client_created_listener);
+    struct wl_client *wl_client = data;
+
+    SERVER_INFO("New client connected");
+}
+
 void server_init(struct server *server) {
     server->display = wl_display_create();
     if (!server->display) {
@@ -48,6 +63,12 @@ void server_init(struct server *server) {
         server->display,
         &xdg_wm_base_interface,
         1, server, bind_xdg_wm_base
+    );
+
+    server->shm_global = wl_global_create(
+        server->display, 
+        &wl_shm_interface, 
+        1, server, bind_shm
     );
 
     if (!server->xdg_wm_base_global) {
