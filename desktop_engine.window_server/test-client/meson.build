@@ -7,6 +7,18 @@ project('simple-wayland-client', 'c',
   ]
 )
 
+add_project_arguments(
+    [
+        '-D_POSIX_C_SOURCE=200809L',
+
+        '-Wno-unused-parameter',
+        '-Wno-unused-variable',
+        '-Wno-unused-function',
+        '-Wno-unused-but-set-variable',
+    ],
+    language: 'c'
+)
+
 # Зависимости
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
