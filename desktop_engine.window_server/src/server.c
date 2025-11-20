@@ -1,4 +1,3 @@
-// #define _POSIX_C_SOURCE 200112L
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -8,6 +7,7 @@
 #include <signal.h>
 
 #include "server.h"
+#include "xdg-shell-protocol.h"
 #include "logger/logger.h"
 #include <wayland-server.h>
 
@@ -16,6 +16,22 @@ static void handle_client_created(struct wl_listener *listener, void *data) {
     struct wl_client *wl_client = data;
 
     SERVER_INFO("New client connected");
+}
+
+static void bind_xdg_wm_base(struct wl_client *client, void *data,
+                            uint32_t version, uint32_t id) {
+    struct server *server = data;
+    
+    struct wl_resource *resource = wl_resource_create(
+        client, &xdg_wm_base_interface, version, id);
+    
+    if (!resource) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+    xdg_wm_base_send_ping(resource, 1234); // Пример ping
+    SERVER_DEBUG("XDG shell bound to client");
 }
 
 void server_init(struct server *server) {
@@ -28,27 +44,15 @@ void server_init(struct server *server) {
     wl_list_init(&server->clients);
 
     /* Create wayland globals */
-    // server->compositor_global = wl_global_create(
-    //     server->display,
-    //     &wl_compositor_interface,
-    //     4, server, bind_compositor
-    // );
+    server->xdg_wm_base_global = wl_global_create(
+        server->display,
+        &xdg_wm_base_interface,
+        1, server, bind_xdg_wm_base
+    );
 
-    // server->shell_global = wl_global_create(
-    //     server->display,
-    //     &wl_shell_interface,
-    //     1, server, bind_compositor
-    // );
-
-    // server->shm_global = wl_global_create(
-    //     server->display, 
-    //     &wl_shm_interface, 
-    //     1, server, bind_shm
-    // );
-
-    // if (!server->compositor_global || !server->shell_global || !server->shm_global) {
-    //     SERVER_FATAL("Failed to create Wayland globals");
-    // }
+    if (!server->xdg_wm_base_global) {
+        SERVER_FATAL("Failed to create Wayland globals");
+    }
 
     /* Assign event listeners */
     server->client_created_listener.notify = handle_client_created;
