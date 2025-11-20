@@ -60,6 +60,21 @@ static void bind_shm(struct wl_client *client, void *data,
     SERVER_DEBUG("SHM bound to client");
 }
 
+static void bind_compositor(struct wl_client *client, void *data,
+                           uint32_t version, uint32_t id) {    
+    struct wl_resource *resource = wl_resource_create(
+        client, &wl_compositor_interface, version, id);
+    
+    if (!resource) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+    // wl_resource_set_implementation(resource, &compositor_implementation, data, NULL);
+    
+    SERVER_DEBUG("Compositor bound to client");
+}
+
 static void handle_client_created(struct wl_listener *listener, void *data) {
     struct server *server = wl_container_of(listener, server, client_created_listener);
     struct wl_client *wl_client = data;
@@ -89,7 +104,13 @@ void server_init(struct server *server) {
         1, server, bind_shm
     );
 
-    if (!server->xdg_wm_base_global || !server->shm_global) {
+    server->compositor_global = wl_global_create(
+        server->display, 
+        &wl_compositor_interface, 
+        1, server, bind_compositor
+    );
+
+    if (!server->xdg_wm_base_global || !server->shm_global || !server->compositor_global) {
         SERVER_FATAL("Failed to create Wayland globals");
     }
 

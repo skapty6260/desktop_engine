@@ -10,7 +10,7 @@ struct server {
     struct wl_listener client_created_listener;
 
     struct wl_global *xdg_wm_base_global;
-    // struct wl_global *compositor_global;
+    struct wl_global *compositor_global;
     // struct wl_global *shell_global;
     struct wl_global *shm_global;
 
