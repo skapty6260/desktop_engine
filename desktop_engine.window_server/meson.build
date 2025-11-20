@@ -31,7 +31,9 @@ executable('desktop_engine_win_server',
         'src/server.c',
         'logger/logger.c',
         'config/config.c',
+        wl_protos_src,
     ],
     dependencies: [wayland_server, wayland_protocols],
+    include_directories: include_directories('protocols'),
     install: true
 )
