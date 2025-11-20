@@ -55,7 +55,7 @@ static void bind_shm(struct wl_client *client, void *data,
 
     wl_resource_set_implementation(resource, &shm_implementation, data, NULL);
     
-    shm_send_formats(client, resource);
+    // shm_send_formats(client, resource);
     
     SERVER_DEBUG("SHM bound to client");
 }
