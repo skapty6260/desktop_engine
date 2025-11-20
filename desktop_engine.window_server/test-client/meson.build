@@ -13,7 +13,7 @@ wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 cairo = dependency('cairo')
 
 # Исполняемый файл
-executable('simple-client', "client.c",
+executable('simple-client', 'client.c',
   dependencies: [wayland_client, cairo, wayland_protos],
   include_directories: include_directories('protocols'),
   install: true,
