@@ -11,6 +11,10 @@
 #include "logger/logger.h"
 #include <wayland-server.h>
 
+/* TODO
+Create shm pool methods (To log client pixel buffers)
+*/
+
 static void bind_xdg_wm_base(struct wl_client *client, void *data,
                             uint32_t version, uint32_t id) {
     struct server *server = data;
@@ -27,6 +31,16 @@ static void bind_xdg_wm_base(struct wl_client *client, void *data,
     SERVER_DEBUG("XDG shell bound to client");
 }
 
+static void shm_create_pool(struct wl_client *client,
+                           struct wl_resource *shm_resource,
+                           uint32_t id, int fd, int32_t size) {
+    SERVER_DEBUG("Creating SHM pool: fd=%d, size=%d", fd, size);
+}
+
+static const struct wl_shm_interface shm_implementation = {
+    .create_pool = shm_create_pool,
+};
+
 static void bind_shm(struct wl_client *client, void *data,
                             uint32_t version, uint32_t id) {
     struct server *server = data;
@@ -38,6 +52,10 @@ static void bind_shm(struct wl_client *client, void *data,
         wl_client_post_no_memory(client);
         return;
     }
+
+    wl_resource_set_implementation(resource, &shm_implementation, data, NULL);
+    
+    shm_send_formats(client, resource);
     
     SERVER_DEBUG("SHM bound to client");
 }
@@ -71,7 +89,7 @@ void server_init(struct server *server) {
         1, server, bind_shm
     );
 
-    if (!server->xdg_wm_base_global) {
+    if (!server->xdg_wm_base_global || !server->shm_global) {
         SERVER_FATAL("Failed to create Wayland globals");
     }
 
