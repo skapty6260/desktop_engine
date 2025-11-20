@@ -15,6 +15,6 @@ cairo = dependency('cairo')
 # Исполняемый файл
 executable('simple-client', 'client.c',
   dependencies: [wayland_client, cairo, wayland_protos],
-  include_directories: include_directories('protocols'),
+  include_directories: include_directories('../protocols'),
   install: true,
 )
