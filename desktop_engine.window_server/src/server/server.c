@@ -9,6 +9,7 @@
 #include "compositor.h"
 #include "shm.h"
 #include "xdg.h"
+#include "xdg-shell-protocol.h"
 
 static void handle_client_destroyed(struct wl_listener *listener, void *data) {
     struct client *client = wl_container_of(listener, client, destroy_listener);
