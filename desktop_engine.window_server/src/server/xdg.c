@@ -44,13 +44,16 @@ static void xdg_surface_get_toplevel(struct wl_client *client, struct wl_resourc
     }
     
     surface->xdg_toplevel = toplevel;
-
-    // Set implementation for toplevels
     wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, surface, NULL);
     
-    // Отправляем события конфигурации
-    xdg_toplevel_send_configure(toplevel, 400, 300, NULL); // width, height, states
-    xdg_surface_send_configure(surface->xdg_surface, 2); // serial
+    // Отправляем configure для toplevel с правильными параметрами
+    struct wl_array states;
+    wl_array_init(&states);
+    xdg_toplevel_send_configure(toplevel, 400, 300, &states);
+    wl_array_release(&states);
+    
+    // Отправляем configure для surface
+    xdg_surface_send_configure(surface->xdg_surface, 1); 
     
     SERVER_DEBUG("XDG toplevel created");
 }
@@ -157,9 +160,6 @@ static void xdg_wm_base_get_xdg_surface(struct wl_client *client, struct wl_reso
     
     // Create implementation for xdg_surface
     wl_resource_set_implementation(xdg_surface, &xdg_surface_implementation, surf, NULL);
-    
-    // Send configure event
-    xdg_surface_send_configure(xdg_surface, 1); // serial
     
     SERVER_DEBUG("XDG surface created and configured");
 }
