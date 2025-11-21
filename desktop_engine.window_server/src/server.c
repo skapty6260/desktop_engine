@@ -60,7 +60,13 @@ static void bind_shm(struct wl_client *client, void *data,
     SERVER_DEBUG("SHM bound to client");
 }
 
-static void compositor_create_surface()
+static void compositor_create_surface() {
+    SERVER_INFO("Compositor create surface");
+}
+
+static void compositor_create_region() {
+    SERVER_INFO("Compositor create region");
+}
 
 static const struct wl_compositor_interface compositor_implementation = {
     .create_surface = compositor_create_surface,
