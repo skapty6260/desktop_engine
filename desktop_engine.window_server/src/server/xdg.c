@@ -51,12 +51,12 @@
         unresponsive	        6	         the client didn’t respond to a ping event in time
 */
 
-static const struct xdg_surface_interface xdg_surface_implementation = {
-    .destroy = xdg_surface_destroy,
-    .get_toplevel = xdg_surface_get_toplevel,
-    .ack_configure = xdg_surface_ack_configure,
-    // Add other methods as needed
-};
+// static const struct xdg_surface_interface xdg_surface_implementation = {
+//     .destroy = xdg_surface_destroy,
+//     .get_toplevel = xdg_surface_get_toplevel,
+//     .ack_configure = xdg_surface_ack_configure,
+//     // Add other methods as needed
+// };
 
 static void xdg_wm_base_destroy(struct wl_client *client, struct wl_resource *resource) {
     wl_resource_destroy(resource);
@@ -92,7 +92,7 @@ static void xdg_wm_base_get_xdg_surface(struct wl_client *client, struct wl_reso
     }
     
     if (!surf) {
-        wl_resource_post_error(resource, XDG_WM_BASE_ERROR_INVALID_SURFACE, "invalid surface");
+        wl_resource_post_error(resource, XDG_WM_BASE_ERROR_INVALID_SURFACE_STATE, "invalid surface");
         wl_resource_destroy(xdg_surface);
         return;
     }
