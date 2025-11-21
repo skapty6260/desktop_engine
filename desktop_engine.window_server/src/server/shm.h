@@ -1,6 +1,24 @@
+#ifndef SHM_H
+#define SHM_H
+
 #include <stdint.h>
 #include <wayland-server.h>
+
 void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
+
+/**
+ * @brief SHM pool structure
+ * 
+ * Represents a shared memory pool that contains multiple buffers
+ */
+struct shm_pool {
+    struct wl_resource *resource;   ///< Wayland resource for this pool
+    struct wl_list link;            ///< Link in server's pool list
+    int fd;                         ///< File descriptor for shared memory
+    size_t size;                    ///< Pool size in bytes
+    void *data;                     ///< Mapped memory region
+    struct wl_list buffers;         ///< List of buffers in this pool
+};
 
 #ifdef _WIN32
 /**
@@ -175,4 +193,6 @@ enum wl_shm_format {
     /* Final video format */
     WL_SHM_FORMAT_P030 = 0x30333050
 };
+#endif
+
 #endif

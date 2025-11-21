@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
 
     server.socket = wl_display_add_socket_auto(server.display);
     if (!server.socket) {
+        // TODO (cleanup)
         wl_display_destroy(server.display);
         SERVER_FATAL("Failed to add socket for Wayland display");
     }

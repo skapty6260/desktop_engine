@@ -16,6 +16,7 @@ struct server {
 
     struct wl_list clients;
     struct wl_list surfaces;
+    struct wl_list shm_pools;
 };
 
 struct surface {

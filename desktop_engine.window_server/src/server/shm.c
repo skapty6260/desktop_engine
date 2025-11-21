@@ -2,6 +2,54 @@
 #include "logger/logger.h"
 #include "shm.h"
 
+#include <sys/mman.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+/*
+    WL_SHM_POOL
+    REQUEST create_buffer(id: new_id<wl_buffer>, offset: int, width: int, height: int, stride: int, format: uint<wl_shm.format>)
+        Argument        Type         Description
+        id	     new_id<wl_buffer>   buffer to create
+        offset	 int	             buffer byte offset within the pool
+        width	 int	             buffer width, in pixels
+        height	 int	             buffer height, in pixels
+        stride	 int	             number of bytes from the beginning of one row to the beginning
+                                     of the next row
+        format	 uint<wl_shm.format> buffer pixel format
+    create a buffer from the pool
+    Create a wl_buffer object from the pool.
+    The buffer is created offset bytes into the pool and has width and height as specified.
+    The stride argument specifies the number of bytes from the beginning of one row to the 
+    beginning of the next. The format is the pixel format of the buffer and must be one of those
+    advertised through the wl_shm.format event.
+    A buffer will keep a reference to the pool it was created from so it is valid to destroy the
+    pool immediately after creating a buffer from it.
+
+    REQUEST destroy()
+    destroy the pool
+    Destroy the shared memory pool.
+    The mmapped memory will be released when all buffers that have been created from this pool
+    are gone.
+
+    REQUEST resize(size: int)
+        Argument        Type        Description
+        size	        int	        new size of the pool, in bytes
+    change the size of the pool mapping
+    This request will cause the server to remap the backing memory for the pool from the file 
+    descriptor  passed when the pool was created, but using the new size. This request can only be
+    used to make the pool bigger.
+    This request only changes the amount of bytes that are mmapped by the server and does not
+    touch the file corresponding to the file descriptor passed at creation time. It is the client's
+    responsibility to ensure that the file is at least as big as the new pool size.
+*/
+
+static const struct wl_shm_pool_interface shm_pool_implementation = {
+    .create_buffer = shm_pool_create_buffer,
+    .destroy = shm_pool_destroy,
+    .resize = shm_pool_resize,
+};
+
 /*
     WL_SHM
     REQUEST create_pool(id: new_id<wl_shm_pool>, fd: fd, size: int)
@@ -45,18 +93,66 @@
     alpha is used for pixel values.
 */
 
-static void shm_create_pool(struct wl_client *client,
-                           struct wl_resource *shm_resource,
-                           uint32_t id, int fd, int32_t size) {
-    SERVER_DEBUG("Creating SHM pool: fd=%d, size=%d", fd, size);
+static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_resource, uint32_t id, int fd, int32_t size) {
+    struct server *server = wl_resource_get_user_data(shm_resource);
+
+    if (size <= 0) {
+        wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_STRIDE,
+                              "invalid size");
+        close(fd);
+        return;
+    }
+    
+    if (fd < 0) {
+        wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_FD,
+                              "invalid file descriptor");
+        return;
+    }
+
+    struct shm_pool *pool = calloc(1, sizeof(struct shm_pool));
+    if (!pool) {
+        wl_client_post_no_memory(client);
+        close(fd);
+        return;
+    }
+
+    pool->fd = fd;
+    pool->size = size;
+    wl_list_init(&pool->buffers);
+
+    // Mmap shared memory for data access
+    pool->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (pool->data == MAP_FAILED) {
+        wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_FD,
+                              "failed to mmap shared memory");
+        close(fd);
+        free(pool);
+        return;
+    }
+
+    // Create pool resource
+    pool->resource = wl_resource_create(client, &wl_shm_pool_interface, 1, id);
+    if (!pool->resource) {
+        wl_client_post_no_memory(client);
+        munmap(pool->data, size);
+        close(fd);
+        free(pool);
+        return;
+    }
+    
+    wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, NULL);
+
+    wl_list_insert(&server->shm_pools, &pool->link);
+    
+    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d, data=%p", 
+                fd, size, pool->data);
 }
 
 static const struct wl_shm_interface shm_implementation = {
     .create_pool = shm_create_pool,
 };
 
-void bind_shm(struct wl_client *client, void *data,
-                            uint32_t version, uint32_t id) {
+void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id) {
     struct server *server = data;
     
     struct wl_resource *resource = wl_resource_create(
@@ -68,8 +164,6 @@ void bind_shm(struct wl_client *client, void *data,
     }
 
     wl_resource_set_implementation(resource, &shm_implementation, data, NULL);
-    
-    // shm_send_formats(client, resource);
     
     SERVER_DEBUG("SHM bound to client");
 }
