@@ -28,7 +28,9 @@ subdir('protocols')
 executable('desktop_engine_win_server',
     sources: [
         'src/main.c',
-        'src/server.c',
+        'src/server/server.c',
+        'src/server/compositor.c',
+        'src/server/shm.c',
         'logger/logger.c',
         'config/config.c',
         wl_protos_src,

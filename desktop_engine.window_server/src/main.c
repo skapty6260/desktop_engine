@@ -7,7 +7,7 @@ Ipc bridge (Should send clients info, should receive input events)
 */
 #include "logger/logger.h"
 #include "config/config.h"
-#include "server.h"
+#include "server/server.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
