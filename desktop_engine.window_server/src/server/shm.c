@@ -45,33 +45,42 @@
     responsibility to ensure that the file is at least as big as the new pool size.
 */
 
+static void shm_buffer_destroy(struct wl_resource *resource) {
+    struct shm_buffer *buffer = wl_resource_get_user_data(resource);
+    
+    if (buffer && buffer->pool) {
+        // Remove buffer from pool's list
+        wl_list_remove(&buffer->link);
+        SERVER_DEBUG("SHM buffer destroyed: %dx%d", buffer->width, buffer->height);
+    }
+    free(buffer);
+}
+
 static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
 
     if (pool) {
         SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
         
-        // Уничтожаем все буферы этого пула
+        // Destroy all buffers in this pool
         struct shm_buffer *buffer, *tmp;
         wl_list_for_each_safe(buffer, tmp, &pool->buffers, link) {
-            wl_list_remove(&buffer->link);
             if (buffer->resource) {
                 wl_resource_destroy(buffer->resource);
             }
-            free(buffer);
         }
         
-        // Освобождаем mmap'нутую память
+        // Free mmap'ed memory
         if (pool->data && pool->data != MAP_FAILED) {
             munmap(pool->data, pool->size);
         }
         
-        // Закрываем файловый дескриптор
+        // Close file descriptor
         if (pool->fd >= 0) {
             close(pool->fd);
         }
         
-        // Удаляем из глобального списка сервера
+        // Remove from server's global list
         wl_list_remove(&pool->link);
         free(pool);
     }
@@ -119,9 +128,11 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     }
 
     // Check if buffer fits in pool
-    size_t required_size = offset + (size_t)height * (size_t)stride;
+    size_t required_size = (size_t)offset + (size_t)height * (size_t)stride;
     if (required_size > pool->size) {
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "buffer exceeds pool size");
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, 
+                              "buffer exceeds pool size (required: %zu, available: %zu)", 
+                              required_size, pool->size);
         return;
     }
 
@@ -153,17 +164,16 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     buffer->stride = stride;
     buffer->format = format;
 
+    // Initialize the link
+    wl_list_init(&buffer->link);
+
     // Add buffer to pool list
     SERVER_DEBUG("shm_pool_create_buffer: list insert");
     wl_list_insert(&pool->buffers, &buffer->link);
 
     // Setup buffer implementation
-    SERVER_DEBUG("shm_pool_create_buffer: setup null implementation");
-    wl_resource_set_implementation(buffer->resource, NULL, buffer, NULL);
-
-    // Setup buffer destructor
-    SERVER_DEBUG("shm_pool_create_buffer: set null destructor");
-    wl_resource_set_destructor(buffer->resource, NULL);
+    SERVER_DEBUG("shm_pool_create_buffer: setup implementation");
+    wl_resource_set_implementation(buffer->resource, NULL, buffer, shm_buffer_destroy);
 
     SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d",
                 width, height, stride, format, offset);
@@ -284,8 +294,7 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     SERVER_DEBUG("shm_create_pool: insert pool to server");
     wl_list_insert(&server->shm_pools, &pool->link);
     
-    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d", 
-                fd, size);
+    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d", fd, size);
 }
 
 static const struct wl_shm_interface shm_implementation = {
