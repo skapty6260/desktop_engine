@@ -315,4 +315,10 @@ void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t i
     wl_resource_set_implementation(resource, &shm_implementation, data, NULL);
     
     SERVER_DEBUG("SHM bound to client");
+
+    // Send supported formats to client
+    wl_shm_send_format(resource, WL_SHM_FORMAT_ARGB8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_XRGB8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_RGBA8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_BGRA8888);
 }
