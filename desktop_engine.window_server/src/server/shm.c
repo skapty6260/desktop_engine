@@ -284,8 +284,8 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     SERVER_DEBUG("shm_create_pool: insert pool to server");
     wl_list_insert(&server->shm_pools, &pool->link);
     
-    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d, data=%p", 
-                fd, size, pool->data);
+    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d", 
+                fd, size);
 }
 
 static const struct wl_shm_interface shm_implementation = {
