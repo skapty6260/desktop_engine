@@ -3,6 +3,11 @@
 #include "xdg.h"
 #include "xdg-shell-protocol.h"
 
+/* TODO
+Rework all modules excluding xdg_wm_base
+Write protocol documentation for rework
+*/
+
 /*
     XDG_TOPLEVEL
 */
@@ -54,7 +59,7 @@ static void xdg_surface_get_toplevel(struct wl_client *client, struct wl_resourc
     
     // Отправляем configure для surface
     xdg_surface_send_configure(surface->xdg_surface, 1); 
-    
+
     SERVER_DEBUG("XDG toplevel created");
 }
 

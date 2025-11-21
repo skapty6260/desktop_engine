@@ -3,9 +3,15 @@
 #include "logger/logger.h"
 #include <stdlib.h>
 
-static void compositor_create_surface(struct wl_client *client,
-                                     struct wl_resource *resource,
-                                     uint32_t id) {
+/* TODO
+Documentation for compositor
+Implement compositor by docs
+
+Documentation for wl_surfaces
+Implement surfaces dummies for testing
+*/
+
+static void compositor_create_surface(struct wl_client *client, struct wl_resource *resource, uint32_t id) {
     struct server *server = wl_resource_get_user_data(resource);
     
     struct wl_resource *surface_resource = wl_resource_create(
@@ -35,9 +41,7 @@ static void compositor_create_surface(struct wl_client *client,
     SERVER_DEBUG("Surface created");
 }
 
-static void compositor_create_region(struct wl_client *client,
-                                    struct wl_resource *resource,
-                                    uint32_t id) {
+static void compositor_create_region(struct wl_client *client, struct wl_resource *resource, uint32_t id) {
     struct wl_resource *region_resource = wl_resource_create(
         client, &wl_region_interface, 1, id);
     
@@ -54,8 +58,7 @@ static const struct wl_compositor_interface compositor_implementation = {
     .create_region = compositor_create_region,
 };
 
-void bind_compositor(struct wl_client *client, void *data,
-                           uint32_t version, uint32_t id) {    
+void bind_compositor(struct wl_client *client, void *data, uint32_t version, uint32_t id) {    
     struct wl_resource *resource = wl_resource_create(
         client, &wl_compositor_interface, version, id);
     
