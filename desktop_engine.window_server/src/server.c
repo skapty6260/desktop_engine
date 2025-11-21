@@ -96,16 +96,6 @@ static void handle_client_destroyed(struct wl_listener *listener, void *data) {
     SERVER_INFO("Client destroyed and removed from server list");
 }
 
-static int wl_list_length(struct wl_list *list) {
-    int count = 0;
-    struct wl_list *pos;
-    
-    wl_list_for_each(pos, list, link) {
-        count++;
-    }
-    return count;
-}
-
 static void handle_client_created(struct wl_listener *listener, void *data) {
     struct server *server = wl_container_of(listener, server, client_created_listener);
     struct wl_client *wl_client = data;
