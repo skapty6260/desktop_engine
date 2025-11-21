@@ -1,4 +1,5 @@
 #include "server.h"
+#include "logger/logger.h"
 #include "shm.h"
 
 static void shm_create_pool(struct wl_client *client,

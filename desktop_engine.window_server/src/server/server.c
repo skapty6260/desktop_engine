@@ -1,10 +1,6 @@
-#include <getopt.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 #include <unistd.h>
-#include <signal.h>
 
 #include "server.h"
 #include "xdg-shell-protocol.h"

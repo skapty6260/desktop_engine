@@ -1,5 +1,7 @@
 #include "compositor.h"
 #include "server.h"
+#include "logger/logger.h"
+#include <stdlib.h>
 
 static void compositor_create_surface(struct wl_client *client,
                                      struct wl_resource *resource,
