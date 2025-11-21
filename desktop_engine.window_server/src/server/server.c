@@ -63,6 +63,7 @@ void server_init(struct server *server) {
     /* Init clients and surfaces lists */
     wl_list_init(&server->clients);
     wl_list_init(&server->surfaces);
+    wl_list_init(&server->shm_pools);
 
     /* Create wayland globals */
     server->xdg_wm_base_global = wl_global_create(
