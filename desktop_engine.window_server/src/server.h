@@ -18,9 +18,12 @@ struct server {
     struct wl_list surfaces;
 };
 
-// struct surface {
-
-// };
+struct surface {
+    struct wl_resource *resource;
+    struct wl_list link;
+    int width, height;
+    struct wl_buffer *buffer;
+};
 
 struct client {
     struct wl_client *wl_client;

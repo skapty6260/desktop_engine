@@ -60,13 +60,51 @@ static void bind_shm(struct wl_client *client, void *data,
     SERVER_DEBUG("SHM bound to client");
 }
 
-static void compositor_create_surface() {
-    SERVER_INFO("Compositor create surface");
-}
+static void compositor_create_surface(struct wl_client *client,
+                                     struct wl_resource *resource,
+                                     uint32_t id) {
+    struct server *server = wl_resource_get_user_data(resource);
+    
+    struct wl_resource *surface_resource = wl_resource_create(
+        client, &wl_surface_interface, wl_resource_get_version(resource), id);
+    
+    if (!surface_resource) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+    // Создаем структуру поверхности
+    struct surface *surface = calloc(1, sizeof(struct surface));
+    if (!surface) {
+        wl_client_post_no_memory(client);
+        wl_resource_destroy(surface_resource);
+        return;
+    }
+    
+    surface->resource = surface_resource;
+    wl_list_init(&surface->link);
+    
+    // Добавляем поверхность в список сервера
+    wl_list_insert(&server->surfaces, &surface->link);
+    
+    wl_resource_set_implementation(surface_resource, NULL, surface, NULL);
+    
+    SERVER_DEBUG("Surface created");
+};
 
-static void compositor_create_region() {
-    SERVER_INFO("Compositor create region");
-}
+static void compositor_create_region(struct wl_client *client,
+                                    struct wl_resource *resource,
+                                    uint32_t id) {
+    struct wl_resource *region_resource = wl_resource_create(
+        client, &wl_region_interface, 1, id);
+    
+    if (!region_resource) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+    SERVER_DEBUG("Region created");
+};
 
 static const struct wl_compositor_interface compositor_implementation = {
     .create_surface = compositor_create_surface,
@@ -159,6 +197,22 @@ void server_run(struct server *server) {
 }
 
 void server_cleanup(struct server *server) {
+    /* TODO
+        Адекватное закрытие клиентов, с их terminate
+    */
+    // struct surface *surface, *tmp_surface;
+    // wl_list_for_each_safe(surface, tmp_surface, &server->surfaces, link) {
+    //     wl_list_remove(&surface->link);
+    //     free(surface);
+    // }
+    
+    // // Cleanup clients
+    // struct client *client, *tmp_client;
+    // wl_list_for_each_safe(client, tmp_client, &server->clients, link) {
+    //     wl_list_remove(&client->link);
+    //     free(client);
+    // }
+
     if (server->display) {
         wl_display_destroy(server->display);
         server->display = NULL;
