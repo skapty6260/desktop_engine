@@ -76,7 +76,7 @@ static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_
         free(pool);
     }
     
-    wl_resource_destroy(resource);
+    wl_resource_destroy(pool_resource);
 }
 
 static bool shm_pool_check_format(uint32_t format) {
