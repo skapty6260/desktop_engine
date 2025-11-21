@@ -3,28 +3,12 @@
 #include <unistd.h>
 
 #include "server.h"
-#include "xdg-shell-protocol.h"
 #include "logger/logger.h"
 #include <wayland-server.h>
 
 #include "compositor.h"
 #include "shm.h"
-
-static void bind_xdg_wm_base(struct wl_client *client, void *data,
-                            uint32_t version, uint32_t id) {
-    struct server *server = data;
-    
-    struct wl_resource *resource = wl_resource_create(
-        client, &xdg_wm_base_interface, version, id);
-    
-    if (!resource) {
-        wl_client_post_no_memory(client);
-        return;
-    }
-    
-    xdg_wm_base_send_ping(resource, 1234); // Пример ping
-    SERVER_DEBUG("XDG shell bound to client");
-}
+#include "xdg.h"
 
 static void handle_client_destroyed(struct wl_listener *listener, void *data) {
     struct client *client = wl_container_of(listener, client, destroy_listener);

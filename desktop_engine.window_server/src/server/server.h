@@ -21,8 +21,11 @@ struct server {
 
 struct surface {
     struct wl_resource *resource;
+    struct wl_resource *xdg_surface;
+    struct wl_resource *xdg_toplevel; 
+    struct server *server;
     struct wl_list link;
-    int width, height;
+    // int width, height;
     struct wl_buffer *buffer;
 };
 
