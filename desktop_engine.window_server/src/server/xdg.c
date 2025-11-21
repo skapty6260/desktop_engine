@@ -3,6 +3,33 @@
 #include "xdg.h"
 #include "xdg-shell-protocol.h"
 
+/*
+    XDG_TOPLEVEL
+*/
+
+static void xdg_toplevel_destroy(struct wl_client *client, struct wl_resource *resource) {
+    wl_resource_destroy(resource);
+}
+
+static void xdg_toplevel_set_title(struct wl_client *client, struct wl_resource *resource, const char *title) {
+    SERVER_DEBUG("XDG toplevel title set: %s", title);
+}
+
+static void xdg_toplevel_set_app_id(struct wl_client *client, struct wl_resource *resource, const char *app_id) {
+    SERVER_DEBUG("XDG toplevel app_id set: %s", app_id);
+}
+
+static const struct xdg_toplevel_interface xdg_toplevel_implementation = {
+    .destroy = xdg_toplevel_destroy,
+    .set_title = xdg_toplevel_set_title,
+    .set_app_id = xdg_toplevel_set_app_id,
+    // Остальные методы можно оставить NULL
+};
+
+/*
+    XDG_SURFACE
+*/
+
 static void xdg_surface_destroy(struct wl_client *client, struct wl_resource *resource) {
     wl_resource_destroy(resource);
 }
@@ -17,9 +44,14 @@ static void xdg_surface_get_toplevel(struct wl_client *client, struct wl_resourc
     }
     
     surface->xdg_toplevel = toplevel;
-    wl_resource_set_implementation(toplevel, NULL, surface, NULL);
+
+    // Set implementation for toplevels
+    wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, surface, NULL);
     
-    xdg_toplevel_set_title(toplevel, "Wayland Client");
+    // Отправляем события конфигурации
+    xdg_toplevel_send_configure(toplevel, 400, 300, NULL); // width, height, states
+    xdg_surface_send_configure(surface->xdg_surface, 2); // serial
+    
     SERVER_DEBUG("XDG toplevel created");
 }
 
