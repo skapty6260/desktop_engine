@@ -46,7 +46,7 @@
 */
 
 static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
-    struct shm_pool *pool = wl_resource_get_user_data(resource);
+    struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
 
     if (pool) {
         SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
@@ -102,7 +102,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
 
-    if (offset < 0 || offset >= pool->size) {
+    if (offset < 0 || (size_t)offset >= pool->size) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid offset");
         return;
     }
