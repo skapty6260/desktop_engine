@@ -32,9 +32,9 @@
               "state": {
                 "file": "Architecture/Main scheme.canvas",
                 "viewState": {
-                  "x": -144,
-                  "y": 560,
-                  "zoom": -1.6374299206152918
+                  "x": 349.41976599672944,
+                  "y": 439.13043643945855,
+                  "zoom": -0.9707632539486253
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -206,12 +206,12 @@
   },
   "active": "bf48584ce80b8277",
   "lastOpenFiles": [
-    "Architecture/communication/Untitled.md",
+    "readme.md",
     "Architecture/Main scheme.canvas",
+    "Architecture/communication/Untitled.md",
     "Architecture/window_server/architecture.md",
     "Architecture/window_server/window_server.md",
     "Architecture/Communication system scheme.canvas",
-    "readme.md",
     "Architecture/communication",
     "Architecture/window_server",
     "Схема работы.canvas",

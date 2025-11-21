@@ -15,12 +15,17 @@ struct server {
     struct wl_global *shm_global;
 
     struct wl_list clients;
+    struct wl_list surfaces;
+};
+
+struct surface {
+
 };
 
 struct client {
     struct wl_client *wl_client;
     struct wl_link *link;
-    pid_t pid;
+    struct wl_listener destroy_listener;
 };
 
 typedef struct server_config {

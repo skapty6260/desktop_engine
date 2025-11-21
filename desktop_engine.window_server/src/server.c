@@ -60,6 +60,13 @@ static void bind_shm(struct wl_client *client, void *data,
     SERVER_DEBUG("SHM bound to client");
 }
 
+static void compositor_create_surface()
+
+static const struct wl_compositor_interface compositor_implementation = {
+    .create_surface = compositor_create_surface,
+    .create_region = compositor_create_region,
+};
+
 static void bind_compositor(struct wl_client *client, void *data,
                            uint32_t version, uint32_t id) {    
     struct wl_resource *resource = wl_resource_create(
@@ -70,16 +77,47 @@ static void bind_compositor(struct wl_client *client, void *data,
         return;
     }
     
-    // wl_resource_set_implementation(resource, &compositor_implementation, data, NULL);
+    wl_resource_set_implementation(resource, &compositor_implementation, data, NULL);
     
     SERVER_DEBUG("Compositor bound to client");
+}
+
+static void handle_client_destroyed(struct wl_listener *listener, void *data) {
+    struct client *client = wl_container_of(listener, client, destroy_listener);
+    wl_list_remove(&client->link);
+    free(client);
+
+    SERVER_INFO("Client destroyed and removed from server list");
+}
+
+static int wl_list_length(struct wl_list *list) {
+    int count = 0;
+    struct wl_list *pos;
+    
+    wl_list_for_each(pos, list, link) {
+        count++;
+    }
+    return count;
 }
 
 static void handle_client_created(struct wl_listener *listener, void *data) {
     struct server *server = wl_container_of(listener, server, client_created_listener);
     struct wl_client *wl_client = data;
 
-    SERVER_INFO("New client connected");
+    struct client *client = calloc(1, sizeof(struct client));
+    if (!client) {
+        SERVER_ERROR("Failed to allocate client");
+        return;
+    }
+    client->wl_client = wl_client;
+    wl_list_init(&client->link);
+    wl_list_insert(&server->clients, &client->link);  // в начало
+
+    client->destroy_listener.notify = handle_client_destroyed;
+    wl_client_add_destroy_listener(wl_client, &client->destroy_listener);
+
+    SERVER_INFO("New client connected (total clients: %d)", 
+               wl_list_length(&server->clients));
 }
 
 void server_init(struct server *server) {
