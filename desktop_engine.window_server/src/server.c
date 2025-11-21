@@ -90,7 +90,7 @@ static void compositor_create_surface(struct wl_client *client,
     wl_resource_set_implementation(surface_resource, NULL, surface, NULL);
     
     SERVER_DEBUG("Surface created");
-};
+}
 
 static void compositor_create_region(struct wl_client *client,
                                     struct wl_resource *resource,
@@ -104,7 +104,7 @@ static void compositor_create_region(struct wl_client *client,
     }
     
     SERVER_DEBUG("Region created");
-};
+}
 
 static const struct wl_compositor_interface compositor_implementation = {
     .create_surface = compositor_create_surface,
