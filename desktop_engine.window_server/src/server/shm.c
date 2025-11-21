@@ -278,8 +278,10 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
         return;
     }
     
+    SERVER_DEBUG("shm_create_pool: set implementation");
     wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, NULL);
 
+    SERVER_DEBUG("shm_create_pool: insert pool to server");
     wl_list_insert(&server->shm_pools, &pool->link);
     
     SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d, data=%p", 
