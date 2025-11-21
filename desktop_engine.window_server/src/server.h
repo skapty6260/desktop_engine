@@ -24,7 +24,7 @@ struct server {
 
 struct client {
     struct wl_client *wl_client;
-    struct wl_link *link;
+    struct wl_list *link;
     struct wl_listener destroy_listener;
 };
 
