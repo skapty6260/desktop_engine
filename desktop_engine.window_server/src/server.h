@@ -18,9 +18,9 @@ struct server {
     struct wl_list surfaces;
 };
 
-struct surface {
+// struct surface {
 
-};
+// };
 
 struct client {
     struct wl_client *wl_client;
