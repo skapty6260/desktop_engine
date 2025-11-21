@@ -96,7 +96,8 @@ static bool shm_pool_check_format(uint32_t format) {
 
 static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
-    
+    SERVER_DEBUG("CALLED shm_pool_create_buffer");
+
     if (!pool) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FD, "invalid pool");
         return;
@@ -124,6 +125,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
 
+    SERVER_DEBUG("shm_pool_create_buffer: check format");
     if (shm_pool_check_format(format) == false) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FORMAT, "unsupported format");
         return;
@@ -137,6 +139,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     }
     
 
+    SERVER_DEBUG("shm_pool_create_buffer: create resource");
     buffer->resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
     if (!buffer->resource) {
         wl_client_post_no_memory(client);
@@ -151,12 +154,15 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     buffer->format = format;
 
     // Add buffer to pool list
+    SERVER_DEBUG("shm_pool_create_buffer: list insert");
     wl_list_insert(&pool->buffers, &buffer->link);
 
     // Setup buffer implementation
+    SERVER_DEBUG("shm_pool_create_buffer: setup null implementation");
     wl_resource_set_implementation(buffer->resource, NULL, buffer, NULL);
 
     // Setup buffer destructor
+    SERVER_DEBUG("shm_pool_create_buffer: set null destructor");
     wl_resource_set_destructor(buffer->resource, NULL);
 
     SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d",
@@ -224,6 +230,8 @@ static const struct wl_shm_pool_interface shm_pool_implementation = {
 static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_resource, uint32_t id, int fd, int32_t size) {
     struct server *server = wl_resource_get_user_data(shm_resource);
 
+    SERVER_DEBUG("CALLED shm_create_pool");
+
     if (size <= 0) {
         wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_STRIDE,
                               "invalid size");
@@ -249,6 +257,7 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     wl_list_init(&pool->buffers);
 
     // Mmap shared memory for data access
+    SERVER_DEBUG("shm_create_pool: mmap data");
     pool->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (pool->data == MAP_FAILED) {
         wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_FD,
@@ -259,6 +268,7 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     }
 
     // Create pool resource
+    SERVER_DEBUG("shm_create_pool: create_resource");
     pool->resource = wl_resource_create(client, &wl_shm_pool_interface, 1, id);
     if (!pool->resource) {
         wl_client_post_no_memory(client);
