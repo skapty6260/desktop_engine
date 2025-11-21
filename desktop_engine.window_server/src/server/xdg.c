@@ -3,6 +3,36 @@
 #include "xdg.h"
 #include "xdg-shell-protocol.h"
 
+static void xdg_surface_destroy(struct wl_client *client, struct wl_resource *resource) {
+    wl_resource_destroy(resource);
+}
+
+static void xdg_surface_get_toplevel(struct wl_client *client, struct wl_resource *resource, uint32_t id) {
+    struct surface *surface = wl_resource_get_user_data(resource);
+    
+    struct wl_resource *toplevel = wl_resource_create(client, &xdg_toplevel_interface, 1, id);
+    if (!toplevel) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+    surface->xdg_toplevel = toplevel;
+    wl_resource_set_implementation(toplevel, NULL, surface, NULL);
+    
+    xdg_toplevel_set_title(toplevel, "Wayland Client");
+    SERVER_DEBUG("XDG toplevel created");
+}
+
+static void xdg_surface_ack_configure(struct wl_client *client, struct wl_resource *resource, uint32_t serial) {
+    SERVER_DEBUG("XDG surface ack configure: %u", serial);
+}
+
+static const struct xdg_surface_interface xdg_surface_implementation = {
+    .destroy = xdg_surface_destroy,
+    .get_toplevel = xdg_surface_get_toplevel,
+    .ack_configure = xdg_surface_ack_configure,
+};
+
 /*
     XDG_WM_BASE
     REQUEST destroy()
@@ -51,13 +81,6 @@
         unresponsive	        6	         the client didn’t respond to a ping event in time
 */
 
-// static const struct xdg_surface_interface xdg_surface_implementation = {
-//     .destroy = xdg_surface_destroy,
-//     .get_toplevel = xdg_surface_get_toplevel,
-//     .ack_configure = xdg_surface_ack_configure,
-//     // Add other methods as needed
-// };
-
 static void xdg_wm_base_destroy(struct wl_client *client, struct wl_resource *resource) {
     wl_resource_destroy(resource);
 }
@@ -100,7 +123,8 @@ static void xdg_wm_base_get_xdg_surface(struct wl_client *client, struct wl_reso
     // Store xdg_surface in surface structure
     surf->xdg_surface = xdg_surface;
     
-    wl_resource_set_implementation(xdg_surface, NULL, surf, NULL);
+    // Create implementation for xdg_surface
+    wl_resource_set_implementation(xdg_surface, &xdg_surface_implementation, surf, NULL);
     
     // Send configure event
     xdg_surface_send_configure(xdg_surface, 1); // serial
