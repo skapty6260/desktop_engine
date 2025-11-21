@@ -7,6 +7,9 @@
 #include "logger/logger.h"
 #include <wayland-server.h>
 
+#include "compositor.h"
+#include "shm.h"
+
 static void bind_xdg_wm_base(struct wl_client *client, void *data,
                             uint32_t version, uint32_t id) {
     struct server *server = data;
