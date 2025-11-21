@@ -65,14 +65,14 @@ void logger_cleanup(void);
 void logger_log(log_level_t level, log_module_t module, const char* file, int line, 
                 const char* function, const char* format, ...);
 
-// Макросы для удобства
+// Log macros
 #define LOG_DEBUG(module, ...) logger_log(LOG_LEVEL_DEBUG, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_INFO(module, ...)  logger_log(LOG_LEVEL_INFO, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_WARN(module, ...)  logger_log(LOG_LEVEL_WARN, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_ERROR(module, ...) logger_log(LOG_LEVEL_ERROR, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_FATAL(module, ...) logger_log(LOG_LEVEL_FATAL, module, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-// Макросы для конкретных модулей
+// Server log macros
 #define SERVER_DEBUG(...)    LOG_DEBUG(LOG_MODULE_SERVER, __VA_ARGS__)
 #define SERVER_INFO(...)     LOG_INFO(LOG_MODULE_SERVER, __VA_ARGS__)
 #define SERVER_WARN(...)     LOG_WARN(LOG_MODULE_SERVER, __VA_ARGS__)

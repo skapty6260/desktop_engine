@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /*
     WL_SHM_POOL
@@ -43,6 +44,133 @@
     touch the file corresponding to the file descriptor passed at creation time. It is the client's
     responsibility to ensure that the file is at least as big as the new pool size.
 */
+
+static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
+    struct shm_pool *pool = wl_resource_get_user_data(resource);
+
+    if (pool) {
+        SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
+        
+        // Уничтожаем все буферы этого пула
+        struct shm_buffer *buffer, *tmp;
+        wl_list_for_each_safe(buffer, tmp, &pool->buffers, link) {
+            wl_list_remove(&buffer->link);
+            if (buffer->resource) {
+                wl_resource_destroy(buffer->resource);
+            }
+            free(buffer);
+        }
+        
+        // Освобождаем mmap'нутую память
+        if (pool->data && pool->data != MAP_FAILED) {
+            munmap(pool->data, pool->size);
+        }
+        
+        // Закрываем файловый дескриптор
+        if (pool->fd >= 0) {
+            close(pool->fd);
+        }
+        
+        // Удаляем из глобального списка сервера
+        wl_list_remove(&pool->link);
+        free(pool);
+    }
+    
+    wl_resource_destroy(resource);
+}
+
+static bool shm_pool_check_format(uint32_t format) {
+    switch (format) {
+        case WL_SHM_FORMAT_ARGB8888:
+        case WL_SHM_FORMAT_XRGB8888:
+        case WL_SHM_FORMAT_RGBA8888:
+        case WL_SHM_FORMAT_BGRA8888:
+        case WL_SHM_FORMAT_ABGR8888:
+        case WL_SHM_FORMAT_XBGR8888:
+            // Поддерживаемые форматы
+            return true;
+        default:
+            return false;
+    }
+}
+
+static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) {
+    struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
+    
+    if (!pool) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FD, "invalid pool");
+        return;
+    }
+
+    if (offset < 0 || offset >= pool->size) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid offset");
+        return;
+    }
+
+    if (width <= 0 || height <= 0) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid width or height");
+        return;
+    }
+    
+    if (stride < width * 4) { // minimal stride for 32bpp
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid stride");
+        return;
+    }
+
+    // Check if buffer fits in pool
+    size_t required_size = offset + (size_t)height * (size_t)stride;
+    if (required_size > pool->size) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "buffer exceeds pool size");
+        return;
+    }
+
+    if (shm_pool_check_format(format) == false) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FORMAT, "unsupported format");
+        return;
+    }
+
+    // Create buffer structure
+    struct shm_buffer *buffer = calloc(1, sizeof(struct shm_buffer));
+    if (!buffer) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    
+
+    buffer->resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
+    if (!buffer->resource) {
+        wl_client_post_no_memory(client);
+        free(buffer);
+        return;
+    }
+    buffer->pool = pool;
+    buffer->offset = offset;
+    buffer->width = width;
+    buffer->height = height;
+    buffer->stride = stride;
+    buffer->format = format;
+
+    // Add buffer to pool list
+    wl_list_insert(&pool->buffers, &buffer->link);
+
+    // Setup buffer implementation
+    wl_resource_set_implementation(buffer->resource, NULL, buffer, NULL);
+
+    // Setup buffer destructor
+    wl_resource_set_destructor(buffer->resource, NULL);
+
+    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d",
+                width, height, stride, format, offset);
+
+    // TODO
+    // В реальном композиторе wl_buffer_send_release() вызывается после рендеринга
+    // Для демонстрации отправляем сразу
+    wl_buffer_send_release(buffer->resource);
+}
+
+static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_resource, int32_t size) {
+    SERVER_DEBUG("SHM_POOL RESIZED");
+}
 
 static const struct wl_shm_pool_interface shm_pool_implementation = {
     .create_buffer = shm_pool_create_buffer,

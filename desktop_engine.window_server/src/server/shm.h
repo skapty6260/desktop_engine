@@ -4,7 +4,29 @@
 #include <stdint.h>
 #include <wayland-server.h>
 
+/**
+ * @file shm.h
+ * @brief Wayland Shared Memory (SHM) implementation
+ * 
+ * Implements wl_shm and wl_shm_pool interfaces for shared memory buffers
+ */
+
 void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
+
+/**
+ * @brief SHM buffer structure
+ * 
+ * Represents a single buffer within a SHM pool
+ */
+struct shm_buffer {
+    struct wl_resource *resource;
+    struct wl_list link;
+    struct shm_pool *pool;
+    int32_t offset;
+    int32_t width, height;
+    int32_t stride;
+    uint32_t format;
+};
 
 /**
  * @brief SHM pool structure
