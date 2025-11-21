@@ -114,7 +114,7 @@ static const struct xdg_wm_base_interface xdg_wm_base_implementation = {
     .get_xdg_surface = xdg_wm_base_get_xdg_surface,
 };
 
-static void bind_xdg_wm_base(struct wl_client *client, void *data, uint32_t version, uint32_t id) {
+void bind_xdg_wm_base(struct wl_client *client, void *data, uint32_t version, uint32_t id) {
     struct server *server = data;
     
     struct wl_resource *resource = wl_resource_create(
