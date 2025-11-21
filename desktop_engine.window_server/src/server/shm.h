@@ -2,6 +2,7 @@
 #include <wayland-server.h>
 void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 
+#ifdef _WIN32
 /**
  * Wayland SHM pixel formats
  * Based on Wayland protocol specification
@@ -174,3 +175,4 @@ enum wl_shm_format {
     /* Final video format */
     WL_SHM_FORMAT_P030 = 0x30333050
 };
+#endif
