@@ -1,5 +1,5 @@
 #include "server.h"
-#include "logger/logger.h"
+#include "../logger/logger.h"
 #include "shm.h"
 
 #include <sys/mman.h>

@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "server.h"
-#include "logger/logger.h"
+#include "../logger/logger.h"
 #include <wayland-server.h>
 
 #include "compositor.h"

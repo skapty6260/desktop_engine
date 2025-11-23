@@ -1,6 +1,6 @@
 #include "compositor.h"
 #include "server.h"
-#include "logger/logger.h"
+#include "../logger/logger.h"
 #include <stdlib.h>
 
 /* TODO

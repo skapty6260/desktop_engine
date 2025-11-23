@@ -1,5 +1,5 @@
 #include "server.h"
-#include "logger/logger.h"
+#include "../logger/logger.h"
 #include "xdg.h"
 #include "xdg-shell-protocol.h"
 
