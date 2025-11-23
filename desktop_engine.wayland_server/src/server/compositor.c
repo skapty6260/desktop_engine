@@ -57,7 +57,7 @@ Argument        Type           Description
         x	    int	                   surface-local x coordinate
         y	    int	                   surface-local y coordinate
 */ 
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_buffer *buffer, int x, int y) {
+static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_buffer *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -68,7 +68,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
 
 /*  WL_SURFACE damage
 */ 
-static void surface_damage(struct wl_client *client, struct wl_resource *resource, int x, int y, int width, int height) {
+static void surface_damage(struct wl_client *client, struct wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -79,7 +79,7 @@ static void surface_damage(struct wl_client *client, struct wl_resource *resourc
 
 /*  WL_SURFACE frame
 */ 
-static void surface_frame(struct wl_client *client, struct wl_resource *resource, struct wl_callback *callback) {
+static void surface_frame(struct wl_client *client, struct wl_resource *resource, uint32_t callback) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -90,7 +90,7 @@ static void surface_frame(struct wl_client *client, struct wl_resource *resource
 
 /*  WL_SURFACE set_opaque_region
 */ 
-static void surface_set_opaque_region(struct wl_client *client, struct wl_resource *resource, struct wl_region *region) {
+static void surface_set_opaque_region(struct wl_client *client, struct wl_resource *resource, struct wl_resource *region) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -101,7 +101,7 @@ static void surface_set_opaque_region(struct wl_client *client, struct wl_resour
 
 /*  WL_SURFACE set_input_region 
 */ 
-static void surface_set_input_region(struct wl_client *client, struct wl_resource *resource, struct wl_region *region) {
+static void surface_set_input_region(struct wl_client *client, struct wl_resource *resource, struct wl_resource *region) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -123,7 +123,7 @@ static void surface_commit(struct wl_client *client, struct wl_resource *resourc
 
 /*  WL_SURFACE set_buffer_transform
 */ 
-static void surface_set_buffer_transform(struct wl_client *client, struct wl_resource *resource) {
+static void surface_set_buffer_transform(struct wl_client *client, struct wl_resource *resource, int32_t transform) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -134,7 +134,7 @@ static void surface_set_buffer_transform(struct wl_client *client, struct wl_res
 
 /*  WL_SURFACE set_buffer_scale
 */ 
-static void surface_set_buffer_scale(struct wl_client *client, struct wl_resource *resource, int scale) {
+static void surface_set_buffer_scale(struct wl_client *client, struct wl_resource *resource, int32_t scale) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -146,7 +146,7 @@ static void surface_set_buffer_scale(struct wl_client *client, struct wl_resourc
 
 /*  WL_SURFACE damage_buffer
 */ 
-static void surface_damage_buffer(struct wl_client *client, struct wl_resource *resource, int x, int y, int width, int height) {
+static void surface_damage_buffer(struct wl_client *client, struct wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -158,7 +158,7 @@ static void surface_damage_buffer(struct wl_client *client, struct wl_resource *
 
 /*  WL_SURFACE offset
 */ 
-static void surface_offset(struct wl_client *client, struct wl_resource *resource, int x, int y) {
+static void surface_offset(struct wl_client *client, struct wl_resource *resource, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
