@@ -189,7 +189,7 @@ static void create_window(struct client_state *state) {
     // Создаем toplevel
     state->toplevel = xdg_surface_get_toplevel(state->xdg_surface);
     xdg_toplevel_add_listener(state->toplevel, &xdg_toplevel_listener, state);
-    xdg_toplevel_set_title(state->toplevel, "Simple Wayland Client");
+    xdg_toplevel_set_title(state->toplevel, "deeng wayland client testbed");
     
     // Коммитим surface
     wl_surface_commit(state->surface);
