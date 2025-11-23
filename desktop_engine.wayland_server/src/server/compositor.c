@@ -52,8 +52,12 @@ static void surface_destroy(struct wl_client *client, struct wl_resource *resour
 }
 
 /*  WL_SURFACE attach
+Argument        Type           Description
+        buffer	object<wl_buffer>	   buffer of surface contents
+        x	    int	                   surface-local x coordinate
+        y	    int	                   surface-local y coordinate
 */ 
-static void surface_attach(struct wl_client *client, struct wl_resource *resource) {
+static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_buffer *buffer, int x, int y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -64,7 +68,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
 
 /*  WL_SURFACE damage
 */ 
-static void surface_damage(struct wl_client *client, struct wl_resource *resource) {
+static void surface_damage(struct wl_client *client, struct wl_resource *resource, int x, int y, int width, int height) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -75,7 +79,7 @@ static void surface_damage(struct wl_client *client, struct wl_resource *resourc
 
 /*  WL_SURFACE frame
 */ 
-static void surface_frame(struct wl_client *client, struct wl_resource *resource) {
+static void surface_frame(struct wl_client *client, struct wl_resource *resource, struct wl_callback *callback) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -86,7 +90,7 @@ static void surface_frame(struct wl_client *client, struct wl_resource *resource
 
 /*  WL_SURFACE set_opaque_region
 */ 
-static void surface_set_opaque_region(struct wl_client *client, struct wl_resource *resource) {
+static void surface_set_opaque_region(struct wl_client *client, struct wl_resource *resource, struct wl_region *region) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -97,7 +101,7 @@ static void surface_set_opaque_region(struct wl_client *client, struct wl_resour
 
 /*  WL_SURFACE set_input_region 
 */ 
-static void surface_set_input_region(struct wl_client *client, struct wl_resource *resource) {
+static void surface_set_input_region(struct wl_client *client, struct wl_resource *resource, struct wl_region *region) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -130,7 +134,7 @@ static void surface_set_buffer_transform(struct wl_client *client, struct wl_res
 
 /*  WL_SURFACE set_buffer_scale
 */ 
-static void surface_set_buffer_scale(struct wl_client *client, struct wl_resource *resource) {
+static void surface_set_buffer_scale(struct wl_client *client, struct wl_resource *resource, int scale) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -142,7 +146,7 @@ static void surface_set_buffer_scale(struct wl_client *client, struct wl_resourc
 
 /*  WL_SURFACE damage_buffer
 */ 
-static void surface_damage_buffer(struct wl_client *client, struct wl_resource *resource) {
+static void surface_damage_buffer(struct wl_client *client, struct wl_resource *resource, int x, int y, int width, int height) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -154,7 +158,7 @@ static void surface_damage_buffer(struct wl_client *client, struct wl_resource *
 
 /*  WL_SURFACE offset
 */ 
-static void surface_offset(struct wl_client *client, struct wl_resource *resource) {
+static void surface_offset(struct wl_client *client, struct wl_resource *resource, int x, int y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
@@ -171,7 +175,38 @@ static void surface_offset(struct wl_client *client, struct wl_resource *resourc
         buffer	object<wl_buffer>	   buffer of surface contents
         x	    int	                   surface-local x coordinate
         y	    int	                   surface-local y coordinate
-    
+    REQUEST damage(x: int, y: int, width: int, height: int)
+        Argument        Type        Description
+        x	            int	        surface-local x coordinate
+        y	            int	        surface-local y coordinate
+        width	        int	        width of damage rectangle
+        height	        int	        height of damage rectangle
+    REQUEST frame(callback: new_id<wl_callback>)
+        Argument            Type            Description
+        callback	new_id<wl_callback>	    callback object for the frame request
+    REQUEST set_opaque_region(region: object<wl_region>)
+        Argument            Type           Description
+        region	    object<wl_region>	   opaque region of the surface
+    REQUEST set_input_region(region: object<wl_region>)
+        Argument            Type           Description
+        region	    object<wl_region>	   input region of the surface
+    REQUEST commit()
+    REQUEST set_buffer_transform(transform: int<wl_output.transform>)
+        Argument            Type                Description
+        transform	int<wl_output.transform>	transform for interpreting buffer contents
+    REQUEST set_buffer_scale(scale: int)
+        Argument        Type        Description
+        scale	        int	        scale for interpreting buffer contents
+    REQUEST damage_buffer(x: int, y: int, width: int, height: int)
+        Argument        Type        Description
+        x	            int	        bufer-local x coordinate
+        y	            int	        bufer-local y coordinate
+        width	        int	        width of damage rectangle
+        height	        int	        height of damage rectangle
+    REQUEST offset(x: int, y: int)
+        Argument        Type        Description
+        x	            int	        surface-local x coordinate
+        y	            int	        surface-local y coordinate
 */
 static const struct wl_surface_interface surface_implementation = {
     .destroy = surface_destroy,
