@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "logger/logger.h"
+#include "../logger/logger.h"
 #include "src/server/server.h"
 
 void parse_args(int argc, char **argv, logger_config_t *logger_config, server_config_t *server_config);
