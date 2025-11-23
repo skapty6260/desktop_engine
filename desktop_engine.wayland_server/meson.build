@@ -1,4 +1,4 @@
-project('desktop_engine_windows_server', 'c',
+project('desktop_engine_wayland_server', 'c',
     version: '1.0.0',
     license: 'GPL',
     default_options: [
@@ -25,15 +25,15 @@ wayland_protocols = dependency('wayland-protocols', required: true)
 
 subdir('protocols')
 
-executable('desktop_engine_win_server',
+executable('desktop_engine_wayland_server',
     sources: [
         'src/main.c',
         'src/server/server.c',
         'src/server/compositor.c',
         'src/server/shm.c',
         'src/server/xdg.c',
-        'logger/logger.c',
-        'config/config.c',
+        'src/logger/logger.c',
+        'src/config/config.c',
         wl_protos_src,
     ],
     dependencies: [wayland_server, wayland_protocols],
