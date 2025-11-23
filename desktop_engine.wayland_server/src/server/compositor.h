@@ -6,4 +6,10 @@
 
 void bind_compositor(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 
+#ifdef _WIN32
+struct wl_surface_error {
+    
+};
+#endif
+
 #endif
