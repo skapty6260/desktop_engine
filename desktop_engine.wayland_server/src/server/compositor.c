@@ -57,7 +57,7 @@ Argument        Type           Description
         x	    int	                   surface-local x coordinate
         y	    int	                   surface-local y coordinate
 */ 
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_buffer *buffer, int32_t x, int32_t y) {
+static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
