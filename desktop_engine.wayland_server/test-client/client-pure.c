@@ -70,6 +70,7 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 // Создание SHM буфера
+// Создание SHM буфера - ИСПРАВЛЕННАЯ ВЕРСИЯ
 static int create_shm_buffer(struct client_state *state) {
     // Создаем shared memory файл
     char filename[] = "/tmp/wayland-client-shm-XXXXXX";
@@ -103,12 +104,11 @@ static int create_shm_buffer(struct client_state *state) {
     // Создаем буфер из пула
     state->buffer = wl_shm_pool_create_buffer(pool, 0, WIDTH, HEIGHT, STRIDE, WL_SHM_FORMAT_ARGB8888);
     
-    // Получаем версию буфера
-    uint32_t buffer_version = wl_proxy_get_version((struct wl_proxy*)state->buffer);
-    printf("Buffer created with version: %u\n", buffer_version);
+    // НЕ УНИЧТОЖАЙТЕ POOL СРАЗУ - буфер зависит от него!
+    // wl_shm_pool_destroy(pool); // УБЕРИТЕ ЭТУ СТРОКУ!
     
-    // Очищаем пул
-    wl_shm_pool_destroy(pool);
+    // Вместо этого сохраните pool в состоянии
+    // Или просто не уничтожайте его до конца работы
     
     printf("SHM buffer created: %dx%d, stride=%d\n", WIDTH, HEIGHT, STRIDE);
     return 0;
