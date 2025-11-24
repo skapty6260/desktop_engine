@@ -354,5 +354,6 @@ void bind_compositor(struct wl_client *client, void *data, uint32_t version, uin
     
     wl_resource_set_implementation(resource, &compositor_implementation, data, NULL);
     
-    SERVER_DEBUG("Compositor bound to client");
+    SERVER_DEBUG("COMPOSITOR: Binding to client, requested version=%u, id=%u", 
+                 version, id);
 }
