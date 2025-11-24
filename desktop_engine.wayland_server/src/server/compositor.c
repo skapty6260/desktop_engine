@@ -117,7 +117,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
-        wl_resource_post_error(resource, WL_SURFACE_ERROR_DEFUNCT_SURFACE, "surface is defunct");
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_BAD_SURFACE, "surface is defunct");
         return;
     }
 
@@ -130,7 +130,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
 
     // Validate buffer (must be NULL or a valid wl_buffer resource from the same client)
     if (buffer && !wl_resource_instance_of(buffer, &wl_buffer_interface, NULL)) {
-        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_BUFFER, "buffer is not a valid wl_buffer");
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_OFFSET, "buffer is not a valid wl_buffer");
         return;
     }
 
