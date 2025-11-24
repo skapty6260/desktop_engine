@@ -124,7 +124,6 @@ static void frame_callback(void *data, struct wl_callback *callback, uint32_t ti
     
     // Перерисовываем
     draw_frame(state);
-    printf("\nCALLING SURFACE_ATTACH\n");
     wl_surface_attach(state->surface, state->buffer, 0, 0);
     wl_surface_damage(state->surface, 0, 0, WIDTH, HEIGHT);
     
@@ -183,18 +182,17 @@ int main() {
     
     // Создаем поверхность
     create_surface(&state);
-
-    // Синхронизируем для обработки конфигурации
-    wl_display_roundtrip(state.display);
     
     if (!state.surface) {
         fprintf(stderr, "Failed to create surface\n");
         return 1;
     }
+
+    // Синхронизируем для обработки конфигурации (second roundtip)
+    wl_display_roundtrip(state.display);
     
     // Рисуем первый кадр
     draw_frame(&state);
-    printf("\nCALLING SURFACE_ATTACH (for first frame)\n");
     wl_surface_attach(state.surface, state.buffer, 0, 0);
     wl_surface_damage(state.surface, 0, 0, WIDTH, HEIGHT);
     
