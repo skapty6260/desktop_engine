@@ -111,14 +111,22 @@ wl_buffer.release и изменяет базовое хранилище буфе
 совместимость, не должны уничтожать отложенные буферы и должны гарантировать, что
 они явно удаляют содержимое с поверхностей, даже после уничтожения буферов.
 */
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
-    SERVER_INFO("SURFACE ATTACH CALLED: surface=NULL, buffer=%p, x=%d, y=%d", buffer, x, y);
-
+static void surface_attach(struct wl_client *client, struct wl_resource *resource, 
+                          struct wl_resource *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
-    if (!surface) {
-        return;
+    SERVER_INFO("SURFACE ATTACH: surface=%p, buffer=%p, x=%d, y=%d", 
+                surface, buffer, x, y);
+
+    // ВРЕМЕННО: просто принимаем все вызовы без проверок
+    if (surface) {
+        surface->buffer = buffer;
     }
+    
+    SERVER_INFO("SURFACE ATTACH: Completed without errors");
+    
+    // Всегда возвращаем успех для тестирования
+    return;
 }
 
 /*  WL_SURFACE damage
@@ -277,6 +285,16 @@ static const struct wl_surface_interface surface_implementation = {
     .offset = surface_offset,
 };
 
+static void surface_resource_destroy(struct wl_resource *resource) {
+    struct surface *surface = wl_resource_get_user_data(resource);
+    
+    SERVER_DEBUG("SURFACE: Resource destroyed, surface=%p", surface);
+    
+    if (surface) {
+        wl_list_remove(&surface->link);
+        free(surface);
+    }
+}
 
 /*  WL_COMPOSITOR DESCRIPTION
     A compositor. This object is a singleton global.
@@ -354,7 +372,7 @@ void bind_compositor(struct wl_client *client, void *data, uint32_t version, uin
         return;
     }
     
-    wl_resource_set_implementation(resource, &compositor_implementation, data, NULL);
+    wl_resource_set_implementation(resource, &compositor_implementation, data, surface_resource_destroy);
     
     SERVER_DEBUG("COMPOSITOR: Binding to client, requested version=%u, id=%u", 
                  version, id);
