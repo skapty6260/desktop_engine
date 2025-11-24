@@ -112,10 +112,10 @@ wl_buffer.release и изменяет базовое хранилище буфе
 они явно удаляют содержимое с поверхностей, даже после уничтожения буферов.
 */
 static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
-    struct surface *surface = wl_resource_get_user_data(resource);
-
-    SERVER_DEBUG("SURFACE ATTACH CALLED: surface=%p, buffer=%p, x=%d, y=%d", 
+        SERVER_DEBUG("SURFACE ATTACH CALLED: surface=%p, buffer=%p, x=%d, y=%d", 
                  surface, buffer, x, y);
+
+    struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
         return;
