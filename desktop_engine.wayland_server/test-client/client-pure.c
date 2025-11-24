@@ -22,7 +22,7 @@ struct client_state {
     
     // Поверхность и буферы
     struct wl_surface *surface;
-    struct wl_resource *buffer;
+    struct wl_buffer *buffer;
     
     // SHM данные
     void *shm_data;
@@ -183,6 +183,9 @@ int main() {
     
     // Создаем поверхность
     create_surface(&state);
+
+    // Синхронизируем для обработки конфигурации
+    wl_display_roundtrip(state.display);
     
     if (!state.surface) {
         fprintf(stderr, "Failed to create surface\n");
