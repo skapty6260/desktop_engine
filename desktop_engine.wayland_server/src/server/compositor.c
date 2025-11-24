@@ -314,7 +314,7 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     
     wl_resource_set_implementation(surface_resource, &surface_implementation, surface, NULL);
     
-    SERVER_DEBUG("COMPOSITOR: Surface created successfully, resource=%p, implementation set", surface_resource);
+    SERVER_DEBUG("COMPOSITOR: Surface created successfully, resource=%p, implementation set, resource version: %i", surface_resource, wl_resource_get_version(resource));
 }
 
 //  WL_COMPOSITOR create_region
