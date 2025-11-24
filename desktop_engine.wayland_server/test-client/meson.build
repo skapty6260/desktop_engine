@@ -58,10 +58,18 @@ foreach p : protocols
   )
 endforeach
 
-# Исполняемый файл
-executable('test-client', 
+executable('test-client-xdg', 
   sources: [
-    'client.c',
+    'client-pure.c',
+  ],
+  dependencies: [wayland_client, cairo],
+  include_directories: include_directories('.'),
+  install: true,
+)
+
+executable('test-client-xdg', 
+  sources: [
+    'client-xdg.c',
     client_protocols_src,
   ],
   dependencies: [wayland_client, cairo],

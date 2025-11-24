@@ -52,10 +52,6 @@ static void surface_destroy(struct wl_client *client, struct wl_resource *resour
 }
 
 /*  WL_SURFACE attach
-Argument        Type           Description
-        buffer	object<wl_buffer>	   buffer of surface contents
-        x	    int	                   surface-local x coordinate
-        y	    int	                   surface-local y coordinate
 */ 
 static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
