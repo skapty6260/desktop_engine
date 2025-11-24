@@ -112,14 +112,36 @@ wl_buffer.release и изменяет базовое хранилище буфе
 они явно удаляют содержимое с поверхностей, даже после уничтожения буферов.
 */
 static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
-    SERVER_DEBUG("SURFACE ATTACH CALLED: surface=NULL, buffer=%p, x=%d, y=%d", buffer, x, y);
+    SERVER_DEBUG("SURFACE ATTACH CALLED: surface=%p, buffer=%p, x=%d, y=%d", wl_resource_get_user_data(resource), buffer, x, y);
 
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_DEFUNCT_SURFACE, "surface is defunct");
         return;
     }
+
+    // Validate arguments based on protocol version
+    int version = wl_resource_get_version(resource);
+    if (version >= 5 && (x != 0 || y != 0)) {
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_OFFSET, "x and y must be 0 for wl_surface version >= 5; use wl_surface.offset instead");
+        return;
+    }
+
+    // Validate buffer (must be NULL or a valid wl_buffer resource from the same client)
+    if (buffer && !wl_resource_instance_of(buffer, &wl_buffer_interface, NULL)) {
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_BUFFER, "buffer is not a valid wl_buffer");
+        return;
+    }
+
+    // Store pending state (assuming struct surface has fields like pending_buffer, pending_x, pending_y)
+    // surface->pending_buffer = buffer;
+    // surface->pending_x = x;
+    // surface->pending_y = y;
+
+    SERVER_DEBUG("SURFACE ATTACH: pending buffer set to %p, x=%d, y=%d", buffer, x, y);
 }
+
 
 /*  WL_SURFACE damage
 */ 
