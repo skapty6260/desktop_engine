@@ -111,110 +111,16 @@ wl_buffer.release и изменяет базовое хранилище буфе
 совместимость, не должны уничтожать отложенные буферы и должны гарантировать, что
 они явно удаляют содержимое с поверхностей, даже после уничтожения буферов.
 */
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer_resource, int32_t x, int32_t y) {
+static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_buffer *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     SERVER_DEBUG("SURFACE ATTACH CALLED: surface=%p, buffer=%p, x=%d, y=%d", 
-                 surface, buffer_resource, x, y);
+                 surface, buffer, x, y);
 
     if (!surface) {
         return;
     }
 }
-
-// static void surface_attach(struct wl_client *client, struct wl_resource *resource,
-//                           struct wl_resource *buffer_resource, int32_t x, int32_t y) {
-//     struct surface *surface = wl_resource_get_user_data(resource);
-    
-//     if (!surface) {
-//         return;
-//     }
-    
-//     // 1. Проверка версии протокола для x/y аргументов
-//     uint32_t version = wl_resource_get_version(resource);
-//     if (version >= 5 && (x != 0 || y != 0)) {
-//         wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_OFFSET,
-//                               "Non-zero x/y not allowed in surface version >= 5");
-//         return;
-//     }
-    
-//     // 2. Обработка NULL буфера (удаление содержимого)
-//     if (buffer_resource == NULL) {
-//         // Освобождаем текущий отложенный буфер если есть
-//         if (surface->pending_buffer) {
-//             // Отправляем release для предыдущего буфера если он был закоммичен
-//             if (surface->buffer_release_pending && surface->current_buffer) {
-//                 wl_buffer_send_release(surface->current_buffer);
-//                 surface->buffer_release_pending = false;
-//             }
-//             surface->pending_buffer = NULL;
-//         }
-//         surface->has_pending_buffer = false;
-//         SERVER_DEBUG("Surface attach: NULL buffer (content removal requested)");
-//         return;
-//     }
-    
-//     // 3. Проверка что ресурс является wl_buffer
-//     if (wl_resource_instance_of(buffer_resource, &wl_buffer_interface)) {
-//         wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_BUFFER,
-//                               "Attached resource is not a wl_buffer");
-//         return;
-//     }
-    
-//     // 4. Валидация размера буфера относительно buffer_scale
-//     struct wl_buffer *buffer = (struct wl_buffer*)buffer_resource;
-    
-//     // Получаем информацию о буфере (нужно реализовать получение размеров)
-//     int buffer_width, buffer_height;
-//     if (!get_buffer_size(buffer, &buffer_width, &buffer_height)) {
-//         wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_BUFFER,
-//                               "Failed to get buffer dimensions");
-//         return;
-//     }
-    
-//     // Проверка что размер кратен buffer_scale
-//     if (surface->pending_buffer_scale > 0) {
-//         if (buffer_width % surface->pending_buffer_scale != 0 ||
-//             buffer_height % surface->pending_buffer_scale != 0) {
-//             wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_SIZE,
-//                                   "Buffer size must be integer multiple of buffer_scale");
-//             return;
-//         }
-//     }
-    
-//     // 5. Освобождение предыдущего отложенного буфера
-//     if (surface->pending_buffer && surface->pending_buffer != buffer_resource) {
-//         // Если был другой отложенный буфер, который не был закоммичен,
-//         // он не получает release событие согласно спецификации
-//         surface->pending_buffer = NULL;
-//     }
-    
-//     // 6. Установка нового отложенного буфера
-//     surface->pending_buffer = buffer_resource;
-//     surface->has_pending_buffer = true;
-//     surface->pending_attach_x = x;
-//     surface->pending_attach_y = y;
-    
-//     // 7. Добавляем ссылку на буфер чтобы предотвратить его уничтожение до коммита
-//     wl_resource_reference(buffer_resource);
-    
-//     // 8. Вычисление нового размера поверхности
-//     surface->pending_width = buffer_width;
-//     surface->pending_height = buffer_height;
-    
-//     // Применяем трансформацию и масштаб
-//     apply_buffer_transform(&surface->pending_width, &surface->pending_height,
-//                           surface->pending_buffer_transform);
-    
-//     if (surface->pending_buffer_scale > 1) {
-//         surface->pending_width /= surface->pending_buffer_scale;
-//         surface->pending_height /= surface->pending_buffer_scale;
-//     }
-    
-//     SERVER_DEBUG("Surface attach: buffer %dx%d, surface %dx%d, x=%d, y=%d",
-//                  buffer_width, buffer_height, surface->pending_width,
-//                  surface->pending_height, x, y);
-// }
 
 /*  WL_SURFACE damage
 */ 
