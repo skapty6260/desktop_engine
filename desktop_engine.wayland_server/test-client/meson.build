@@ -58,7 +58,7 @@ foreach p : protocols
   )
 endforeach
 
-executable('test-client-xdg', 
+executable('test-client', 
   sources: [
     'client-pure.c',
   ],
