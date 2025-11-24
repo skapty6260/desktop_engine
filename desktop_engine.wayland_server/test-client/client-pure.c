@@ -124,7 +124,7 @@ static void frame_callback(void *data, struct wl_callback *callback, uint32_t ti
     
     // Перерисовываем
     draw_frame(state);
-    wl_surface_attach(state->surface, state->buffer, NULL, NULL);
+    wl_surface_attach(state->surface, state->buffer, 0, 0);
     wl_surface_damage(state->surface, 0, 0, WIDTH, HEIGHT);
     
     // Создаем новый callback для следующего кадра
@@ -193,7 +193,7 @@ int main() {
     
     // Рисуем первый кадр
     draw_frame(&state);
-    wl_surface_attach(state.surface, state.buffer, NULL, NULL);
+    wl_surface_attach(state.surface, state.buffer, 0, 0);
     wl_surface_damage(state.surface, 0, 0, WIDTH, HEIGHT);
     
     // Добавляем frame callback для анимации
