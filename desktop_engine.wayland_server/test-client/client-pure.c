@@ -190,6 +190,9 @@ int main() {
 
     // Синхронизируем для обработки конфигурации (second roundtip)
     wl_display_roundtrip(state.display);
+
+    uint32_t version = wl_proxy_get_version((struct wl_proxy*)surface);
+    printf("\n\nSurface version: %u\n", version);
     
     // Рисуем первый кадр
     draw_frame(&state);
