@@ -117,7 +117,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface) {
-        wl_resource_post_error(resource, WL_SURFACE_ERROR_BAD_SURFACE, "surface is defunct");
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_ROLE_OBJECT, "surface is defunct");
         return;
     }
 
