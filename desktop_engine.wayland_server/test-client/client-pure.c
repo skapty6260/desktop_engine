@@ -40,9 +40,23 @@ static void registry_global(void *data, struct wl_registry *registry,
     printf("Global available: %s (version %u)\n", interface, version);
     
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        state->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 4);
+        // Получаем версию до биндинга
+        printf("Compositor advertised version: %u\n", version);
+        
+        // Биндим с максимальной поддерживаемой версией (но не выше 4 для совместимости)
+        uint32_t bind_version = (version > 4) ? 4 : version;
+        state->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, bind_version);
+        
+        // Получаем фактическую версию после биндинга
+        uint32_t actual_version = wl_proxy_get_version((struct wl_proxy*)state->compositor);
+        printf("Compositor bound with version: %u\n", actual_version);
+        
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
+        printf("SHM advertised version: %u\n", version);
         state->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+        
+        uint32_t shm_version = wl_proxy_get_version((struct wl_proxy*)state->shm);
+        printf("SHM bound with version: %u\n", shm_version);
     }
 }
 
@@ -88,6 +102,10 @@ static int create_shm_buffer(struct client_state *state) {
     
     // Создаем буфер из пула
     state->buffer = wl_shm_pool_create_buffer(pool, 0, WIDTH, HEIGHT, STRIDE, WL_SHM_FORMAT_ARGB8888);
+    
+    // Получаем версию буфера
+    uint32_t buffer_version = wl_proxy_get_version((struct wl_proxy*)state->buffer);
+    printf("Buffer created with version: %u\n", buffer_version);
     
     // Очищаем пул
     wl_shm_pool_destroy(pool);
@@ -143,7 +161,34 @@ static void create_surface(struct client_state *state) {
         return;
     }
     
+    // Получаем версию поверхности
+    uint32_t surface_version = wl_proxy_get_version((struct wl_proxy*)state->surface);
+    printf("Surface created with version: %u\n", surface_version);
+    
+    // Проверяем доступные функции в зависимости от версии
+    printf("Surface features based on version %u:\n", surface_version);
+    if (surface_version >= 1) printf("  - Basic surface operations\n");
+    if (surface_version >= 2) printf("  - set_opaque_region\n");
+    if (surface_version >= 3) printf("  - set_input_region\n");
+    if (surface_version >= 4) printf("  - damage_buffer\n");
+    if (surface_version >= 5) printf("  - offset (x,y in attach are ignored)\n");
+    if (surface_version >= 6) printf("  - buffer_scale\n");
+    if (surface_version >= 7) printf("  - buffer_transform\n");
+    
     printf("Surface created successfully\n");
+}
+
+// Функция для вывода информации о proxy объекте
+static void print_proxy_info(const char *name, struct wl_proxy *proxy) {
+    if (!proxy) {
+        printf("%s: NULL\n", name);
+        return;
+    }
+    
+    uint32_t version = wl_proxy_get_version(proxy);
+    const char *interface = wl_proxy_get_class(proxy);
+    
+    printf("%s: interface=%s, version=%u\n", name, interface, version);
 }
 
 int main() {
@@ -159,6 +204,9 @@ int main() {
         return 1;
     }
     
+    // Получаем информацию о display
+    print_proxy_info("Display", (struct wl_proxy*)state.display);
+    
     // Получаем registry
     state.registry = wl_display_get_registry(state.display);
     wl_registry_add_listener(state.registry, &registry_listener, &state);
@@ -171,6 +219,10 @@ int main() {
         fprintf(stderr, "Missing required Wayland globals\n");
         return 1;
     }
+    
+    printf("\n=== Wayland Protocol Versions ===\n");
+    print_proxy_info("Compositor", (struct wl_proxy*)state.compositor);
+    print_proxy_info("SHM", (struct wl_proxy*)state.shm);
     
     printf("Wayland globals acquired successfully\n");
     
@@ -188,11 +240,15 @@ int main() {
         return 1;
     }
 
+    // Выводим финальную информацию о версиях
+    printf("\n=== Final Object Versions ===\n");
+    print_proxy_info("Compositor", (struct wl_proxy*)state.compositor);
+    print_proxy_info("SHM", (struct wl_proxy*)state.shm);
+    print_proxy_info("Surface", (struct wl_proxy*)state.surface);
+    print_proxy_info("Buffer", (struct wl_proxy*)state.buffer);
+    
     // Синхронизируем для обработки конфигурации (second roundtip)
     wl_display_roundtrip(state.display);
-
-    uint32_t version = wl_proxy_get_version((struct wl_proxy*)surface);
-    printf("\n\nSurface version: %u\n", version);
     
     // Рисуем первый кадр
     draw_frame(&state);
@@ -205,7 +261,7 @@ int main() {
     
     wl_surface_commit(state.surface);
     
-    printf("Surface created and content set, starting main loop...\n");
+    printf("\nSurface created and content set, starting main loop...\n");
     printf("Note: Without shell protocol, the surface may not be visible as a proper window\n");
     printf("Some compositors may show it as a fullscreen surface or not show it at all\n");
     
