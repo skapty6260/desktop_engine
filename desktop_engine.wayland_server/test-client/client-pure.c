@@ -210,7 +210,7 @@ int main() {
     // Получаем registry
     state.registry = wl_display_get_registry(state.display);
     wl_registry_add_listener(state.registry, &registry_listener, &state);
-    
+
     // Синхронизируем для получения глобальных объектов
     wl_display_roundtrip(state.display);
     
@@ -249,6 +249,9 @@ int main() {
     
     // Синхронизируем для обработки конфигурации (second roundtip)
     wl_display_roundtrip(state.display);
+
+    printf("Surface pointer: %p\n", state.surface);
+    printf("Buffer pointer: %p\n", state.buffer);
     
     // Рисуем первый кадр
     draw_frame(&state);

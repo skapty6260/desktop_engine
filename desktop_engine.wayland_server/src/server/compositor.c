@@ -306,13 +306,16 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     }
     
     surface->resource = surface_resource;
+    surface->buffer = NULL;
+    surface->server = server;
+    surface->xdg_surface = NULL;
+    surface->xdg_toplevel = NULL;
     wl_list_init(&surface->link);
-    
-    // Добавляем поверхность в список сервера
-    wl_list_insert(&server->surfaces, &surface->link);
     
     wl_resource_set_implementation(surface_resource, &surface_implementation, surface, NULL);
     
+    wl_list_insert(&server->surfaces, &surface->link);
+
     SERVER_DEBUG("COMPOSITOR: Surface created successfully, resource=%p, implementation set, resource version: %i", surface_resource, wl_resource_get_version(surface_resource));
 }
 
