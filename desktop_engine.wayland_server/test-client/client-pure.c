@@ -22,7 +22,7 @@ struct client_state {
     
     // Поверхность и буферы
     struct wl_surface *surface;
-    struct wl_buffer *buffer;
+    struct wl_resource *buffer;
     
     // SHM данные
     void *shm_data;
