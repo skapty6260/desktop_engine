@@ -290,7 +290,7 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     struct server *server = wl_resource_get_user_data(resource);
     
     struct wl_resource *surface_resource = wl_resource_create(
-        client, &wl_surface_interface, 7, id); // wl_resource_get_version(resource)
+        client, &wl_surface_interface, wl_resource_get_version(resource), id);
     
     if (!surface_resource) {
         wl_client_post_no_memory(client);

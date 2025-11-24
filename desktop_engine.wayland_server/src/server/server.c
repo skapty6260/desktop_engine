@@ -66,7 +66,7 @@ void server_init(struct server *server) {
     server->compositor_global = wl_global_create(
         server->display, 
         &wl_compositor_interface, 
-        4, server, bind_compositor
+        6, server, bind_compositor
     );
 
     if (!server->xdg_wm_base_global || !server->shm_global || !server->compositor_global) {
