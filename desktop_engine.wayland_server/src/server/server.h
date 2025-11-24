@@ -26,7 +26,7 @@ struct surface {
     struct server *server;
     struct wl_list link;
     // int width, height;
-    struct wl_buffer *buffer;
+    struct wl_resource *buffer;
 };
 
 struct client {
