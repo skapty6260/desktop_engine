@@ -118,46 +118,52 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     SERVER_DEBUG("SURFACE ATTACH: surface=%p, pending_buffer=%p, pending_x=%d, pending_y=%d", surface, surface->pending_buffer, surface->pending_x, surface->pending_y);
 }
 
-enum buffer_type {
-    BUFFER_TYPE_DMA_BUF = 0,
-    BUFFER_TYPE_SHM = 1,
-    BUFFER_TYPE_UNKNOWN = 2,
-};
-
-static const char* buffer_type_to_string(enum buffer_type type) {
-    switch (type) {
-        case BUFFER_TYPE_SHM: return "SHM";
-        case BUFFER_TYPE_DMA_BUF: return "DMA-BUF";
-        case BUFFER_TYPE_UNKNOWN: return "UNKNOWN";
-        default: return "INVALID";
-    }
-}
-
-static enum buffer_type detect_buffer_type(struct wl_resource *buffer) {
-    if (wl_shm_buffer_get(buffer)) {
-        return BUFFER_TYPE_SHM;
-    }
-
-#ifdef HAVE_LINUX_DMABUF
-    // Проверяем DMA-BUF buffer (правильный способ)
-    // Получаем реализацию ресурса и проверяем интерфейс
-    const struct wl_interface *iface = wl_resource_get_interface(buffer);
-    if (iface && strcmp(iface->name, "zwp_linux_buffer_params_v1") == 0) {
-        return BUFFER_TYPE_DMA_BUF;
-    }
-#endif
-
-    return BUFFER_TYPE_UNKNOWN;
-}
-
-static void surface_headless_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
+static void surface_headless_attach(struct wl_client *client, 
+                                   struct wl_resource *resource, 
+                                   struct wl_resource *buffer_resource, 
+                                   int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
-    if (!surface) return;
+    if (!surface || !buffer_resource) return;
     
-    if (buffer) {
-        enum buffer_type type = detect_buffer_type(buffer);
-        SERVER_INFO("Get buffer from client, buffer type: %s", buffer_type_to_string(type));
+    surface->buffer_resource = buffer_resource;
+    
+    // Получаем информацию о буфере для отладки
+    const struct wl_interface *iface = wl_resource_get_interface(buffer_resource);
+    uint32_t buffer_id = wl_resource_get_id(buffer_resource);
+    uint32_t version = wl_resource_get_version(buffer_resource);
+    
+    SERVER_INFO("Buffer attached - ID: %d, Version: %d", buffer_id, version);
+    
+    if (iface) {
+        SERVER_INFO("Buffer interface: %s", iface->name);
+        
+        // Детектируем тип по имени интерфейса
+        if (strcmp(iface->name, "wl_buffer") == 0) {
+            // Базовый wl_buffer - проверяем дальше
+            struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(buffer_resource);
+            if (shm_buffer) {
+                SERVER_INFO("SHM buffer confirmed via wl_shm_buffer_get()");
+                // handle_shm_buffer(surface, buffer_resource);
+            } else {
+                SERVER_INFO("Non-SHM wl_buffer - possibly DMA-BUF or other");
+#ifdef HAVE_LINUX_DMABUF
+                // Пытаемся обработать как DMA-BUF
+#else
+                SERVER_INFO("DMA-BUF support not compiled in");
+#endif
+            }
+        }
+#ifdef HAVE_LINUX_DMABUF
+        else if (strcmp(iface->name, "zwp_linux_buffer_params_v1") == 0) {
+            SERVER_INFO("DMA-BUF buffer via linux-dmabuf extension");
+        }
+#endif
+        else {
+            SERVER_INFO("Unknown buffer interface: %s", iface->name);
+        }
+    } else {
+        SERVER_INFO("Buffer has no interface information");
     }
 }
 
