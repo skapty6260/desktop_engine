@@ -37,26 +37,18 @@ static void registry_global(void *data, struct wl_registry *registry,
                            uint32_t name, const char *interface, uint32_t version) {
     struct client_state *state = data;
     
-    printf("Global available: %s (version %u)\n", interface, version);
-    
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        // Получаем версию до биндинга
-        printf("Compositor advertised version: %u\n", version);
-        
         // Биндим с максимальной поддерживаемой версией (но не выше 4 для совместимости)
         uint32_t bind_version = (version > 4) ? 4 : version;
         state->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, bind_version);
         
         // Получаем фактическую версию после биндинга
         uint32_t actual_version = wl_proxy_get_version((struct wl_proxy*)state->compositor);
-        printf("Compositor bound with version: %u\n", actual_version);
         
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
-        printf("SHM advertised version: %u\n", version);
         state->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
         
         uint32_t shm_version = wl_proxy_get_version((struct wl_proxy*)state->shm);
-        printf("SHM bound with version: %u\n", shm_version);
     }
 }
 
