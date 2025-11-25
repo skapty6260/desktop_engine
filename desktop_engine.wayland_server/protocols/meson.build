@@ -57,3 +57,10 @@ foreach p : protocols
 		build_by_default: true,
 	)
 endforeach
+
+foreach p : protocols
+    if p[1].contains('linux-dmabuf')
+        add_project_arguments('-DHAVE_LINUX_DMABUF', language: 'c')
+        break
+    endif
+endforeach
