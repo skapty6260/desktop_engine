@@ -224,9 +224,9 @@ static void surface_offset(struct wl_client *client, struct wl_resource *resourc
     SERVER_DEBUG("SURFACE OFFSET CALLED");
 }
 
-/*  WL_SURFACE destroy (And destructor for resource implementation)
+/*  WL_SURFACE destroy
 */
-static void surface_resource_destroy(struct wl_resource *resource) {
+static void surface_destroy(struct wl_client *client, struct wl_resource *resource) {
     struct surface *surface = wl_resource_get_user_data(resource);
     
     SERVER_DEBUG("SURFACE: Resource destroyed, surface=%p", surface);
@@ -278,7 +278,7 @@ static void surface_resource_destroy(struct wl_resource *resource) {
         y	            int	        surface-local y coordinate
 */
 static const struct wl_surface_interface surface_implementation = {
-    .destroy = surface_resource_destroy,
+    .destroy = surface_destroy,
     .attach = surface_attach,
     .damage = surface_damage,
     .frame = surface_frame,
@@ -325,7 +325,7 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     surface->xdg_toplevel = NULL;
     wl_list_init(&surface->link);
     
-    wl_resource_set_implementation(surface_resource, &surface_implementation, surface, surface_resource_destroy);
+    wl_resource_set_implementation(surface_resource, &surface_implementation, surface, NULL); // TODO: destructor
     
     wl_list_insert(&server->surfaces, &surface->link);
 
