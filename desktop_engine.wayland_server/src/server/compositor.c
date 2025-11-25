@@ -114,6 +114,26 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     SERVER_DEBUG("SURFACE ATTACH: surface=%p, pending_buffer=%p, pending_x=%d, pending_y=%d", surface, surface->pending_buffer, surface->pending_x, surface->pending_y);
 }
 
+enum buffer_type {
+    BUFFER_TYPE_DMA_BUF = 0,
+    BUFFER_TYPE_SHM = 1,
+    BUFFER_TYPE_UNKNOWN = 2,
+};
+
+static enum buffer_type detect_buffer_type(struct wl_resource *buffer) {
+    if (wl_shm_buffer_get(buffer)) {
+        return BUFFER_TYPE_SHM;
+    }
+
+    struct wl_resource *dmabuf_resource = wl_resource_find_for_client(
+        buffer, &zwp_linux_buffer_params_v1_interface);
+    if (dmabuf_resource) {
+        return BUFFER_TYPE_DMA_BUF;
+    }
+
+    return BUFFER_TYPE_UNKNOWN;
+}
+
 static void surface_headless_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
@@ -121,8 +141,8 @@ static void surface_headless_attach(struct wl_client *client, struct wl_resource
     
     if (buffer) {
         surface->raw_buffer = wl_resource_get_user_data(buffer);
-        const char *interface = wl_resource_get_class(buffer);
-        SERVER_INFO("Get buffer from client, buffer interface: %s", interface);
+
+        SERVER_INFO("Get buffer from client, buffer type: %s", detect_buffer_type(buffer));
     }
 }
 
