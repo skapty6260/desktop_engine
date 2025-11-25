@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #ifdef HAVE_LINUX_DMABUF
-#include "linux-dmabuf-unstable-v1-server-protocol.h"
+#include "linux-dmabuf-unstable-v1-protocol.h"
 #endif
 
 
