@@ -103,17 +103,9 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
         return;
     }
 
-    // Release previous pending_buffer
-    if (surface->pending_buffer) {
-        wl_resource_unref(surface->pending_buffer);
-    }
+    // Should add get_buffer_size and check for invalid_size and invalid_offset error
 
-    // Ref new pending buffer
     surface->pending_buffer = buffer;
-    if (buffer) {
-        wl_resource_ref(buffer);
-    }
-
     surface->pending_x = (surface_version >= 5) ? 0 : x;
     surface->pending_y = (surface_version >= 5) ? 0 : y;
     
@@ -176,8 +168,6 @@ static void surface_commit(struct wl_client *client, struct wl_resource *resourc
     if (surface->pending_changes.attach == true) {
         if (surface->buffer) {
             wl_buffer_send_release(surface->buffer);
-            wl_resource_unref(surface->buffer);
-            surface->buffer = NULL;
         }
 
         // Set new buffer (May be NULL to detach)
