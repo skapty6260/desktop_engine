@@ -114,12 +114,13 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     // от 0, не рекомендуется и должно быть заменено использованием отдельного запроса
     // wl_surface.offset.
 
-    // Когда связанная версия wl_surface равна 5 или выше, передача любых не-null значений
-    // x или y является нарушением протокола и приведет к ошибке 'invalid_offset'.
-    // Аргументы x и y игнорируются и не изменяют отложенное состояние. Для достижения
-    // эквивалентной семантики используйте wl_surface.offset.
-    SERVER_DEBUG("Attaching surface with semantics version: %i", wl_resource_get_version(resource));
-    
+    if (wl_resource_get_version(resource) >= 5 && (x != 0 || y != 0)) {
+        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_OFFSET,
+                              "x and y must be 0 for wl_surface version >= 5");
+        return;
+    } else {
+        SERVER_DEBUG("Can access non-null X, Y");
+    }
 }
 
 /*  WL_SURFACE damage
