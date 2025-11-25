@@ -31,26 +31,6 @@
     - Role switching between different types is prohibited
 */
 
-/*  WL_SURFACE destroy
-
-    DESCRIPTION
-    Remove surface link from server->surfaces
-    Cleanup buffers and regions
-*/
-static void surface_destroy(struct wl_client *client, struct wl_resource *resource) {
-    struct surface *surface = wl_resource_get_user_data(resource);
-
-    if (!surface) {
-        return;
-    }
-
-    wl_list_remove(&surface->link);
-    free(surface);
-
-    wl_resource_destroy(resource);
-    SERVER_DEBUG("COMPOSITOR_SURFACE surface destroyed: removed from server list, freed, destroyed surface resource");
-}
-
 /*  WL_SURFACE attach
 */ 
 /*
@@ -115,18 +95,31 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
                           struct wl_resource *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
-    SERVER_INFO("SURFACE ATTACH: surface=%p, buffer=%p, x=%d, y=%d", 
+    SERVER_DEBUG("SURFACE ATTACH: surface=%p, buffer=%p, x=%d, y=%d", 
                 surface, buffer, x, y);
 
-    // ВРЕМЕННО: просто принимаем все вызовы без проверок
-    if (surface) {
-        surface->buffer = buffer;
+    if (!surface) {
+        wl_client_post_no_memory(client);
+        return;
     }
+    // Новый размер поверхности вычисляется на основе размера буфера с применением
+    // обратного buffer_transform и обратного buffer_scale. Это означает, что при
+    // коммите размер буфера должен быть целым кратным buffer_scale. Если это не так,
+    // отправляется ошибка invalid_size.
+
+    // Аргументы x и y задают расположение верхнего левого угла нового отложенного буфера
+    // относительно верхнего левого угла текущего буфера в поверхностно-локальных координатах.
+    // Другими словами, x и y вместе с новым размером поверхности определяют, в каких
+    // направлениях изменяется размер поверхности. Использование значений x и y, отличных
+    // от 0, не рекомендуется и должно быть заменено использованием отдельного запроса
+    // wl_surface.offset.
+
+    // Когда связанная версия wl_surface равна 5 или выше, передача любых не-null значений
+    // x или y является нарушением протокола и приведет к ошибке 'invalid_offset'.
+    // Аргументы x и y игнорируются и не изменяют отложенное состояние. Для достижения
+    // эквивалентной семантики используйте wl_surface.offset.
+    SERVER_DEBUG("Attaching surface with semantics version: %i", wl_resource_get_version(resource))
     
-    SERVER_INFO("SURFACE ATTACH: Completed without errors");
-    
-    // Всегда возвращаем успех для тестирования
-    return;
 }
 
 /*  WL_SURFACE damage
@@ -272,7 +265,7 @@ static void surface_offset(struct wl_client *client, struct wl_resource *resourc
         y	            int	        surface-local y coordinate
 */
 static const struct wl_surface_interface surface_implementation = {
-    .destroy = surface_destroy,
+    .destroy = surface_resource_destroy,
     .attach = surface_attach,
     .damage = surface_damage,
     .frame = surface_frame,
@@ -330,7 +323,7 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     surface->xdg_toplevel = NULL;
     wl_list_init(&surface->link);
     
-    wl_resource_set_implementation(surface_resource, &surface_implementation, surface, NULL);
+    wl_resource_set_implementation(surface_resource, &surface_implementation, surface, surface_resource_destroy);
     
     wl_list_insert(&server->surfaces, &surface->link);
 
@@ -372,7 +365,7 @@ void bind_compositor(struct wl_client *client, void *data, uint32_t version, uin
         return;
     }
     
-    wl_resource_set_implementation(resource, &compositor_implementation, data, surface_resource_destroy);
+    wl_resource_set_implementation(resource, &compositor_implementation, data, NULL);
     
     SERVER_DEBUG("COMPOSITOR: Binding to client, requested version=%u, id=%u", 
                  version, id);
