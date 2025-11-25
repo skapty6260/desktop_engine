@@ -20,6 +20,9 @@ protocols = [
 wl_protos_src = []
 wl_protos_headers = []
 
+# Переменная для отслеживания наличия linux-dmabuf
+has_linux_dmabuf = false
+
 foreach p : protocols
 	# Обрабатываем пути протоколов
 	if p.length() == 2
@@ -28,6 +31,18 @@ foreach p : protocols
 	else
 		xml_path = p
 		base_name = p.split('/')[-1].split('.')[0]
+	endif
+
+	# Проверяем существование файла протокола
+	if not fs.exists(xml_path)
+		warning('Protocol file not found: ' + xml_path)
+		continue
+	endif
+
+	# Отмечаем если это linux-dmabuf
+	if base_name == 'linux-dmabuf-unstable-v1'
+		has_linux_dmabuf = true
+		message('Linux DMA-BUF protocol found: yes')
 	endif
 
 	# Генерируем исходные файлы протоколов
@@ -58,9 +73,125 @@ foreach p : protocols
 	)
 endforeach
 
+# Добавляем флаги компиляции на основе найденных протоколов
+if has_linux_dmabuf
+	add_project_arguments('-DHAVE_LINUX_DMABUF', language: 'c')
+	add_project_arguments('-DHAVE_LINUX_DMABUF_UNSTABLE_V1', language: 'c')
+	message('DMA-BUF support enabled')
+else
+	message('DMA-BUF support disabled (protocol not found)')
+endif
+
+# Дополнительная проверка системных зависимостей для DMA-BUF
+libdrm_dep = dependency('libdrm', required: false)
+if libdrm_dep.found() and has_linux_dmabuf
+	add_project_arguments('-DHAVE_LIBDRM', language: 'c')
+	message('libdrm found: yes, enhanced DMA-BUF support')
+else
+	message('libdrm not found, basic DMA-BUF support only')
+endif
+
+# Проверка поддержки EGL для расширенной работы с буферами
+egl_dep = dependency('egl', required: false)
+if egl_dep.found() and has_linux_dmabuf
+	add_project_arguments('-DHAVE_EGL', language: 'c')
+	add_project_arguments('-DHAVE_EGL_DMA_BUF', language: 'c')
+	message('EGL found: yes, EGL DMA-BUF import support')
+endif
+
+# Проверка поддержки GBM
+gbm_dep = dependency('gbm', required: false)
+if gbm_dep.found() and has_linux_dmabuf
+	add_project_arguments('-DHAVE_GBM', language: 'c')
+	message('GBM found: yes, GBM buffer support')
+endif
+
+# Вывод итоговой конфигурации
+message('=== Wayland Protocols Configuration ===')
+message('Protocols found: @0@'.format(protocols.length()))
+message('Linux DMA-BUF: @0@'.format(has_linux_dmabuf))
+message('libdrm: @0@'.format(libdrm_dep.found()))
+message('EGL: @0@'.format(egl_dep.found()))
+message('GBM: @0@'.format(gbm_dep.found()))wl_protocol_dir = wayland_protocols.get_variable('pkgdatadir')
+
+wayland_scanner_dep = dependency('wayland-scanner', native: true)
+wayland_scanner = find_program(
+	wayland_scanner_dep.get_variable('wayland_scanner'),
+	native: true,
+)
+
+protocols = [
+	[wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+	[wl_protocol_dir, 'stable/tablet/tablet-v2.xml'],
+	[wl_protocol_dir, 'staging/cursor-shape/cursor-shape-v1.xml'],
+	[wl_protocol_dir, 'unstable/xdg-output/xdg-output-unstable-v1.xml'],
+	[wl_protocol_dir, 'unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml'],
+	# 'wlr-layer-shell-unstable-v1.xml',
+	# 'idle.xml',
+	# 'wlr-output-power-management-unstable-v1.xml',
+]
+
+wl_protos_src = []
+wl_protos_headers = []
+
+# Переменная для отслеживания наличия linux-dmabuf
+has_linux_dmabuf = false
+
 foreach p : protocols
-    if p[1].contains('linux-dmabuf')
-        add_project_arguments('-DHAVE_LINUX_DMABUF', language: 'c')
-        break
-    endif
+	# Обрабатываем пути протоколов
+	if p.length() == 2
+		xml_path = p[0] / p[1]
+		base_name = p[1].split('/')[-1].split('.')[0]
+	else
+		xml_path = p
+		base_name = p.split('/')[-1].split('.')[0]
+	endif
+
+	# Проверяем существование файла протокола
+	if not fs.exists(xml_path)
+		warning('Protocol file not found: ' + xml_path)
+		continue
+	endif
+
+	# Отмечаем если это linux-dmabuf
+	if base_name == 'linux-dmabuf-unstable-v1'
+		has_linux_dmabuf = true
+		message('Linux DMA-BUF protocol found: yes')
+	endif
+
+	# Генерируем исходные файлы протоколов
+	wl_protos_src += custom_target(
+		base_name + '_protocol_c',
+		input: xml_path,
+		output: '@BASENAME@-protocol.c',
+		command: [wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@'],
+		build_by_default: true,
+	)
+
+	# Генерируем server headers
+	wl_protos_headers += custom_target(
+		base_name + '_server_h',
+		input: xml_path,
+		output: '@BASENAME@-protocol.h',
+		command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+		build_by_default: true,
+	)
+
+	# Генерируем client headers (для полноты)
+	custom_target(
+		base_name + '_client_h',
+		input: xml_path,
+		output: '@BASENAME@-client-protocol.h',
+		command: [wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@'],
+		build_by_default: true,
+	)
 endforeach
+
+# Добавляем флаги компиляции на основе найденных протоколов
+if has_linux_dmabuf
+	add_project_arguments('-DHAVE_LINUX_DMABUF', language: 'c')
+	add_project_arguments('-DHAVE_LINUX_DMABUF_UNSTABLE_V1', language: 'c')
+	message('DMA-BUF support enabled')
+else
+	message('DMA-BUF support disabled (protocol not found)')
+endif
