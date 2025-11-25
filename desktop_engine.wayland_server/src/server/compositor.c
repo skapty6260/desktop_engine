@@ -126,8 +126,6 @@ static void surface_headless_attach(struct wl_client *client,
 
     if (!surface || !buffer_resource) return;
     
-    surface->buffer_resource = buffer_resource;
-    
     // Получаем информацию о буфере для отладки
     const struct wl_interface *iface = wl_resource_get_interface(buffer_resource);
     uint32_t buffer_id = wl_resource_get_id(buffer_resource);
