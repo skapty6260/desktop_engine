@@ -101,8 +101,7 @@ static int create_shm_buffer(struct client_state *state) {
     
     // Вместо этого сохраните pool в состоянии
     // Или просто не уничтожайте его до конца работы
-    
-    printf("SHM buffer created: %dx%d, stride=%d\n", WIDTH, HEIGHT, STRIDE);
+
     return 0;
 }
 
