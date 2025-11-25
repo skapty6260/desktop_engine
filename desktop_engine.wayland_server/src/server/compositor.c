@@ -3,6 +3,10 @@
 #include "../logger/logger.h"
 #include <stdlib.h>
 
+#ifdef HAVE_LINUX_DMABUF
+#include "linux-dmabuf-unstable-v1-server-protocol.h"
+#endif
+
 
 /*  WL_SURFACE DESCRIPTION
     A surface is a rectangular area that may be displayed on zero or more outputs,
@@ -120,16 +124,28 @@ enum buffer_type {
     BUFFER_TYPE_UNKNOWN = 2,
 };
 
+static const char* buffer_type_to_string(enum buffer_type type) {
+    switch (type) {
+        case BUFFER_TYPE_SHM: return "SHM";
+        case BUFFER_TYPE_DMA_BUF: return "DMA-BUF";
+        case BUFFER_TYPE_UNKNOWN: return "UNKNOWN";
+        default: return "INVALID";
+    }
+}
+
 static enum buffer_type detect_buffer_type(struct wl_resource *buffer) {
     if (wl_shm_buffer_get(buffer)) {
         return BUFFER_TYPE_SHM;
     }
 
-    struct wl_resource *dmabuf_resource = wl_resource_find_for_client(
-        buffer, &zwp_linux_buffer_params_v1_interface);
-    if (dmabuf_resource) {
+#ifdef HAVE_LINUX_DMABUF
+    // Проверяем DMA-BUF buffer (правильный способ)
+    // Получаем реализацию ресурса и проверяем интерфейс
+    const struct wl_interface *iface = wl_resource_get_interface(buffer);
+    if (iface && strcmp(iface->name, "zwp_linux_buffer_params_v1") == 0) {
         return BUFFER_TYPE_DMA_BUF;
     }
+#endif
 
     return BUFFER_TYPE_UNKNOWN;
 }
@@ -140,9 +156,8 @@ static void surface_headless_attach(struct wl_client *client, struct wl_resource
     if (!surface) return;
     
     if (buffer) {
-        surface->raw_buffer = wl_resource_get_user_data(buffer);
-
-        SERVER_INFO("Get buffer from client, buffer type: %s", detect_buffer_type(buffer));
+        enum buffer_type type = detect_buffer_type(buffer);
+        SERVER_INFO("Get buffer from client, buffer type: %s", buffer_type_to_string(type));
     }
 }
 

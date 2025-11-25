@@ -26,8 +26,6 @@ struct surface {
     struct server *server;
     struct wl_list link;
 
-    struct wl_buffer *raw_buffer; // Headless buffer (send this to remote renderer) 
-
     // Active state
     struct wl_resource *buffer;
     int width, height;
