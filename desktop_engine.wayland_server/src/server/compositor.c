@@ -145,6 +145,22 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
     return NULL;
 }
 
+static const char* buffer_type_to_string(struct buffer *buffer) {
+    switch (buffer->type) {
+        case WL_BUFFER_SHM:
+        return "SHM";
+
+        case WL_BUFFER_EGL:
+        return "EGL";
+
+        case WL_BUFFER_DMA_BUF:
+        return "DMA-BUF";
+
+        default:
+        return "UNKNOWN";
+    }
+}
+
 static void surface_headless_attach(struct wl_client *client, 
                                    struct wl_resource *resource, 
                                    struct wl_resource *buffer_resource, 
@@ -160,8 +176,7 @@ static void surface_headless_attach(struct wl_client *client,
     
     struct buffer *buffer = custom_buffer_from_resource(buffer_resource);
     if (buffer) {
-        SERVER_DEBUG("Buffer attached headless, buffer type: %s", buffer->type === WL_BUFFER_SHM ? "SHM" : "DMABUF");
-    } else {
+        SERVER_DEBUG("Buffer attached headless, buffer type: %s", buffer_type_to_string(buffer->type));
         SERVER_DEBUG("Buffer not attached (It's type not defined)");
     }
 }
