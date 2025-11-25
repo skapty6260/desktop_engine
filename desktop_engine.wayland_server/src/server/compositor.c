@@ -114,6 +114,18 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     SERVER_DEBUG("SURFACE ATTACH: surface=%p, pending_buffer=%p, pending_x=%d, pending_y=%d", surface, surface->pending_buffer, surface->pending_x, surface->pending_y);
 }
 
+static void surface_headless_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
+    struct surface *surface = wl_resource_get_user_data(resource);
+
+    if (!surface) return;
+    
+    if (buffer) {
+        surface->raw_buffer = wl_resource_get_user_data(buffer);
+        const char *interface = wl_resource_get_class(buffer);
+        SERVER_INFO("Get buffer from client, buffer interface: %s", interface);
+    }
+}
+
 /*  WL_SURFACE damage
 */ 
 static void surface_damage(struct wl_client *client, struct wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height) {
@@ -296,7 +308,7 @@ static void surface_destroy(struct wl_client *client, struct wl_resource *resour
 */
 static const struct wl_surface_interface surface_implementation = {
     .destroy = surface_destroy,
-    .attach = surface_attach,
+    .attach = surface_headless_attach, // surface_attach
     .damage = surface_damage,
     .frame = surface_frame,
     .set_opaque_region = surface_set_opaque_region,
