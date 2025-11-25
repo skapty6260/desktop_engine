@@ -118,7 +118,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     SERVER_DEBUG("SURFACE ATTACH: surface=%p, pending_buffer=%p, pending_x=%d, pending_y=%d", surface, surface->pending_buffer, surface->pending_x, surface->pending_y);
 }
 
-static void custom_buffer_from_resource(struct wl_resource *resource) {
+static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) {
     struct buffer *buffer = calloc(1, sizeof(struct buffer));
     
     struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(resource);
@@ -162,7 +162,7 @@ static void surface_headless_attach(struct wl_client *client,
     if (buffer) {
         SERVER_DEBUG("Buffer attached headless, buffer type: %s", buffer->type === WL_BUFFER_SHM ? "SHM" : "DMABUF");
     } else {
-        SERVER_DEBUG("Buffer not attached (It's type not defined)")
+        SERVER_DEBUG("Buffer not attached (It's type not defined)");
     }
 }
 
