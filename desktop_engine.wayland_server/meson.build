@@ -23,7 +23,7 @@ add_project_arguments(
 wayland_server = dependency('wayland-server', required: true)
 wayland_protocols = dependency('wayland-protocols', required: true)
 
-dmabuf_protocol = wayland_protocols_dep.get_variable('pkgdatadir') / 'unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml'
+dmabuf_protocol = wayland_protocols.get_variable('pkgdatadir') / 'unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml'
 
 if fs.exists(dmabuf_protocol)
   add_project_arguments('-DHAVE_LINUX_DMABUF', language: 'c')
