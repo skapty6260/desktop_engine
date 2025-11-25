@@ -91,36 +91,35 @@ wl_buffer.release и изменяет базовое хранилище буфе
 совместимость, не должны уничтожать отложенные буферы и должны гарантировать, что
 они явно удаляют содержимое с поверхностей, даже после уничтожения буферов.
 */
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, 
-                          struct wl_resource *buffer, int32_t x, int32_t y) {
+static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
+    const uint32_t surface_version = wl_resource_get_version(resource);
 
-    SERVER_DEBUG("SURFACE ATTACH: surface=%p, buffer=%p, x=%d, y=%d", 
-                surface, buffer, x, y);
+    if (!surface) return;
 
-    if (!surface) {
-        wl_client_post_no_memory(client);
-        return;
-    }
-    // Новый размер поверхности вычисляется на основе размера буфера с применением
-    // обратного buffer_transform и обратного buffer_scale. Это означает, что при
-    // коммите размер буфера должен быть целым кратным buffer_scale. Если это не так,
-    // отправляется ошибка invalid_size.
-
-    // Аргументы x и y задают расположение верхнего левого угла нового отложенного буфера
-    // относительно верхнего левого угла текущего буфера в поверхностно-локальных координатах.
-    // Другими словами, x и y вместе с новым размером поверхности определяют, в каких
-    // направлениях изменяется размер поверхности. Использование значений x и y, отличных
-    // от 0, не рекомендуется и должно быть заменено использованием отдельного запроса
-    // wl_surface.offset.
-
-    if (wl_resource_get_version(resource) >= 5 && (x != 0 || y != 0)) {
+    if (surface_version >= 5 && (x != 0 || y != 0)) {
         wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_OFFSET,
                               "x and y must be 0 for wl_surface version >= 5");
         return;
-    } else {
-        SERVER_DEBUG("Can access non-null X, Y");
     }
+
+    // Release previous pending_buffer
+    if (surface->pending_buffer) {
+        wl_resource_unref(surface->pending_buffer);
+    }
+
+    // Ref new pending buffer
+    surface->pending_buffer = buffer;
+    if (buffer) {
+        wl_resource_ref(buffer);
+    }
+
+    surface->pending_x = (surface_version >= 5) ? 0 : x;
+    surface->pending_y = (surface_version >= 5) ? 0 : y;
+    
+    surface->pending_changes.attach = true;
+
+    SERVER_DEBUG("SURFACE ATTACH: surface=%p, pending_buffer=%p, pending_x=%d, pending_y=%d", surface, surface->pending_buffer, surface->pending_x, surface->pending_y);
 }
 
 /*  WL_SURFACE damage
@@ -172,10 +171,37 @@ static void surface_set_input_region(struct wl_client *client, struct wl_resourc
 static void surface_commit(struct wl_client *client, struct wl_resource *resource) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
-    if (!surface) {
-        return;
+    if (!surface) return;
+    
+    if (surface->pending_changes.attach == true) {
+        if (surface->buffer) {
+            wl_buffer_send_release(surface->buffer);
+            wl_resource_unref(surface->buffer);
+            surface->buffer = NULL;
+        }
+
+        // Set new buffer (May be NULL to detach)
+        if (surface->pending_buffer) {
+            surface->buffer = surface->pending_buffer;
+            surface->pending_buffer = NULL; // Передача владения
+
+            // Обновляем размеры поверхности (Should add get buffer size)
+            int width, height;
+            // if (get_buffer_size(surface->buffer, &width, &height)) {
+            //     // Применяем масштабирование
+            //     surface->width = width / surface->buffer_scale;
+            //     surface->height = height / surface->buffer_scale;
+            // }
+            SERVER_DEBUG("Surface committed: buffer=%p, size=%dx%d", surface->buffer, surface->width, surface->height);
+        } else {
+            // Buffer detach
+            surface->width = 0;
+            surface->height = 0;
+            SERVER_DEBUG("Surface committed: buffer detached");
+        }
+
+        surface->pending_changes.attach = false;
     }
-    SERVER_DEBUG("SURFACE COMMIT CALLED");\
 }
 
 /*  WL_SURFACE set_buffer_transform
@@ -321,9 +347,18 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     
     surface->resource = surface_resource;
     surface->buffer = NULL;
+    surface->pending_buffer = NULL;
     surface->server = server;
     surface->xdg_surface = NULL;
     surface->xdg_toplevel = NULL;
+    surface->x = 0;
+    surface->y = 0;
+    surface->pending_x = 0;
+    surface->pending_y = 0;
+    surface->pending_width = 0;
+    surface->pending_height = 0;
+    surface->width = 0;
+    surface->height = 0;
     wl_list_init(&surface->link);
     
     wl_resource_set_implementation(surface_resource, &surface_implementation, surface, NULL); // TODO: destructor
