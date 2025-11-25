@@ -160,42 +160,11 @@ static void create_surface(struct client_state *state) {
         fprintf(stderr, "Failed to create surface\n");
         return;
     }
-    
-    // Получаем версию поверхности
-    uint32_t surface_version = wl_proxy_get_version((struct wl_proxy*)state->surface);
-    printf("Surface created with version: %u\n", surface_version);
-    
-    // Проверяем доступные функции в зависимости от версии
-    printf("Surface features based on version %u:\n", surface_version);
-    if (surface_version >= 1) printf("  - Basic surface operations\n");
-    if (surface_version >= 2) printf("  - set_opaque_region\n");
-    if (surface_version >= 3) printf("  - set_input_region\n");
-    if (surface_version >= 4) printf("  - damage_buffer\n");
-    if (surface_version >= 5) printf("  - offset (x,y in attach are ignored)\n");
-    if (surface_version >= 6) printf("  - buffer_scale\n");
-    if (surface_version >= 7) printf("  - buffer_transform\n");
-    
-    printf("Surface created successfully\n");
-}
-
-// Функция для вывода информации о proxy объекте
-static void print_proxy_info(const char *name, struct wl_proxy *proxy) {
-    if (!proxy) {
-        printf("%s: NULL\n", name);
-        return;
-    }
-    
-    uint32_t version = wl_proxy_get_version(proxy);
-    const char *interface = wl_proxy_get_class(proxy);
-    
-    printf("%s: interface=%s, version=%u\n", name, interface, version);
 }
 
 int main() {
     struct client_state state = {0};
     state.running = 1;
-    
-    printf("Initializing Wayland client (no shell protocol)...\n");
     
     // Подключаемся к Wayland display
     state.display = wl_display_connect(NULL);
@@ -203,9 +172,6 @@ int main() {
         fprintf(stderr, "Failed to connect to Wayland display\n");
         return 1;
     }
-    
-    // Получаем информацию о display
-    print_proxy_info("Display", (struct wl_proxy*)state.display);
     
     // Получаем registry
     state.registry = wl_display_get_registry(state.display);
@@ -220,12 +186,6 @@ int main() {
         return 1;
     }
     
-    printf("\n=== Wayland Protocol Versions ===\n");
-    print_proxy_info("Compositor", (struct wl_proxy*)state.compositor);
-    print_proxy_info("SHM", (struct wl_proxy*)state.shm);
-    
-    printf("Wayland globals acquired successfully\n");
-    
     // Создаем SHM буфер
     if (create_shm_buffer(&state) < 0) {
         fprintf(stderr, "Failed to create SHM buffer\n");
@@ -239,19 +199,9 @@ int main() {
         fprintf(stderr, "Failed to create surface\n");
         return 1;
     }
-
-    // Выводим финальную информацию о версиях
-    printf("\n=== Final Object Versions ===\n");
-    print_proxy_info("Compositor", (struct wl_proxy*)state.compositor);
-    print_proxy_info("SHM", (struct wl_proxy*)state.shm);
-    print_proxy_info("Surface", (struct wl_proxy*)state.surface);
-    print_proxy_info("Buffer", (struct wl_proxy*)state.buffer);
     
     // Синхронизируем для обработки конфигурации (second roundtip)
     wl_display_roundtrip(state.display);
-
-    printf("Surface pointer: %p\n", state.surface);
-    printf("Buffer pointer: %p\n", state.buffer);
     
     // Рисуем первый кадр
     draw_frame(&state);
@@ -263,10 +213,6 @@ int main() {
     wl_callback_add_listener(callback, &(struct wl_callback_listener){ .done = frame_callback }, &state);
     
     wl_surface_commit(state.surface);
-    
-    printf("\nSurface created and content set, starting main loop...\n");
-    printf("Note: Without shell protocol, the surface may not be visible as a proper window\n");
-    printf("Some compositors may show it as a fullscreen surface or not show it at all\n");
     
     // Главный цикл
     while (state.running) {
