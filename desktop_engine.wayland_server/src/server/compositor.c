@@ -118,7 +118,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
     // x или y является нарушением протокола и приведет к ошибке 'invalid_offset'.
     // Аргументы x и y игнорируются и не изменяют отложенное состояние. Для достижения
     // эквивалентной семантики используйте wl_surface.offset.
-    SERVER_DEBUG("Attaching surface with semantics version: %i", wl_resource_get_version(resource))
+    SERVER_DEBUG("Attaching surface with semantics version: %i", wl_resource_get_version(resource));
     
 }
 
@@ -224,6 +224,19 @@ static void surface_offset(struct wl_client *client, struct wl_resource *resourc
     SERVER_DEBUG("SURFACE OFFSET CALLED");
 }
 
+/*  WL_SURFACE destroy (And destructor for resource implementation)
+*/
+static void surface_resource_destroy(struct wl_resource *resource) {
+    struct surface *surface = wl_resource_get_user_data(resource);
+    
+    SERVER_DEBUG("SURFACE: Resource destroyed, surface=%p", surface);
+    
+    if (surface) {
+        wl_list_remove(&surface->link);
+        free(surface);
+    }
+}
+
 /*  WL_SURFACE IMPLEMENTATION
     REQUEST destroy()
     REQUEST attach(buffer: object<wl_buffer>, x: int, y: int)
@@ -277,17 +290,6 @@ static const struct wl_surface_interface surface_implementation = {
     .damage_buffer = surface_damage_buffer,
     .offset = surface_offset,
 };
-
-static void surface_resource_destroy(struct wl_resource *resource) {
-    struct surface *surface = wl_resource_get_user_data(resource);
-    
-    SERVER_DEBUG("SURFACE: Resource destroyed, surface=%p", surface);
-    
-    if (surface) {
-        wl_list_remove(&surface->link);
-        free(surface);
-    }
-}
 
 /*  WL_COMPOSITOR DESCRIPTION
     A compositor. This object is a singleton global.
