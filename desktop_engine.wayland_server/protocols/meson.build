@@ -20,11 +20,9 @@ protocols = [
 wl_protos_src = []
 wl_protos_headers = []
 
-# Переменная для отслеживания наличия linux-dmabuf
 has_linux_dmabuf = false
 
 foreach p : protocols
-	# Обрабатываем пути протоколов
 	if p.length() == 2
 		xml_path = p[0] / p[1]
 		base_name = p[1].split('/')[-1].split('.')[0]
@@ -32,20 +30,12 @@ foreach p : protocols
 		xml_path = p
 		base_name = p.split('/')[-1].split('.')[0]
 	endif
-
-	# Проверяем существование файла протокола
-	if not fs.exists(xml_path)
-		warning('Protocol file not found: ' + xml_path)
-		continue
-	endif
-
-	# Отмечаем если это linux-dmabuf
+	
 	if base_name == 'linux-dmabuf-unstable-v1'
 		has_linux_dmabuf = true
 		message('Linux DMA-BUF protocol found: yes')
 	endif
 
-	# Генерируем исходные файлы протоколов
 	wl_protos_src += custom_target(
 		base_name + '_protocol_c',
 		input: xml_path,
@@ -54,7 +44,6 @@ foreach p : protocols
 		build_by_default: true,
 	)
 
-	# Генерируем server headers
 	wl_protos_headers += custom_target(
 		base_name + '_server_h',
 		input: xml_path,
@@ -63,17 +52,16 @@ foreach p : protocols
 		build_by_default: true,
 	)
 
-	# Генерируем client headers (для полноты)
-	custom_target(
-		base_name + '_client_h',
-		input: xml_path,
-		output: '@BASENAME@-client-protocol.h',
-		command: [wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@'],
-		build_by_default: true,
-	)
+	# Generate client headers
+	#	custom_target(
+	#		base_name + '_client_h',
+	#		input: xml_path,
+	#		output: '@BASENAME@-client-protocol.h',
+	#		command: [wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@'],
+	#		build_by_default: true,
+	#	)
 endforeach
 
-# Добавляем флаги компиляции на основе найденных протоколов
 if has_linux_dmabuf
 	add_project_arguments('-DHAVE_LINUX_DMABUF', language: 'c')
 	add_project_arguments('-DHAVE_LINUX_DMABUF_UNSTABLE_V1', language: 'c')
