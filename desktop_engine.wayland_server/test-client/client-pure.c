@@ -94,7 +94,7 @@ static int create_shm_buffer(struct client_state *state) {
     struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, state->shm_fd, state->shm_size);
     
     // Создаем буфер из пула
-    state->buffer = wl_shm_pool_create_buffer(pool, 0, WIDTH, HEIGHT, STRIDE, WL_SHM_FORMAT_ARGB8888);
+    state->buffer = wl_shm_pool_create_buffer(pool, 0, WIDTH, HEIGHT, STRIDE, WL_SHM_FORMAT_XRGB8888);
     
     // НЕ УНИЧТОЖАЙТЕ POOL СРАЗУ - буфер зависит от него!
     // wl_shm_pool_destroy(pool); // УБЕРИТЕ ЭТУ СТРОКУ!
