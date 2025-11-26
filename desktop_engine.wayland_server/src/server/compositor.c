@@ -120,14 +120,26 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
 
 static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) {
     struct buffer *buffer = calloc(1, sizeof(struct buffer));
+    if (!buffer) {
+        SERVER_ERROR("Failed to allocate memory for buffer");
+        return NULL;
+    }
     
+    // Проверяем SHM буфер
+    SERVER_DEBUG("Checking for SHM buffer...");
     struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(resource);
+    SERVER_DEBUG("wl_shm_buffer_get() returned: %p", (void*)shm_buffer);
+
     if (shm_buffer) {
         buffer->type = WL_BUFFER_SHM;
         buffer->resource = resource;
         buffer->width = wl_shm_buffer_get_width(shm_buffer);
         buffer->height = wl_shm_buffer_get_height(shm_buffer);
         buffer->shm.shm_buffer = shm_buffer;
+
+        SERVER_DEBUG("SHM buffer detected: %dx%d", buffer->width, buffer->height);
+        SERVER_DEBUG("SHM format: 0x%x", wl_shm_buffer_get_format(shm_buffer));
+        SERVER_DEBUG("SHM stride: %d", wl_shm_buffer_get_stride(shm_buffer));
         return buffer;
     }
 
