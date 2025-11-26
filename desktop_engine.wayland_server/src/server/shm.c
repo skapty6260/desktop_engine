@@ -103,7 +103,23 @@ static bool shm_pool_check_format(uint32_t format) {
     }
 }
 
-static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) {
+static void buffer_handle_destroy(struct wl_client *client, struct wl_resource *resource) {
+    struct shm_buffer *buffer = wl_resource_get_user_data(resource);
+    SERVER_DEBUG("Buffer destroy requested by client");
+    
+    if (buffer) {
+        // Освобождаем ресурсы буфера
+        free(buffer);
+    }
+}
+
+static const struct wl_buffer_interface buffer_implementation = {
+    .destroy = buffer_handle_destroy,
+};
+
+static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, 
+                                  uint32_t id, int32_t offset, int32_t width, int32_t height, 
+                                  int32_t stride, uint32_t format) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
     SERVER_DEBUG("CALLED shm_pool_create_buffer");
 
@@ -112,6 +128,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
 
+    // Валидация параметров
     if (offset < 0 || (size_t)offset >= pool->size) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid offset");
         return;
@@ -122,66 +139,65 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
     
-    if (stride < width * 4) { // minimal stride for 32bpp
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid stride");
+    // Более гибкая проверка stride
+    int min_stride = width * 4; // минимальный stride для 32bpp
+    if (stride < min_stride) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, 
+                              "stride too small (min: %d, got: %d)", min_stride, stride);
         return;
     }
 
-    // Check if buffer fits in pool
+    // Проверка что буфер помещается в pool
     size_t required_size = (size_t)offset + (size_t)height * (size_t)stride;
     if (required_size > pool->size) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, 
-                              "buffer exceeds pool size (required: %zu, available: %zu)", 
-                              required_size, pool->size);
+                              "buffer exceeds pool size");
         return;
     }
 
-    SERVER_DEBUG("shm_pool_create_buffer: check format");
-    if (shm_pool_check_format(format) == false) {
+    if (!shm_pool_check_format(format)) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FORMAT, "unsupported format");
         return;
     }
 
-    // Create buffer structure
+    // Создаем структуру буфера
     struct shm_buffer *buffer = calloc(1, sizeof(struct shm_buffer));
     if (!buffer) {
         wl_client_post_no_memory(client);
         return;
     }
-    
 
-    SERVER_DEBUG("shm_pool_create_buffer: create resource");
+    // Создаем ресурс буфера
     buffer->resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
     if (!buffer->resource) {
         wl_client_post_no_memory(client);
         free(buffer);
         return;
     }
+
     buffer->pool = pool;
     buffer->offset = offset;
     buffer->width = width;
     buffer->height = height;
     buffer->stride = stride;
     buffer->format = format;
+    
+    // Вычисляем указатель на данные
+    buffer->data = (unsigned char*)pool->data + offset;
 
-    // Initialize the link
     wl_list_init(&buffer->link);
-
-    // Add buffer to pool list
-    SERVER_DEBUG("shm_pool_create_buffer: list insert");
     wl_list_insert(&pool->buffers, &buffer->link);
 
-    // Setup buffer implementation
-    SERVER_DEBUG("shm_pool_create_buffer: setup implementation");
-    wl_resource_set_implementation(buffer->resource, NULL, buffer, shm_buffer_destroy);
+    static const struct wl_buffer_interface buffer_impl = {
+        .destroy = buffer_handle_destroy,
+    };
+    wl_resource_set_implementation(buffer->resource, &buffer_impl, buffer, shm_buffer_destroy);
 
-    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d",
-                width, height, stride, format, offset);
+    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d, data=%p",
+                width, height, stride, format, offset, buffer->data);
 
-    // TODO
-    // В реальном композиторе wl_buffer_send_release() вызывается после рендеринга
-    // Для демонстрации отправляем сразу
-    wl_buffer_send_release(buffer->resource);
+    // НЕ отправляем release сразу - это должен делать композитор после рендеринга
+    // wl_buffer_send_release(buffer->resource); // ⛔️ УБЕРИТЕ ЭТУ СТРОКУ
 }
 
 // TODO
