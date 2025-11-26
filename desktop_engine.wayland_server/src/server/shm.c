@@ -183,7 +183,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     buffer->format = format;
     
     // Вычисляем указатель на данные
-    buffer->data = (unsigned char*)pool->data + offset;
+    // buffer->data = (unsigned char*)pool->data + offset;
 
     wl_list_init(&buffer->link);
     wl_list_insert(&pool->buffers, &buffer->link);
@@ -193,8 +193,8 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     };
     wl_resource_set_implementation(buffer->resource, &buffer_impl, buffer, shm_buffer_destroy);
 
-    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d, data=%p",
-                width, height, stride, format, offset, buffer->data);
+    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d=",
+                width, height, stride, format, offset);
 
     // НЕ отправляем release сразу - это должен делать композитор после рендеринга
     // wl_buffer_send_release(buffer->resource); // ⛔️ УБЕРИТЕ ЭТУ СТРОКУ
