@@ -127,13 +127,13 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         buffer->resource = resource;
         buffer->width = wl_shm_buffer_get_width(shm_buffer);
         buffer->height = wl_shm_buffer_get_height(shm_buffer);
-        buffer->shm = shm_buffer;
+        buffer->shm.shm_buffer = shm_buffer;
         return buffer;
     }
 
 #ifdef HAVE_LINUX_DMABUF
     // Проверяем DMA-BUF через linux-dmabuf extension
-    if (wl_resource_instance_of(resource, &zwp_linux_buffer_params_v1_interface)) {
+    if (wl_resource_instance_of(resource, &zwp_linux_buffer_params_v1_interface, NULL)) {
         buffer->type = WL_BUFFER_DMA_BUF;
         // Получаем параметры DMA-BUF
         // get_dmabuf_params(buffer, resource);
