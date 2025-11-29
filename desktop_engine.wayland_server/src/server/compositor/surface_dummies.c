@@ -1,5 +1,7 @@
 #include "compositor.h"
 #include "../server.h"
+#include "../../logger/logger.h"
+#include <stdlib.h>
 
 static void surface_destroy(struct wl_client *client, struct wl_resource *resource) {
     struct surface *surface = wl_resource_get_user_data(resource);

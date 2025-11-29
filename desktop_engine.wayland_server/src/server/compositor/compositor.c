@@ -1,5 +1,5 @@
 #include "compositor.h"
-#include "../logger/logger.h"
+#include "../../logger/logger.h"
 #include "../server.h"
 #include <stdlib.h>
 
