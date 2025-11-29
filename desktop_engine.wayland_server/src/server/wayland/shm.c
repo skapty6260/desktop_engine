@@ -166,8 +166,6 @@ static const struct wl_shm_pool_interface shm_pool_implementation = {
 static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_resource, uint32_t id, int fd, int32_t size) {
     struct server *server = wl_resource_get_user_data(shm_resource);
 
-    SERVER_DEBUG("CALLED shm_create_pool");
-
     if (size <= 0) {
         wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_STRIDE,
                               "invalid size");
@@ -192,8 +190,6 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     pool->size = size;
     wl_list_init(&pool->buffers);
 
-    // Mmap shared memory for data access
-    SERVER_DEBUG("shm_create_pool: mmap data");
     pool->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (pool->data == MAP_FAILED) {
         wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_FD,
@@ -203,8 +199,6 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
         return;
     }
 
-    // Create pool resource
-    SERVER_DEBUG("shm_create_pool: create_resource");
     pool->resource = wl_resource_create(client, &wl_shm_pool_interface, 1, id);
     if (!pool->resource) {
         wl_client_post_no_memory(client);
@@ -214,13 +208,8 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
         return;
     }
     
-    SERVER_DEBUG("shm_create_pool: set implementation");
     wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, NULL);
-
-    SERVER_DEBUG("shm_create_pool: insert pool to server");
     wl_list_insert(&server->shm_pools, &pool->link);
-    
-    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d", fd, size);
 }
 
 static const struct wl_shm_interface shm_implementation = {
@@ -239,8 +228,6 @@ void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t i
     }
 
     wl_resource_set_implementation(resource, &shm_implementation, data, NULL);
-    
-    SERVER_DEBUG("SHM bound to client");
 
     // Send supported formats to client
     wl_shm_send_format(resource, WL_SHM_FORMAT_ARGB8888);
