@@ -2,14 +2,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "server.h"
-#include "../logger/logger.h"
+#include <server/server.h>
+#include <server/logger/logger.h>
 #include <wayland-server.h>
 
-#include "compositor/compositor.h"
-#include "shm.h"
-#include "xdg.h"
-#include "xdg-shell-protocol.h"
+#include <server/wayland/compositor.h>
+#include <server/wayland/shm.h>
+#include <server/xdg-shell/xdg.h>
 
 static void handle_client_destroyed(struct wl_listener *listener, void *data) {
     struct client *client = wl_container_of(listener, client, destroy_listener);

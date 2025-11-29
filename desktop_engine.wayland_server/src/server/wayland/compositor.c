@@ -1,6 +1,6 @@
-#include "compositor.h"
-#include "../../logger/logger.h"
-#include "../server.h"
+#include <server/wayland/compositor.h>
+#include <logger/logger.h>
+#include <server/server.h>
 #include <stdlib.h>
 
 #ifdef HAVE_LINUX_DMABUF

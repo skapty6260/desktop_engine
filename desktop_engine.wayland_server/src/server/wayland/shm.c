@@ -1,6 +1,6 @@
-#include "server.h"
-#include "../logger/logger.h"
-#include "shm.h"
+#include <server/server.h>
+#include <logger/logger.h>
+#include <server/wayland/shm.h>
 
 #include <sys/mman.h>
 #include <unistd.h>

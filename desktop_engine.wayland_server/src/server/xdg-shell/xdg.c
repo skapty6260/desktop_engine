@@ -1,7 +1,6 @@
-#include "server.h"
-#include "../logger/logger.h"
+#include <server/server.h>
+#include <logger/logger.h>
 #include "xdg.h"
-#include "xdg-shell-protocol.h"
 
 /* TODO
 Rework all modules excluding xdg_wm_base

@@ -38,6 +38,6 @@ executable('desktop_engine_wayland_server',
         wl_protos_src,
     ],
     dependencies: [wayland_server, wayland_protocols],
-    include_directories: include_directories('protocols'),
+    include_directories: [include_directories('protocols'), include_directories('src')],
     install: true
 )
