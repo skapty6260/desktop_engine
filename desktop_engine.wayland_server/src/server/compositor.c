@@ -187,6 +187,7 @@ static void surface_headless_attach(struct wl_client *client,
     struct buffer *buffer = custom_buffer_from_resource(buffer_resource);
     if (buffer) {
         SERVER_DEBUG("Buffer attached headless, buffer type: %s", buffer_type_to_string(buffer));
+    } else {
         SERVER_DEBUG("Buffer not attached (It's type not defined)");
     }
 }
