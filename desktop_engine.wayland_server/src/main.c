@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
     logger_config_t logger_config;
     server_config_t server_config;
     struct server server = {0};
+    pthread_t network_thread;
     
     /* Logger and config initialization */
     load_default_config(&logger_config, &server_config);
