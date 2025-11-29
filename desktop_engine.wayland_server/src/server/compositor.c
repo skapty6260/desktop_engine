@@ -125,20 +125,19 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         return NULL;
     }
     
-    // Теперь это должно работать
-    struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(resource);
-    SERVER_DEBUG("wl_shm_buffer_get() returned: %p", (void*)shm_buffer);
-
-    if (shm_buffer) {
+    struct shm_buffer *custom_shm_buffer = wl_resource_get_user_data(resource);
+    if (custom_shm_buffer) {
+        // Это наш ручной SHM буфер
         buffer->type = WL_BUFFER_SHM;
         buffer->resource = resource;
-        buffer->width = wl_shm_buffer_get_width(shm_buffer);
-        buffer->height = wl_shm_buffer_get_height(shm_buffer);
-        buffer->shm.shm_buffer = shm_buffer;
-
-        SERVER_DEBUG("SHM buffer detected: %dx%d", buffer->width, buffer->height);
-        SERVER_DEBUG("SHM format: 0x%x", wl_shm_buffer_get_format(shm_buffer));
-        SERVER_DEBUG("SHM stride: %d", wl_shm_buffer_get_stride(shm_buffer));
+        buffer->width = custom_shm_buffer->width;
+        buffer->height = custom_shm_buffer->height;
+        
+        // Для совместимости с кодом, который ожидает wl_shm_buffer,
+        // мы можем либо создать обертку, либо работать напрямую с данными
+        SERVER_DEBUG("Custom SHM buffer: %dx%d, format=0x%x, stride=%d",
+                    buffer->width, buffer->height, 
+                    custom_shm_buffer->format, custom_shm_buffer->stride);
         return buffer;
     }
 
