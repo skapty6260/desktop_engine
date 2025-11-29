@@ -40,9 +40,21 @@
               "icon": "lucide-layout-dashboard",
               "title": "Main scheme"
             }
+          },
+          {
+            "id": "8241e23d6120d1dd",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.10.6"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.10.6"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -204,8 +216,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "bf48584ce80b8277",
+  "active": "8241e23d6120d1dd",
   "lastOpenFiles": [
+    "Untitled.base",
     "Architecture/communication/Untitled.md",
     "Architecture/Main scheme.canvas",
     "readme.md",

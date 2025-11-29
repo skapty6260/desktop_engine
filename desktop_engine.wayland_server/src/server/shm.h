@@ -13,11 +13,16 @@
 
 void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 
-/**
- * @brief SHM buffer structure
- * 
- * Represents a single buffer within a SHM pool
- */
+struct shm_pool {
+    struct wl_resource *resource;
+    struct wl_list link;
+    int fd;
+    size_t size;
+    void *data;
+    struct wl_shm_pool *wl_pool;  // Важно: сохраняем Wayland SHM pool
+    struct wl_list buffers;
+};
+
 struct shm_buffer {
     struct wl_resource *resource;
     struct wl_list link;
@@ -26,20 +31,7 @@ struct shm_buffer {
     int32_t width, height;
     int32_t stride;
     uint32_t format;
-};
-
-/**
- * @brief SHM pool structure
- * 
- * Represents a shared memory pool that contains multiple buffers
- */
-struct shm_pool {
-    struct wl_resource *resource;   ///< Wayland resource for this pool
-    struct wl_list link;            ///< Link in server's pool list
-    int fd;                         ///< File descriptor for shared memory
-    size_t size;                    ///< Pool size in bytes
-    void *data;                     ///< Mapped memory region
-    struct wl_list buffers;         ///< List of buffers in this pool
+    struct wl_shm_buffer *wl_shm_buffer;  // Сохраняем указатель на shm_buffer
 };
 
 #ifdef _WIN32

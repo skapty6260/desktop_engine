@@ -125,8 +125,7 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         return NULL;
     }
     
-    // Проверяем SHM буфер
-    SERVER_DEBUG("Checking for SHM buffer...");
+    // Теперь это должно работать
     struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(resource);
     SERVER_DEBUG("wl_shm_buffer_get() returned: %p", (void*)shm_buffer);
 
@@ -148,12 +147,13 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
     if (wl_resource_instance_of(resource, &zwp_linux_buffer_params_v1_interface, NULL)) {
         buffer->type = WL_BUFFER_DMA_BUF;
         // Получаем параметры DMA-BUF
-        // get_dmabuf_params(buffer, resource);
         SERVER_DEBUG("Buffer is dmabuf!");
         return buffer;
     }
 #endif
 
+    // Если не SHM и не DMA-BUF, освобождаем память
+    free(buffer);
     return NULL;
 }
 
