@@ -2,6 +2,7 @@
 #include <server/wayland/buffer.h>
 #include <logger/logger.h>
 #include <server/server.h>
+#include <ipc/network_server.h>
 #include <stdlib.h>
 
 #ifdef HAVE_LINUX_DMABUF
@@ -66,6 +67,7 @@ void surface_headless_attach(struct wl_client *client, struct wl_resource *resou
     if (!surface || !buffer_resource) return;
     
     struct buffer *buffer = wl_resource_get_user_data(buffer_resource);
+    network_server_broadcast_buffer(buffer);
     SERVER_DEBUG("Called attach buffer with type: %s, size: %i or %iX%i", buffer_type_to_string(buffer), buffer->size, buffer->width, buffer->height);
 }
 

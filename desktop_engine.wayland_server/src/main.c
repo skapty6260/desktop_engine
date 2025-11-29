@@ -10,12 +10,14 @@ Buffer methods
 Ipc bridge (Should send clients info, should receive input events)
 -- Simple socket server to send buffers (No receiving & broadcast yet)
 */
-#include "logger/logger.h"
-#include "config/config.h"
-#include "server/server.h"
+#include <logger/logger.h>
+#include <config/config.h>
+#include <server/server.h>
+#include <ipc/network_server.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <pthread.h>
 
 static struct server *global_server = NULL;
 static volatile sig_atomic_t g_shutdown_requested = 0;
@@ -30,6 +32,29 @@ static void signal_handler(int signal) {
     if (global_server && global_server->display) {
         wl_display_terminate(global_server->display);
     }
+}
+
+static void *network_server_thread(void *arg) {
+    struct server *server = (struct server *)arg;
+    
+    if (network_server_init(NETWORK_PORT) != 0) {
+        LOG_ERROR(LOG_MODULE_CORE, "Failed to initialize network server");
+        return NULL;
+    }
+    
+    LOG_INFO(LOG_MODULE_CORE, "Network server started on port %d", NETWORK_PORT);
+    
+    // Здесь можно добавить логику для получения событий от клиентов
+    // или просто оставить сервер работающим для отправки буферов
+    
+    while (!g_shutdown_requested) {
+        sleep(1); // Просто ждем, пока основной поток отправляет буферы
+    }
+    
+    network_server_cleanup();
+    LOG_INFO(LOG_MODULE_CORE, "Network server stopped");
+    
+    return NULL;
 }
 
 int main(int argc, char **argv) {
@@ -69,6 +94,14 @@ int main(int argc, char **argv) {
     }
     setenv("WAYLAND_DISPLAY", server.socket, true);
 
+    /* Запускаем сетевой сервер в отдельном потоке */
+    if (pthread_create(&network_thread, NULL, network_server_thread, &server) != 0) {
+        LOG_ERROR(LOG_MODULE_CORE, "Failed to create network server thread");
+        server_cleanup(&server);
+        logger_cleanup();
+        return 1;
+    }
+
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
         LOG_DEBUG(LOG_MODULE_CORE, "TESTBED startup cmd: %s", server_config.startup_cmd);
@@ -78,12 +111,16 @@ int main(int argc, char **argv) {
     }
 
     LOG_INFO(LOG_MODULE_CORE, "Wayland server started on socket: %s", server.socket);
+    LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", NETWORK_PORT);
     LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
     server_run(&server);
 
     LOG_INFO(LOG_MODULE_CORE, "Wayland server shutdown complete");
     
+    // Ждем завершения сетевого потока
+    pthread_join(network_thread, NULL);
+
     server_cleanup(&server);
     logger_cleanup();
 
