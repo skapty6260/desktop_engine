@@ -19,8 +19,6 @@ struct server {
     struct wl_list shm_pools;
 };
 
-
-
 struct buffer {
     uint32_t width, height;
     struct wl_resource *resource;

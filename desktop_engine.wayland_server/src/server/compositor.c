@@ -125,7 +125,7 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         return NULL;
     }
     
-    struct shm_buffer *custom_shm_buffer = wl_resource_get_user_data(resource);
+    struct buffer *custom_shm_buffer = wl_resource_get_user_data(resource);
     if (custom_shm_buffer) {
         // Это наш ручной SHM буфер
         buffer->type = WL_BUFFER_SHM;
