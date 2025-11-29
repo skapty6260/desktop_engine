@@ -37,12 +37,12 @@ static void signal_handler(int signal) {
 static void *network_server_thread(void *arg) {
     struct server *server = (struct server *)arg;
     
-    if (network_server_init(NETWORK_PORT) != 0) {
+    if (network_server_init(PORT) != 0) {
         LOG_ERROR(LOG_MODULE_CORE, "Failed to initialize network server");
         return NULL;
     }
     
-    LOG_INFO(LOG_MODULE_CORE, "Network server started on port %d", NETWORK_PORT);
+    LOG_INFO(LOG_MODULE_CORE, "Network server started on port %d", PORT);
     
     // Здесь можно добавить логику для получения событий от клиентов
     // или просто оставить сервер работающим для отправки буферов
