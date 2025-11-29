@@ -7,6 +7,8 @@
 #include "linux-dmabuf-unstable-v1-protocol.h"
 #endif
 
+// BUFFERS
+
 // SURFACES
 static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) {
     struct buffer *buffer = calloc(1, sizeof(struct buffer));

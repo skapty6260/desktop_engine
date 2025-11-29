@@ -19,28 +19,6 @@ struct server {
     struct wl_list shm_pools;
 };
 
-struct buffer {
-    uint32_t width, height;
-    struct wl_resource *resource;
-
-    enum wl_buffer_type {
-        WL_BUFFER_SHM,
-        WL_BUFFER_DMA_BUF,
-        WL_BUFFER_EGL
-    } type;
-
-    union {
-        struct {
-            struct wl_shm_buffer *shm_buffer;
-        } shm;
-        struct {
-            int fd;
-            uint32_t format;
-            uint64_t modifier;
-        } dmabuf;
-    };
-};
-
 struct surface {
     struct wl_resource *resource;
     struct wl_resource *xdg_surface;
