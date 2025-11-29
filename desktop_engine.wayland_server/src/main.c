@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     }
 
     LOG_INFO(LOG_MODULE_CORE, "Wayland server started on socket: %s", server.socket);
-    LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", NETWORK_PORT);
+    LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", PORT);
     LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
     server_run(&server);
