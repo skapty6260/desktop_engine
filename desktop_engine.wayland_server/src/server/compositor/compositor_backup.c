@@ -8,115 +8,19 @@
 #endif
 
 
-/*  WL_SURFACE DESCRIPTION
-    A surface is a rectangular area that may be displayed on zero or more outputs,
-    and shown any number of times at the compositor's discretion. It can present
-    wl_buffers, receive user input, and define a local coordinate system.
+/* TODO
+Rework compositor to do nothing, but attach client surface buffer to custom buffer
+and transfer it to renderer.
 
-    Surface size and relative positions are described in surface-local coordinates,
-    which may differ from buffer pixel coordinates when buffer_transform or
-    buffer_scale is used.
+Main functionality: 
+bind compositor;
+implement compositor methods; 
+handle surface constructor (surface_create) and destructor;
+surface_attach (bind buffer);
+surface_destroy (destructor);
 
-    A surface without a role is useless - the compositor doesn't know where, when
-    or how to present it. The role defines the surface's purpose. 
-    Role Examples include:
-    - a pointer cursor (set by wl_pointer.set_cursor),
-    - a drag icon (wl_data_device.start_drag),
-    - a sub-surface (wl_subcompositor.get_subsurface),
-    - a window via shell protocols (XDG).
-
-    Key rules:
-    - Surface can have only one role at a time
-    - Initially surface has no role
-    - Once set, role is permanent for the surface's lifetime
-    - Re-setting the same role is allowed unless explicitly forbidden
-    - Role objects (like wl_subsurface) must be destroyed before the surface
-    - Destroying role object stops the role execution but doesn't remove the role
-    - Role switching between different types is prohibited
+All other methods should be dummies to be compatible for all clients
 */
-
-/*  WL_SURFACE attach
-*/ 
-/*
-Устанавливает буфер в качестве содержимого поверхности.
-
-Новый размер поверхности вычисляется на основе размера буфера с применением
-обратного buffer_transform и обратного buffer_scale. Это означает, что при
-коммите размер буфера должен быть целым кратным buffer_scale. Если это не так,
-отправляется ошибка invalid_size.
-
-Аргументы x и y задают расположение верхнего левого угла нового отложенного буфера
-относительно верхнего левого угла текущего буфера в поверхностно-локальных координатах.
-Другими словами, x и y вместе с новым размером поверхности определяют, в каких
-направлениях изменяется размер поверхности. Использование значений x и y, отличных
-от 0, не рекомендуется и должно быть заменено использованием отдельного запроса
-wl_surface.offset.
-
-Когда связанная версия wl_surface равна 5 или выше, передача любых не-null значений
-x или y является нарушением протокола и приведет к ошибке 'invalid_offset'.
-Аргументы x и y игнорируются и не изменяют отложенное состояние. Для достижения
-эквивалентной семантики используйте wl_surface.offset.
-
-Содержимое поверхности имеет двойную буферизацию, см. wl_surface.commit.
-
-Начальное содержимое поверхности пустое. wl_surface.attach назначает заданный
-wl_buffer в качестве отложенного wl_buffer. wl_surface.commit делает отложенный
-wl_buffer новым содержимым поверхности, и размер поверхности становится равным
-размеру, вычисленному из wl_buffer, как описано выше. После коммита отложенного
-буфера нет до следующего attach.
-
-Коммит отложенного wl_buffer позволяет композитору читать пиксели в wl_buffer.
-Композитор может получить доступ к пикселям в любое время после запроса
-wl_surface.commit. Когда композитор больше не будет обращаться к пикселям,
-он отправит событие wl_buffer.release. Только после получения wl_buffer.release
-клиент может повторно использовать wl_buffer. wl_buffer, который был attached,
-а затем заменен другим attach вместо коммита, не получит событие release и не
-используется композитором.
-
-Если отложенный wl_buffer был закоммичен на несколько wl_surface, доставка
-событий wl_buffer.release становится неопределенной. Корректный клиент не должен
-полагаться на события wl_buffer.release в этом случае. Альтернативно, клиент
-может создать несколько объектов wl_buffer из одного хранилища или использовать
-расширение протокола, предоставляющее уведомления о release при каждом коммите.
-
-Уничтожение wl_buffer после wl_buffer.release не изменяет содержимое поверхности.
-Уничтожение wl_buffer до wl_buffer.release разрешено, пока базовое хранилище
-буфера не используется повторно (это может произойти, например, при завершении
-процесса клиента). Однако, если клиент уничтожает wl_buffer до получения события
-wl_buffer.release и изменяет базовое хранилище буфера, содержимое поверхности
-немедленно становится неопределенным.
-
-Если wl_surface.attach отправляется с NULL wl_buffer, следующий wl_surface.commit
-удалит содержимое поверхности.
-
-Если отложенный wl_buffer был уничтожен, результат не определен. Известно, что
-многие композиторы удаляют содержимое поверхности при следующем wl_surface.commit,
-но это поведение не является универсальным. Клиенты, стремящиеся максимизировать
-совместимость, не должны уничтожать отложенные буферы и должны гарантировать, что
-они явно удаляют содержимое с поверхностей, даже после уничтожения буферов.
-*/
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y) {
-    struct surface *surface = wl_resource_get_user_data(resource);
-    const uint32_t surface_version = wl_resource_get_version(resource);
-
-    if (!surface) return;
-
-    if (surface_version >= 5 && (x != 0 || y != 0)) {
-        wl_resource_post_error(resource, WL_SURFACE_ERROR_INVALID_OFFSET,
-                              "x and y must be 0 for wl_surface version >= 5");
-        return;
-    }
-
-    // Should add get_buffer_size and check for invalid_size and invalid_offset error
-
-    surface->pending_buffer = buffer;
-    surface->pending_x = (surface_version >= 5) ? 0 : x;
-    surface->pending_y = (surface_version >= 5) ? 0 : y;
-    
-    surface->pending_changes.attach = true;
-
-    SERVER_DEBUG("SURFACE ATTACH: surface=%p, pending_buffer=%p, pending_x=%d, pending_y=%d", surface, surface->pending_buffer, surface->pending_x, surface->pending_y);
-}
 
 static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) {
     struct buffer *buffer = calloc(1, sizeof(struct buffer));
@@ -133,8 +37,6 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         buffer->width = custom_shm_buffer->width;
         buffer->height = custom_shm_buffer->height;
         
-        // Для совместимости с кодом, который ожидает wl_shm_buffer,
-        // мы можем либо создать обертку, либо работать напрямую с данными
         SERVER_DEBUG("Custom SHM buffer: %dx%d",
                     buffer->width, buffer->height);
         return buffer;
@@ -171,18 +73,10 @@ static const char* buffer_type_to_string(struct buffer *buffer) {
     }
 }
 
-static void surface_headless_attach(struct wl_client *client, 
-                                   struct wl_resource *resource, 
-                                   struct wl_resource *buffer_resource, 
-                                   int32_t x, int32_t y) {
+static void surface_headless_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer_resource, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface || !buffer_resource) return;
-    
-    uint32_t buffer_id = wl_resource_get_id(buffer_resource);
-    uint32_t version = wl_resource_get_version(buffer_resource);
-    
-    SERVER_INFO("Buffer attached - ID: %d, Version: %d", buffer_id, version);
     
     struct buffer *buffer = custom_buffer_from_resource(buffer_resource);
     if (buffer) {

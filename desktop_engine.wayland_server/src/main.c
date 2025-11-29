@@ -3,7 +3,12 @@ Basic wayland server (Open clients, create surfaces)
 
 -- In logger_fatal not just cleaning up, but work with shutdown requests
 
+Buffer methods
+-- Shm buffer creation handling
+-- Attach buffer (No surface implementation)
+
 Ipc bridge (Should send clients info, should receive input events)
+-- Simple socket server to send buffers (No receiving & broadcast yet)
 */
 #include "logger/logger.h"
 #include "config/config.h"

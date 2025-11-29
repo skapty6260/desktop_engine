@@ -200,7 +200,6 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     // wl_buffer_send_release(buffer->resource); // ⛔️ УБЕРИТЕ ЭТУ СТРОКУ
 }
 
-// TODO
 static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_resource, int32_t size) {
     SERVER_DEBUG("SHM_POOL RESIZED");
 }

@@ -6,7 +6,7 @@
 #include "../logger/logger.h"
 #include <wayland-server.h>
 
-#include "compositor.h"
+#include "compositor/compositor.h"
 #include "shm.h"
 #include "xdg.h"
 #include "xdg-shell-protocol.h"
@@ -84,22 +84,6 @@ void server_run(struct server *server) {
 }
 
 void server_cleanup(struct server *server) {
-    /* TODO
-        Адекватное закрытие клиентов, с их terminate
-    */
-    // struct surface *surface, *tmp_surface;
-    // wl_list_for_each_safe(surface, tmp_surface, &server->surfaces, link) {
-    //     wl_list_remove(&surface->link);
-    //     free(surface);
-    // }
-    
-    // // Cleanup clients
-    // struct client *client, *tmp_client;
-    // wl_list_for_each_safe(client, tmp_client, &server->clients, link) {
-    //     wl_list_remove(&client->link);
-    //     free(client);
-    // }
-
     if (server->display) {
         wl_display_destroy(server->display);
         server->display = NULL;
