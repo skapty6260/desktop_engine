@@ -1,4 +1,5 @@
 #include <server/wayland/buffer.h>
+#include <stdlib.h>
 
 enum pixel_format wl_shm_format_to_pixel_format(uint32_t wl_format) {
     switch (wl_format) {
@@ -61,7 +62,7 @@ struct buffer *buffer_create_shm(struct wl_resource *resource, void *pool_data, 
     buf->format = wl_shm_format_to_pixel_format(wl_format);
     
     SERVER_DEBUG("Created buffer from SHM: %dx%d, stride=%d, format=0x%x, data=%p",
-                buf->width, buf->height, buf->shm.stride, shm_buf->format, buf->shm.data);
+                buf->width, buf->height, buf->shm.stride, buf->format, buf->shm.data);
     
     return buf;
 }
