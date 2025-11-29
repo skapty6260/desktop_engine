@@ -62,9 +62,6 @@ struct buffer *buffer_create_shm(struct wl_resource *resource, void *pool_data, 
     buf->size = buf->shm.stride * buf->height;
     buf->format = wl_shm_format_to_pixel_format(format);
     
-    SERVER_DEBUG("Created buffer from SHM: %dx%d, stride=%d, format=0x%x, data=%p",
-                buf->width, buf->height, buf->shm.stride, buf->format, buf->shm.data);
-    
     return buf;
 }
 

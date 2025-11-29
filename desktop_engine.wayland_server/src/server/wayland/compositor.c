@@ -26,8 +26,6 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         buffer->width = custom_shm_buffer->width;
         buffer->height = custom_shm_buffer->height;
         
-        SERVER_DEBUG("Custom SHM buffer: %dx%d",
-                    buffer->width, buffer->height);
         return buffer;
     }
 
@@ -67,12 +65,8 @@ void surface_headless_attach(struct wl_client *client, struct wl_resource *resou
 
     if (!surface || !buffer_resource) return;
     
-    struct buffer *buffer = custom_buffer_from_resource(buffer_resource);
-    if (buffer) {
-        SERVER_DEBUG("Buffer attached headless, buffer type: %s", buffer_type_to_string(buffer));
-    } else {
-        SERVER_DEBUG("Buffer not attached (It's type not defined)");
-    }
+    struct buffer *buffer = wl_resource_get_user_data(resource);
+    SERVER_DEBUG("Called attach buffer with type: %s, size: %i or %iX%i", buffer_type_to_string(buffer->type), buffer->size, buffer->width, buffer->height);
 }
 
 static void compositor_create_surface(struct wl_client *client, struct wl_resource *resource, uint32_t id) {
