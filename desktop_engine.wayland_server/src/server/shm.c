@@ -42,11 +42,6 @@ static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_
             }
         }
         
-        // Уничтожаем Wayland SHM pool
-        if (pool->wl_pool) {
-            wl_shm_pool_destroy(pool->wl_pool);
-        }
-        
         // Освобождаем mmap'ed память
         if (pool->data && pool->data != MAP_FAILED) {
             munmap(pool->data, pool->size);
@@ -127,15 +122,6 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
 
-    // Используем Wayland функцию для создания SHM буфера
-    struct wl_shm_buffer *wl_shm_buffer = wl_shm_buffer_create(buffer_resource, pool->wl_pool,
-                                                              offset, width, height, stride, format);
-    if (!wl_shm_buffer) {
-        wl_resource_destroy(buffer_resource);
-        wl_client_post_no_memory(client);
-        return;
-    }
-
     // Создаем нашу структуру для отслеживания
     struct shm_buffer *buffer = calloc(1, sizeof(struct shm_buffer));
     if (!buffer) {
@@ -151,7 +137,10 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     buffer->height = height;
     buffer->stride = stride;
     buffer->format = format;
-    buffer->wl_shm_buffer = wl_shm_buffer;  // Сохраняем указатель
+
+    // ВАЖНО: Регистрируем буфер как SHM буфер в Wayland
+    // Это позволяет wl_shm_buffer_get() находить его
+    wl_shm_buffer_set_user_data(buffer_resource, buffer);
 
     wl_list_init(&buffer->link);
     wl_list_insert(&pool->buffers, &buffer->link);
@@ -159,8 +148,8 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     // Устанавливаем реализацию
     wl_resource_set_implementation(buffer_resource, &buffer_implementation, buffer, shm_buffer_destroy);
 
-    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d, wl_shm_buffer=%p",
-                width, height, stride, format, offset, wl_shm_buffer);
+    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d",
+                width, height, stride, format, offset);
 }
 
 static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_resource, int32_t size) {
@@ -176,9 +165,6 @@ static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_r
         return;
     }
 
-    // Изменяем размер SHM pool
-    wl_shm_pool_resize(pool->wl_pool, size);
-    
     // Обновляем mmap если нужно
     if (pool->data && pool->data != MAP_FAILED) {
         munmap(pool->data, pool->size);
@@ -227,30 +213,20 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     pool->size = size;
     wl_list_init(&pool->buffers);
 
-    // Создаем Wayland SHM pool
-    pool->wl_pool = wl_shm_create_pool(server->shm, fd, size);
-    if (!pool->wl_pool) {
-        wl_client_post_no_memory(client);
+    // Mmap shared memory для доступа к данным
+    pool->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (pool->data == MAP_FAILED) {
+        wl_resource_post_error(shm_resource, WL_SHM_ERROR_INVALID_FD,
+                              "failed to mmap shared memory");
         close(fd);
         free(pool);
         return;
     }
 
-    // Mmap shared memory для доступа к данным
-    pool->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (pool->data == MAP_FAILED) {
-        SERVER_DEBUG("Warning: failed to mmap shared memory (but pool created)");
-        pool->data = NULL;
-        // Не прерываем выполнение - pool все равно работает
-    }
-
     // Создаем ресурс пула
     pool->resource = wl_resource_create(client, &wl_shm_pool_interface, 1, id);
     if (!pool->resource) {
-        wl_shm_pool_destroy(pool->wl_pool);
-        if (pool->data && pool->data != MAP_FAILED) {
-            munmap(pool->data, size);
-        }
+        munmap(pool->data, size);
         close(fd);
         free(pool);
         return;
@@ -259,7 +235,7 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
     wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, NULL);
     wl_list_insert(&server->shm_pools, &pool->link);
     
-    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d, wl_pool=%p", fd, size, pool->wl_pool);
+    SERVER_DEBUG("SHM pool created successfully: fd=%d, size=%d", fd, size);
 }
 
 static const struct wl_shm_interface shm_implementation = {
