@@ -135,9 +135,8 @@ static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) 
         
         // Для совместимости с кодом, который ожидает wl_shm_buffer,
         // мы можем либо создать обертку, либо работать напрямую с данными
-        SERVER_DEBUG("Custom SHM buffer: %dx%d, format=0x%x, stride=%d",
-                    buffer->width, buffer->height, 
-                    custom_shm_buffer->shm.shm_buffer->format, custom_shm_buffer->shm.shm_buffer->stride);
+        SERVER_DEBUG("Custom SHM buffer: %dx%d",
+                    buffer->width, buffer->height);
         return buffer;
     }
 
