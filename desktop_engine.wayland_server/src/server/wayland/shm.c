@@ -122,13 +122,13 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     }
 
     // Создаем ресурс буфера
-    struct wl_resource buffer_resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
+    struct wl_resource *buffer_resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
     if (!buffer_resource) {
         wl_client_post_no_memory(client);
         return;
     }
 
-    struct buffer *buffer = buffer_create_shm(buffer_resource, pool->data, offset, width, height, stride, format);
+    struct buffer *buffer = buffer_create_shm(buffer_resource, pool->data, id, offset, width, height, stride, format);
     if (!buffer) {
         wl_client_post_no_memory(client);
         wl_resource_destroy(buffer_resource);
