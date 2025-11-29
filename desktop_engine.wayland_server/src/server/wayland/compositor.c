@@ -1,4 +1,5 @@
 #include <server/wayland/compositor.h>
+#include <server/wayland/buffer.h>
 #include <logger/logger.h>
 #include <server/server.h>
 #include <stdlib.h>
