@@ -9,14 +9,16 @@
 #include <stdbool.h>
 
 static void shm_buffer_destroy(struct wl_resource *resource) {
-    struct shm_buffer *buffer = wl_resource_get_user_data(resource);
+    struct buffer *buffer = wl_resource_get_user_data(resource);
     
-    if (buffer && buffer->pool) {
+    if (buffer) {
         // Remove buffer from pool's list
         wl_list_remove(&buffer->link);
         SERVER_DEBUG("SHM buffer destroyed: %dx%d", buffer->width, buffer->height);
+        
+        // Free the buffer structure
+        free(buffer);
     }
-    free(buffer);
 }
 
 static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
@@ -26,7 +28,7 @@ static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_
         SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
         
         // Destroy all buffers in this pool
-        struct shm_buffer *buffer, *tmp;
+        struct buffer *buffer, *tmp;
         wl_list_for_each_safe(buffer, tmp, &pool->buffers, link) {
             if (buffer->resource) {
                 wl_resource_destroy(buffer->resource);
@@ -67,12 +69,13 @@ static bool shm_pool_check_format(uint32_t format) {
 }
 
 static void buffer_handle_destroy(struct wl_client *client, struct wl_resource *resource) {
-    struct shm_buffer *buffer = wl_resource_get_user_data(resource);
+    struct buffer *buffer = wl_resource_get_user_data(resource);
     SERVER_DEBUG("Buffer destroy requested by client");
     
     if (buffer) {
-        // Освобождаем ресурсы буфера
-        free(buffer);
+        // Note: Actual destruction happens in shm_buffer_destroy destructor
+        // We just destroy the Wayland resource here, which will trigger shm_buffer_destroy
+        wl_resource_destroy(resource);
     }
 }
 
