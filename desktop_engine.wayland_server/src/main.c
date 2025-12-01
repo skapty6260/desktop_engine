@@ -115,6 +115,17 @@ int main(int argc, char **argv) {
     LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", PORT);
     LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
+    while (g_shutdown_requested != 1) {
+        struct buffer *buf = calloc(1, sizeof(struct buffer));
+        buf->width = 1920;
+        buf->height = 1080;
+        buf->resource = NULL;
+        buf->size = 400000;
+        buf->type = WL_BUFFER_SHM;
+
+        network_server_broadcast_buffer(buf);
+    }
+
     server_run(&server);
 
     LOG_INFO(LOG_MODULE_CORE, "Wayland server shutdown complete");

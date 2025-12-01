@@ -1,3 +1,4 @@
 build
 .vscode
 src/wayland.xml
+../desktop_engine.remote_renderer_windows/network_client.exe
