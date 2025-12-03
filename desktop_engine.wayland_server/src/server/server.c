@@ -50,27 +50,15 @@ void server_run(struct server *server) {
     wl_display_run(server->display);
 }
 
-#define CLEANUP_WL_LIST_1(type, list) \
+#define CLEANUP_WL_LIST(type, list, ...) \
     do { \
         struct type *member, *member_tmp; \
         wl_list_for_each_safe(member, member_tmp, list, link) { \
             wl_list_remove(&member->link); \
+            __VA_ARGS__ \
             free(member); \
         } \
     } while(0)
-
-#define CLEANUP_WL_LIST_2(type, list, callback) \
-    do { \
-        struct type *member, *member_tmp; \
-        wl_list_for_each_safe(member, member_tmp, list, link) { \
-            wl_list_remove(&member->link); \
-            callback(member); \
-            free(member); \
-        } \
-    } while(0)
-
-#define CLEANUP_WL_LIST_HELPER(_1, _2, _3, NAME, ...) NAME
-#define CLEANUP_WL_LIST(...) CLEANUP_WL_LIST_HELPER(__VA_ARGS__, CLEANUP_WL_LIST_2, CLEANUP_WL_LIST_1, )
 
 void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
@@ -79,7 +67,7 @@ void server_cleanup(struct server *server) {
     CLEANUP_WL_LIST(surface, &server->surfaces);
 
     /* Cleanup shm_pools */
-    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool);
+    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool(member));
 
     if (server->display) {
         wl_display_destroy(server->display);
