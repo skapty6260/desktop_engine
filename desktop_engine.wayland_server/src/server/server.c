@@ -55,7 +55,7 @@ void server_run(struct server *server) {
         struct type *member, *member_tmp; \
         wl_list_for_each_safe(member, member_tmp, list, link) { \
             wl_list_remove(&member->link); \
-            callback(member); \
+            callback; \
             free(member); \
         } \
     } while(0)
@@ -65,11 +65,11 @@ void server_cleanup(struct server *server) {
 
     /* Cleanup surfaces */
     SERVER_DEBUG("Cleaning up surfaces");
-    CLEANUP_WL_LIST(surface, &server->surfaces, void *);
+    CLEANUP_WL_LIST(surface, &server->surfaces, void(0));
 
     /* Cleanup shm_pools */
     SERVER_DEBUG("Cleaning up shm_pools");
-    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool);
+    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool(member));
 
     SERVER_DEBUG("Destroying wl display");
     if (server->display) {
