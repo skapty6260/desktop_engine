@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/mman.h>
+#include <stddef.h>
 
 #include <server/server.h>
 #include <logger/logger.h>
@@ -50,26 +50,35 @@ void server_run(struct server *server) {
     wl_display_run(server->display);
 }
 
-#define CLEANUP_WL_LIST(type, list, callback) \
-    do { \
-        struct type *member, *member_tmp; \
-        wl_list_for_each_safe(member, member_tmp, list, link) { \
-            wl_list_remove(&member->link); \
-            callback; \
-            free(member); \
-        } \
-    } while(0)
+static void wl_list_cleanup(
+    struct wl_list *list,
+    void (*callback)(void *),
+    size_t offset /* offsetof(struct type, link) */
+) {
+    struct wl_list *pos, *tmp;
+    wl_list_for_each_safe(pos, tmp, list) {
+        wl_list_remove(pos);
+        
+        /* Получаем указатель на структуру */
+        void *item = (char *)pos - offset;
+        
+        /* Вызываем callback если есть */
+        if (callback) {
+            callback(item);
+        }
+        
+        free(item);
+    }
+}
 
 void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 
     /* Cleanup surfaces */
-    SERVER_DEBUG("Cleaning up surfaces");
-    CLEANUP_WL_LIST(surface, &server->surfaces, void(0));
+    wl_list_cleanup(&server->surfaces, NULL, offsetof(struct surface, link));
 
     /* Cleanup shm_pools */
-    SERVER_DEBUG("Cleaning up shm_pools");
-    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool(member));
+    wl_list_cleanup(&server->shm_pools, destroy_shm_pool, offsetof(struct shm_pool, link));
 
     SERVER_DEBUG("Destroying wl display");
     if (server->display) {
