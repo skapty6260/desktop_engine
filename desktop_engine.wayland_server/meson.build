@@ -16,6 +16,7 @@ add_project_arguments(
         '-Wno-unused-variable',
         '-Wno-unused-function',
         '-Wno-unused-but-set-variable',
+        '-Wno-maybe-uninitialized',
     ],
     language: 'c'
 )
