@@ -64,11 +64,14 @@ void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 
     /* Cleanup surfaces */
+    SERVER_DEBUG("Cleaning up surfaces");
     CLEANUP_WL_LIST(surface, &server->surfaces, void *);
 
     /* Cleanup shm_pools */
+    SERVER_DEBUG("Cleaning up shm_pools");
     CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool);
 
+    SERVER_DEBUG("Destroying wl display");
     if (server->display) {
         wl_display_destroy(server->display);
         server->display = NULL;
