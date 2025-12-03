@@ -60,7 +60,7 @@ void server_run(struct server *server) {
 
 #define CLEANUP_WL_LIST_2(type, list, callback) \
     do { \
-        type *member, *member_tmp; \
+        struct type *member, *member_tmp; \
         wl_list_for_each_safe(member, member_tmp, list, link) { \
             wl_list_remove(&member->link); \
             callback(member); \
