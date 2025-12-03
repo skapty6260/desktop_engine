@@ -10,42 +10,13 @@
 #include <server/wayland/shm.h>
 #include <server/xdg-shell/xdg.h>
 
-// static void handle_client_destroyed(struct wl_listener *listener, void *data) {
-//     struct client *client = wl_container_of(listener, client, destroy_listener);
-//     wl_list_remove(&client->link);
-//     free(client);
-
-//     SERVER_INFO("Client destroyed and removed from server list");
-// }
-
-// static void handle_client_created(struct wl_listener *listener, void *data) {
-//     struct server *server = wl_container_of(listener, server, client_created_listener);
-//     struct wl_client *wl_client = data;
-
-//     struct client *client = calloc(1, sizeof(struct client));
-//     if (!client) {
-//         SERVER_ERROR("Failed to allocate client");
-//         return;
-//     }
-//     client->wl_client = wl_client;
-//     wl_list_init(&client->link);
-//     wl_list_insert(&server->clients, &client->link);  // в начало
-
-//     client->destroy_listener.notify = handle_client_destroyed;
-//     wl_client_add_destroy_listener(wl_client, &client->destroy_listener);
-
-//     SERVER_INFO("New client connected (total clients: %d)", 
-//                wl_list_length(&server->clients));
-// }
-
 void server_init(struct server *server) {
     server->display = wl_display_create();
     if (!server->display) {
         SERVER_FATAL("Failed to create Wayland display");
     }
 
-    /* Init clients and surfaces lists */
-    wl_list_init(&server->clients);
+    /* Init lists */
     wl_list_init(&server->surfaces);
     wl_list_init(&server->shm_pools);
 
@@ -71,10 +42,6 @@ void server_init(struct server *server) {
     if (!server->xdg_wm_base_global || !server->shm_global || !server->compositor_global) {
         SERVER_FATAL("Failed to create Wayland globals");
     }
-
-    /* Assign event listeners */
-    // server->client_created_listener.notify = handle_client_created;
-    // wl_display_add_client_created_listener(server->display, &server->client_created_listener);
 }
 
 void server_run(struct server *server) {
@@ -82,8 +49,38 @@ void server_run(struct server *server) {
     wl_display_run(server->display);
 }
 
+#define CLEANUP_WL_LIST_1(type, list) \
+    type *member, *member_tmp; \
+    wl_list_for_each_safe(member, member_tmp, list, link) { \
+        wl_list_remove(&member->link); \
+        free(member); \
+    } \
+
+#define CLEANUP_WL_LIST_2(type, list, callback) \
+    type *member, *member_tmp; \
+    wl_list_for_each_safe(member, member_tmp, list, link) { \
+        wl_list_remove(&member->link); \
+        callback \
+        free(member); \
+    } \
+
+#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
+#define CLEANUP_WL_LIST(...) \
+    GET_MACRO(__VA_ARGS__, CLEANUP_WL_LIST_2, CLEANUP_WL_LIST_1)(__VA_ARGS__)
+
 void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
+
+    /* Cleanup surfaces */
+    CLEANUP_WL_LIST(struct surface, &server->surfaces)
+
+    /* Cleanup shm_pools */
+    CLEANUP_WL_LIST(struct shm_pool, &server->shm_pools, 
+        /* Cleanup shm buffers inside pool */
+        CLEANUP_WL_LIST(struct buffer, &member->buffers);
+        munmap(member->data, member->size);
+        close(member->fd);
+    )
 
     if (server->display) {
         wl_display_destroy(server->display);

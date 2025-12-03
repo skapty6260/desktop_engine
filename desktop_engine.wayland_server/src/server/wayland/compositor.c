@@ -90,19 +90,10 @@ static void compositor_create_surface(struct wl_client *client, struct wl_resour
     }
     
     surface->resource = surface_resource;
-    surface->buffer = NULL;
-    surface->pending_buffer = NULL;
+    // surface->buffer = NULL;
     surface->server = server;
     surface->xdg_surface = NULL;
     surface->xdg_toplevel = NULL;
-    surface->x = 0;
-    surface->y = 0;
-    surface->pending_x = 0;
-    surface->pending_y = 0;
-    surface->pending_width = 0;
-    surface->pending_height = 0;
-    surface->width = 0;
-    surface->height = 0;
     wl_list_init(&surface->link);
     
     wl_resource_set_implementation(surface_resource, &surface_implementation, surface, NULL); // TODO: destructor

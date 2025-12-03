@@ -7,14 +7,10 @@ struct server {
     struct wl_display *display;
     const char* socket;
 
-    struct wl_listener client_created_listener;
-
     struct wl_global *xdg_wm_base_global;
     struct wl_global *compositor_global;
-    // struct wl_global *shell_global;
     struct wl_global *shm_global;
 
-    struct wl_list clients;
     struct wl_list surfaces;
     struct wl_list shm_pools;
 };
@@ -26,29 +22,23 @@ struct surface {
     struct server *server;
     struct wl_list link;
 
-    // Active state
-    struct wl_resource *buffer;
-    int width, height;
-    int x,y;
+    // // Active state
+    // struct wl_resource *buffer;
+    // int width, height;
+    // int x,y;
 
-    // Pending state
-    struct wl_resource *pending_buffer;
-    int pending_width, pending_height;
-    int pending_x, pending_y;
+    // // Pending state
+    // struct wl_resource *pending_buffer;
+    // int pending_width, pending_height;
+    // int pending_x, pending_y;
 
-    struct {
-        bool attach : 1;
-        bool damage : 1;
-        bool transform : 1;
-        bool scale : 1;
-    } pending_changes;
+    // struct {
+    //     bool attach : 1;
+    //     bool damage : 1;
+    //     bool transform : 1;
+    //     bool scale : 1;
+    // } pending_changes;
 };
-
-// struct client {
-//     struct wl_client *wl_client;
-//     struct wl_list link;
-//     struct wl_listener destroy_listener;
-// };
 
 typedef struct server_config {
     char* startup_cmd;
