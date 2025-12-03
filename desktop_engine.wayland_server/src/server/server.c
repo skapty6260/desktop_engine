@@ -50,7 +50,7 @@ void server_run(struct server *server) {
 }
 
 #define CLEANUP_WL_LIST_1(type, list) \
-    type *member, *member_tmp; \
+    struct type *member, *member_tmp; \
     wl_list_for_each_safe(member, member_tmp, list, link) { \
         wl_list_remove(&member->link); \
         free(member); \
@@ -72,15 +72,15 @@ void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 
     /* Cleanup surfaces */
-    CLEANUP_WL_LIST(struct surface, &server->surfaces)
+    CLEANUP_WL_LIST(surface, &server->surfaces);
 
     /* Cleanup shm_pools */
-    CLEANUP_WL_LIST(struct shm_pool, &server->shm_pools, 
+    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, 
         /* Cleanup shm buffers inside pool */
         CLEANUP_WL_LIST(struct buffer, &member->buffers);
         munmap(member->data, member->size);
         close(member->fd);
-    )
+    );
 
     if (server->display) {
         wl_display_destroy(server->display);
