@@ -21,7 +21,9 @@ static void shm_buffer_destroy(struct wl_resource *resource) {
     }
 }
 
-void destroy_shm_pool(struct shm_pool *pool) {
+void destroy_shm_pool(void *data) {
+    struct shm_pool *pool = data;
+
     if (pool) {
         SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
         

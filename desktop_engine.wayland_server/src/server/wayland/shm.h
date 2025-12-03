@@ -15,7 +15,7 @@ struct shm_pool {
     struct wl_list buffers;         ///< List of buffers in this pool
 };
 
-void destroy_shm_pool(struct shm_pool *pool);
+void destroy_shm_pool(void *data);
 
 #ifdef _WIN32
 /**
