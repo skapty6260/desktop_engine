@@ -50,19 +50,22 @@ void server_run(struct server *server) {
     wl_display_run(server->display);
 }
 
-static void wl_list_cleanup(
+/* Макрос для удобства использования offsetof */
+#define CLEANUP_WL_LIST(list, type, callback) \
+    wl_list_cleanup_generic(list, offsetof(type, link), \
+                           (void (*)(void *))callback)
+
+/* Базовая функция */
+static inline void wl_list_cleanup_generic(
     struct wl_list *list,
-    void (*callback)(void *),
-    size_t offset /* offsetof(struct type, link) */
+    size_t link_offset,
+    void (*callback)(void *)
 ) {
     struct wl_list *pos, *tmp;
     wl_list_for_each_safe(pos, tmp, list, link) {
         wl_list_remove(pos);
+        void *item = (char *)pos - link_offset;
         
-        /* Получаем указатель на структуру */
-        void *item = (char *)pos - offset;
-        
-        /* Вызываем callback если есть */
         if (callback) {
             callback(item);
         }
@@ -75,10 +78,10 @@ void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 
     /* Cleanup surfaces */
-    wl_list_cleanup(&server->surfaces, NULL, offsetof(struct surface, link));
+    CLEANUP_WL_LIST(&server->surfaces, struct surface, NULL);
 
     /* Cleanup shm_pools */
-    wl_list_cleanup(&server->shm_pools, destroy_shm_pool, offsetof(struct shm_pool, link));
+    CLEANUP_WL_LIST(&server->shm_pools, struct shm_pool, destroy_shm_pool);
 
     SERVER_DEBUG("Destroying wl display");
     if (server->display) {
