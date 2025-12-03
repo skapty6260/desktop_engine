@@ -5,6 +5,7 @@
 #include <wayland-server.h>
 
 void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
+void destroy_shm_pool();
 
 struct shm_pool {
     struct wl_resource *resource;   ///< Wayland resource for this pool

@@ -21,9 +21,7 @@ static void shm_buffer_destroy(struct wl_resource *resource) {
     }
 }
 
-static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
-    struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
-
+void destroy_shm_pool(struct shm_pool *pool) {
     if (pool) {
         SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
         
@@ -49,7 +47,11 @@ static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_
         wl_list_remove(&pool->link);
         free(pool);
     }
-    
+}
+
+static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
+    struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
+    destroy_shm_pool(pool);
     wl_resource_destroy(pool_resource);
 }
 

@@ -50,19 +50,23 @@ void server_run(struct server *server) {
 }
 
 #define CLEANUP_WL_LIST_1(type, list) \
-    struct type *member, *member_tmp; \
-    wl_list_for_each_safe(member, member_tmp, list, link) { \
-        wl_list_remove(&member->link); \
-        free(member); \
-    } \
+    do { \
+        struct type *member, *member_tmp; \
+        wl_list_for_each_safe(member, member_tmp, list, link) { \
+            wl_list_remove(&member->link); \
+            free(member); \
+        } \
+    } while(0)
 
 #define CLEANUP_WL_LIST_2(type, list, callback) \
-    type *member, *member_tmp; \
-    wl_list_for_each_safe(member, member_tmp, list, link) { \
-        wl_list_remove(&member->link); \
-        callback \
-        free(member); \
-    } \
+    do { \
+        type *member, *member_tmp; \
+        wl_list_for_each_safe(member, member_tmp, list, link) { \
+            wl_list_remove(&member->link); \
+            callback(member); \
+            free(member); \
+        } \
+    } while(0)
 
 #define GET_MACRO(_1, _2, _3, NAME, ...) NAME
 #define CLEANUP_WL_LIST(...) \
@@ -75,12 +79,7 @@ void server_cleanup(struct server *server) {
     CLEANUP_WL_LIST(surface, &server->surfaces);
 
     /* Cleanup shm_pools */
-    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, 
-        /* Cleanup shm buffers inside pool */
-        CLEANUP_WL_LIST(struct buffer, &member->buffers);
-        munmap(member->data, member->size);
-        close(member->fd);
-    );
+    CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool);
 
     if (server->display) {
         wl_display_destroy(server->display);
