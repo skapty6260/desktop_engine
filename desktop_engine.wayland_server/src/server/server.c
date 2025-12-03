@@ -73,8 +73,8 @@ void server_init(struct server *server) {
     }
 
     /* Assign event listeners */
-    server->client_created_listener.notify = handle_client_created;
-    wl_display_add_client_created_listener(server->display, &server->client_created_listener);
+    // server->client_created_listener.notify = handle_client_created;
+    // wl_display_add_client_created_listener(server->display, &server->client_created_listener);
 }
 
 void server_run(struct server *server) {
