@@ -56,7 +56,7 @@ static void wl_list_cleanup(
     size_t offset /* offsetof(struct type, link) */
 ) {
     struct wl_list *pos, *tmp;
-    wl_list_for_each_safe(pos, tmp, list) {
+    wl_list_for_each_safe(pos, tmp, list, link) {
         wl_list_remove(pos);
         
         /* Получаем указатель на структуру */
