@@ -115,16 +115,17 @@ int main(int argc, char **argv) {
     LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", PORT);
     LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
-    while (g_shutdown_requested != 1) {
-        struct buffer *buf = calloc(1, sizeof(struct buffer));
-        buf->width = 1920;
-        buf->height = 1080;
-        buf->resource = NULL;
-        buf->size = 400000;
-        buf->type = WL_BUFFER_SHM;
-
-        network_server_broadcast_buffer(buf);
-    }
+    struct buffer *test_buffer = calloc(1, sizeof(struct buffer));
+    test_buffer->format = PIXEL_FORMAT_ARGB8888;
+    test_buffer->height = 1080;
+    test_buffer->width = 1920;
+    test_buffer->type = WL_BUFFER_SHM;
+    test_buffer->size = 400000;
+    struct wl_resource *test_res = calloc(1, sizeof(struct wl_resource));
+    test_buffer->resource = test_res;
+    test_buffer->shm.data = "BUFFER DATA";
+    test_buffer->shm.stride = 32;
+    network_server_send_buffer()
 
     server_run(&server);
 
