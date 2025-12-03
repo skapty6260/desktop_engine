@@ -203,6 +203,8 @@ bool network_server_send_buffer(struct buffer *buf, int client_fd) {
 void network_server_broadcast_buffer(struct buffer *buf) {
     void *data;
     size_t size;
+
+    printf("Broadcasting buffer to %d clients\n", num_clients);
     
     if (!serialize_buffer(buf, &data, &size)) {
         return;

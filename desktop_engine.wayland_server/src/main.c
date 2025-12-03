@@ -44,13 +44,10 @@ static void *network_server_thread(void *arg) {
     
     LOG_INFO(LOG_MODULE_CORE, "Network server started on port %d", PORT);
     
-    // Здесь можно добавить логику для получения событий от клиентов
-    // или просто оставить сервер работающим для отправки буферов
+    // Run the server in blocking mode
+    network_server_run();  // This will accept connections
     
-    while (!g_shutdown_requested) {
-        sleep(1); // Просто ждем, пока основной поток отправляет буферы
-    }
-    
+    // This code won't execute until server stops
     network_server_cleanup();
     LOG_INFO(LOG_MODULE_CORE, "Network server stopped");
     
@@ -103,6 +100,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Should be removed
+    sleep(1);  // Give time for server to start and client to connect
+
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
         LOG_DEBUG(LOG_MODULE_CORE, "TESTBED startup cmd: %s", server_config.startup_cmd);
@@ -115,17 +115,34 @@ int main(int argc, char **argv) {
     LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", PORT);
     LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
+    // Test buffer cross-network ipc
     struct buffer *test_buffer = calloc(1, sizeof(struct buffer));
-    test_buffer->format = PIXEL_FORMAT_ARGB8888;
-    test_buffer->height = 1080;
-    test_buffer->width = 1920;
-    test_buffer->type = WL_BUFFER_SHM;
-    test_buffer->size = 400000;
-    struct wl_resource *test_res = calloc(1, sizeof(struct wl_resource));
-    test_buffer->resource = test_res;
-    test_buffer->shm.data = "BUFFER DATA";
-    test_buffer->shm.stride = 32;
-    network_server_broadcast_buffer(test_buffer);
+    if (!test_buffer) {
+        LOG_ERROR(LOG_MODULE_CORE, "Failed to allocate test buffer");
+    } else {
+        test_buffer->format = PIXEL_FORMAT_ARGB8888;
+        test_buffer->height = 300;  // Match your debug output: 400x300
+        test_buffer->width = 400;
+        test_buffer->type = WL_BUFFER_SHM;
+        test_buffer->size = 400 * 300 * 4;  // ARGB8888 = 4 bytes per pixel
+        test_buffer->shm.stride = 400 * 4;  // width * bytes per pixel
+        
+        // Allocate and fill with test pattern
+        test_buffer->shm.data = malloc(test_buffer->size);
+        if (test_buffer->shm.data) {
+            // Fill with a simple pattern
+            uint32_t *pixels = (uint32_t*)test_buffer->shm.data;
+            for (int i = 0; i < 400 * 300; i++) {
+                pixels[i] = 0xFF0000FF;  // Red color
+            }
+            
+            // Send the buffer
+            network_server_broadcast_buffer(test_buffer);
+            
+            free(test_buffer->shm.data);
+        }
+        free(test_buffer);
+    }
 
     server_run(&server);
 
