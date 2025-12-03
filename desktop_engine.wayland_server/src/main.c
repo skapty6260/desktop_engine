@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     test_buffer->resource = test_res;
     test_buffer->shm.data = "BUFFER DATA";
     test_buffer->shm.stride = 32;
-    network_server_send_buffer(test_buffer);
+    network_server_broadcast_buffer(test_buffer);
 
     server_run(&server);
 
