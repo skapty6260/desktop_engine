@@ -64,7 +64,7 @@ void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 
     /* Cleanup surfaces */
-    CLEANUP_WL_LIST(surface, &server->surfaces, void);
+    CLEANUP_WL_LIST(surface, &server->surfaces, void *);
 
     /* Cleanup shm_pools */
     CLEANUP_WL_LIST(shm_pool, &server->shm_pools, destroy_shm_pool);
