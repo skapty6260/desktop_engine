@@ -55,7 +55,9 @@ void server_run(struct server *server) {
         struct type *pos, *tmp; \
         wl_list_for_each_safe(pos, tmp, list, link) { \
             wl_list_remove(&pos->link); \
-            if (callback != NULL) callback(pos); \
+            if (sizeof(callback) == sizeof(void(*)(void))) { \
+                callback(pos); \
+            } \
             free(pos); \
         } \
     } while(0)
