@@ -10,33 +10,33 @@
 #include <server/wayland/shm.h>
 #include <server/xdg-shell/xdg.h>
 
-static void handle_client_destroyed(struct wl_listener *listener, void *data) {
-    struct client *client = wl_container_of(listener, client, destroy_listener);
-    wl_list_remove(&client->link);
-    free(client);
+// static void handle_client_destroyed(struct wl_listener *listener, void *data) {
+//     struct client *client = wl_container_of(listener, client, destroy_listener);
+//     wl_list_remove(&client->link);
+//     free(client);
 
-    SERVER_INFO("Client destroyed and removed from server list");
-}
+//     SERVER_INFO("Client destroyed and removed from server list");
+// }
 
-static void handle_client_created(struct wl_listener *listener, void *data) {
-    struct server *server = wl_container_of(listener, server, client_created_listener);
-    struct wl_client *wl_client = data;
+// static void handle_client_created(struct wl_listener *listener, void *data) {
+//     struct server *server = wl_container_of(listener, server, client_created_listener);
+//     struct wl_client *wl_client = data;
 
-    struct client *client = calloc(1, sizeof(struct client));
-    if (!client) {
-        SERVER_ERROR("Failed to allocate client");
-        return;
-    }
-    client->wl_client = wl_client;
-    wl_list_init(&client->link);
-    wl_list_insert(&server->clients, &client->link);  // в начало
+//     struct client *client = calloc(1, sizeof(struct client));
+//     if (!client) {
+//         SERVER_ERROR("Failed to allocate client");
+//         return;
+//     }
+//     client->wl_client = wl_client;
+//     wl_list_init(&client->link);
+//     wl_list_insert(&server->clients, &client->link);  // в начало
 
-    client->destroy_listener.notify = handle_client_destroyed;
-    wl_client_add_destroy_listener(wl_client, &client->destroy_listener);
+//     client->destroy_listener.notify = handle_client_destroyed;
+//     wl_client_add_destroy_listener(wl_client, &client->destroy_listener);
 
-    SERVER_INFO("New client connected (total clients: %d)", 
-               wl_list_length(&server->clients));
-}
+//     SERVER_INFO("New client connected (total clients: %d)", 
+//                wl_list_length(&server->clients));
+// }
 
 void server_init(struct server *server) {
     server->display = wl_display_create();
@@ -83,6 +83,8 @@ void server_run(struct server *server) {
 }
 
 void server_cleanup(struct server *server) {
+    wl_display_destroy_clients(server->display);
+
     if (server->display) {
         wl_display_destroy(server->display);
         server->display = NULL;

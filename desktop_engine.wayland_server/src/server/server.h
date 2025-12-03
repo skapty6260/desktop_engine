@@ -44,11 +44,11 @@ struct surface {
     } pending_changes;
 };
 
-struct client {
-    struct wl_client *wl_client;
-    struct wl_list link;
-    struct wl_listener destroy_listener;
-};
+// struct client {
+//     struct wl_client *wl_client;
+//     struct wl_list link;
+//     struct wl_listener destroy_listener;
+// };
 
 typedef struct server_config {
     char* startup_cmd;
