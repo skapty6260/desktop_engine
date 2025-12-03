@@ -68,9 +68,8 @@ void server_run(struct server *server) {
         } \
     } while(0)
 
-#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
-#define CLEANUP_WL_LIST(...) \
-    GET_MACRO(__VA_ARGS__, CLEANUP_WL_LIST_2, CLEANUP_WL_LIST_1)(__VA_ARGS__)
+#define CLEANUP_WL_LIST_HELPER(_1, _2, _3, NAME, ...) NAME
+#define CLEANUP_WL_LIST(...) CLEANUP_WL_LIST_HELPER(__VA_ARGS__, CLEANUP_WL_LIST_2, CLEANUP_WL_LIST_1, )
 
 void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
