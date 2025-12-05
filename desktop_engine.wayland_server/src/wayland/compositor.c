@@ -58,13 +58,37 @@ static const char* buffer_type_to_string(struct buffer *buffer) {
     }
 }
 
+static void debug_buffer_data(const char *prefix, struct buffer *buffer) {
+    if (!buffer || !buffer->shm.data) return;
+    
+    SERVER_DEBUG("%s: data at %p, size %zu bytes", prefix, buffer->shm.data, buffer->size);
+    
+    // Печать первых 32 байт в hex и ASCII
+    char hex[100] = "";
+    char ascii[33] = "";
+    
+    for (int i = 0; i < 32 && i < buffer->size; i++) {
+        unsigned char byte = buffer->shm.data[i];
+        char hex_part[4];
+        snprintf(hex_part, sizeof(hex_part), "%02x ", byte);
+        strcat(hex, hex_part);
+        
+        ascii[i] = (byte >= 32 && byte < 127) ? byte : '.';
+        ascii[i+1] = '\0';
+    }
+    
+    SERVER_DEBUG("  Hex: %s", hex);
+    SERVER_DEBUG("  ASCII: %s", ascii);
+}
+
 void surface_headless_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer_resource, int32_t x, int32_t y) {
     struct surface *surface = wl_resource_get_user_data(resource);
 
     if (!surface || !buffer_resource) return;
     
     struct buffer *buffer = wl_resource_get_user_data(buffer_resource);
-    SERVER_DEBUG("Called attach buffer with type: %s, size: %i or %iX%i\nBuffer data pointer: %s", buffer_type_to_string(buffer), buffer->size, buffer->width, buffer->height, buffer->shm.data);
+    SERVER_DEBUG("Called attach buffer with type: %s, size: %i or %iX%i", buffer_type_to_string(buffer), buffer->size, buffer->width, buffer->height);
+    debug_buffer_data("Buffer data:", buffer);
 }
 
 static void compositor_create_surface(struct wl_client *client, struct wl_resource *resource, uint32_t id) {
