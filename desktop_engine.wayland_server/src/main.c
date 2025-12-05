@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     }
 
     if (!dbus_server_init(dbus_server, server.display)) {
-        dbus_server_destroy(dbus_server);
+        dbus_server_cleanup(dbus_server);
         EXIT_AND_ERROR("Failed to initialize dbus server");
     }
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		}
     }
 
-    LOG_INFO(LOG_MODULE_CORE, "D-Bus server started on bus: %s", dbus_server_get_name(global_dbus_server));
+    LOG_INFO(LOG_MODULE_CORE, "D-Bus server started on bus: %s", dbus_server_get_name(dbus_server));
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server started on socket: %s", server.socket);
 
     server_run(&server);
