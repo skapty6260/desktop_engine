@@ -1,19 +1,6 @@
-/* TODO
-Basic wayland server (Open clients, create surfaces)
-
--- In logger_fatal not just cleaning up, but work with shutdown requests
-
-Buffer methods
--- Shm buffer creation handling
--- Attach buffer (No surface implementation)
-
-Ipc bridge (Should send clients info, should receive input events)
--- Simple socket server to send buffers (No receiving & broadcast yet)
-*/
-#include <logger/logger.h>
-#include <config/config.h>
-#include <server/server.h>
-#include <ipc/network_server.h>
+#include <logger.h>
+#include <config.h>
+#include <server.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -81,8 +68,6 @@ int main(int argc, char **argv) {
     }
 
     LOG_INFO(LOG_MODULE_CORE, "Wayland server started on socket: %s", server.socket);
-    LOG_INFO(LOG_MODULE_CORE, "Network server started on port: %d", PORT);
-    LOG_INFO(LOG_MODULE_CORE, "Press Ctrl+C to stop the server");
 
     server_run(&server);
 

@@ -3,13 +3,13 @@
 #include <unistd.h>
 #include <stddef.h>
 
-#include <server/server.h>
-#include <logger/logger.h>
+#include <logger.h>
 #include <wayland-server.h>
 
-#include <server/wayland/compositor.h>
-#include <server/wayland/shm.h>
-#include <server/xdg-shell/xdg.h>
+#include <wayland/server.h>
+#include <wayland/compositor.h>
+#include <wayland/shm.h>
+#include <xdg-shell/xdg.h>
 
 void server_init(struct server *server) {
     server->display = wl_display_create();
@@ -50,19 +50,9 @@ void server_run(struct server *server) {
     wl_display_run(server->display);
 }
 
-// TODO: не чистисть списки, а делать очистку через деструкторы
 void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 
-    /* Cleanup surfaces */
-    struct surface *surface, *surface_tmp;
-    SERVER_DEBUG("Running surfaces cleanup loop");
-    wl_list_for_each_safe(surface, surface_tmp, &server->surfaces, link) {
-        wl_list_remove(&surface->link);
-        free(surface);
-    }
-
-    SERVER_DEBUG("Destroying wl display");
     if (server->display) {
         wl_display_destroy(server->display);
         server->display = NULL;

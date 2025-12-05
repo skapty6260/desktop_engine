@@ -1,15 +1,12 @@
-#include <server/wayland/compositor.h>
-#include <server/wayland/buffer.h>
-#include <logger/logger.h>
-#include <server/server.h>
-#include <ipc/network_server.h>
+#include <wayland/compositor.h>
+#include <wayland/buffer.h>
+#include <logger.h>
+#include <wayland/server.h>
 #include <stdlib.h>
 
 #ifdef HAVE_LINUX_DMABUF
 #include "linux-dmabuf-unstable-v1-protocol.h"
 #endif
-
-// BUFFERS
 
 // SURFACES
 static struct buffer *custom_buffer_from_resource(struct wl_resource *resource) {

@@ -1,23 +1,14 @@
-#include <server/server.h>
-#include <logger/logger.h>
-#include <server/wayland/shm.h>
-#include <server/wayland/buffer.h>
+#include <wayland/server.h>
+#include <logger.h>
+#include <wayland/shm.h>
+#include <wayland/buffer.h>
 
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-static void shm_buffer_destructor(struct wl_resource *resource) {
-    struct buffer *buffer = wl_resource_get_user_data(resource);
-    
-    if (buffer) {
-        SERVER_DEBUG("SHM buffer destroyed: %dx%d", buffer->width, buffer->height);
-        free(buffer);
-    }
-}
-
-static bool shm_pool_check_format(uint32_t format) {
+static bool check_format(uint32_t format) {
     switch (format) {
         case WL_SHM_FORMAT_ARGB8888:
         case WL_SHM_FORMAT_XRGB8888:
@@ -25,11 +16,19 @@ static bool shm_pool_check_format(uint32_t format) {
         case WL_SHM_FORMAT_BGRA8888:
         case WL_SHM_FORMAT_ABGR8888:
         case WL_SHM_FORMAT_XBGR8888:
-            // Поддерживаемые форматы
             return true;
         default:
             return false;
     }
+}
+
+static void send_supported_formats(struct wl_resource *resource) {
+    wl_shm_send_format(resource, WL_SHM_FORMAT_ARGB8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_XRGB8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_RGBA8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_BGRA8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_ABGR8888);
+    wl_shm_send_format(resource, WL_SHM_FORMAT_XBGR8888);
 }
 
 static void buffer_handle_destroy(struct wl_client *client, struct wl_resource *resource) {
@@ -47,39 +46,48 @@ static const struct wl_buffer_interface buffer_implementation = {
     .destroy = buffer_handle_destroy,
 };
 
+static void shm_buffer_destructor(struct wl_resource *resource) {
+    struct buffer *buffer = wl_resource_get_user_data(resource);
+    
+    if (buffer) {
+        SERVER_DEBUG("SHM buffer destroyed: %dx%d", buffer->width, buffer->height);
+        free(buffer);
+    }
+}
+
 static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
 
     if (!pool) {
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FD, "invalid pool");
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FD, "Failed to create buffer: invalid shm pool");
         return;
     }
 
     if (offset < 0 || (size_t)offset >= pool->size) {
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid offset");
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "Failed to create buffer: invalid offset");
         return;
     }
 
     if (width <= 0 || height <= 0) {
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "invalid width or height");
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "Failed to create buffer: invalid width or height");
         return;
     }
     
     int min_stride = width * 4;
     if (stride < min_stride) {
         wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, 
-                              "stride too small (min: %d, got: %d)", min_stride, stride);
+                              "Failed to create buffer: stride too small (min: %d, got: %d)", min_stride, stride);
         return;
     }
 
     size_t required_size = (size_t)offset + (size_t)height * (size_t)stride;
     if (required_size > pool->size) {
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "buffer exceeds pool size");
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_STRIDE, "Failed to create buffer: buffer exceeds pool size");
         return;
     }
 
-    if (!shm_pool_check_format(format)) {
-        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FORMAT, "unsupported format");
+    if (!check_format(format)) {
+        wl_resource_post_error(pool_resource, WL_SHM_ERROR_INVALID_FORMAT, "Failed to create buffer: unsupported format");
         return;
     }
 
@@ -115,13 +123,18 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
 }
 
 static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_resource, int32_t size) {
-    SERVER_DEBUG("SHM_POOL RESIZED");
+    SERVER_DEBUG("SHM_POOL RESIZE requested from client");
 }
 
 static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
-    SERVER_DEBUG("Client requested to destroy SHM pool");
     wl_resource_destroy(pool_resource);
 }
+
+static const struct wl_shm_pool_interface shm_pool_implementation = {
+    .create_buffer = shm_pool_create_buffer,
+    .destroy = shm_pool_destroy,
+    .resize = shm_pool_resize,
+};
 
 static void shm_pool_destructor(struct wl_resource *pool_resource) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
@@ -147,12 +160,6 @@ static void shm_pool_destructor(struct wl_resource *pool_resource) {
         free(pool);
     }
 }
-
-static const struct wl_shm_pool_interface shm_pool_implementation = {
-    .create_buffer = shm_pool_create_buffer,
-    .destroy = shm_pool_destroy,
-    .resize = shm_pool_resize,
-};
 
 static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_resource, uint32_t id, int fd, int32_t size) {
     struct server *server = wl_resource_get_user_data(shm_resource);
@@ -219,10 +226,5 @@ void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t i
     }
 
     wl_resource_set_implementation(resource, &shm_implementation, data, NULL);
-
-    // Send supported formats to client
-    wl_shm_send_format(resource, WL_SHM_FORMAT_ARGB8888);
-    wl_shm_send_format(resource, WL_SHM_FORMAT_XRGB8888);
-    wl_shm_send_format(resource, WL_SHM_FORMAT_RGBA8888);
-    wl_shm_send_format(resource, WL_SHM_FORMAT_BGRA8888);
+    send_supported_formats(resource);
 }

@@ -1,6 +1,6 @@
-#include <server/wayland/compositor.h>
-#include <server/server.h>
-#include <logger/logger.h>
+#include <wayland/compositor.h>
+#include <wayland/server.h>
+#include <logger.h>
 #include <stdlib.h>
 
 static void surface_destroy(struct wl_client *client, struct wl_resource *resource) {

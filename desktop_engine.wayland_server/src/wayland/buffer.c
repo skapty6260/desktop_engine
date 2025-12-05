@@ -1,5 +1,5 @@
-#include <server/wayland/buffer.h>
-#include <logger/logger.h>
+#include <wayland/buffer.h>
+#include <logger.h>
 #include <stdlib.h>
 
 enum pixel_format wl_shm_format_to_pixel_format(uint32_t wl_format) {

@@ -8,53 +8,20 @@
         "type": "tabs",
         "children": [
           {
-            "id": "b38e4f83e137caef",
+            "id": "273a28753e7659ce",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "Architecture/Root.canvas",
-                "viewState": {
-                  "x": -243.5,
-                  "y": 879.0633288131473,
-                  "zoom": -1.0780025120012733
-                }
+                "file": "Смысл и устройство проекта.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Root"
-            }
-          },
-          {
-            "id": "bf48584ce80b8277",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Architecture/Main scheme.canvas",
-                "viewState": {
-                  "x": 412.5580848354435,
-                  "y": 351.81661954397066,
-                  "zoom": -1.2708992865745163
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Main scheme"
-            }
-          },
-          {
-            "id": "8241e23d6120d1dd",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.10.6"
-              },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.10.6"
+              "icon": "lucide-file",
+              "title": "Смысл и устройство проекта"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -216,8 +183,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "8241e23d6120d1dd",
+  "active": "273a28753e7659ce",
   "lastOpenFiles": [
+    "Смысл и устройство проекта.md",
     "Untitled.base",
     "Architecture/communication/Untitled.md",
     "Architecture/Main scheme.canvas",
