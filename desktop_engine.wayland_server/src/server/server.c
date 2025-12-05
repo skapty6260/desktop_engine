@@ -61,14 +61,6 @@ void server_cleanup(struct server *server) {
         free(surface);
     }
 
-    /* Cleanup shm_pools */
-    struct shm_pool *shm_pool, *shm_pool_tmp;
-    SERVER_DEBUG("Running shm_pool cleanup loop");
-    wl_list_for_each_safe(shm_pool, shm_pool_tmp, &server->shm_pools, link) {
-        wl_list_remove(&shm_pool->link);
-        free(shm_pool);
-    }
-
     SERVER_DEBUG("Destroying wl display");
     if (server->display) {
         wl_display_destroy(server->display);
