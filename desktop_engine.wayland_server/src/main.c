@@ -7,7 +7,7 @@
 #include <signal.h>
 
 #define EXIT_AND_ERROR(msg) \
-    LOG_ERROR(msg); \
+    LOG_ERROR(LOG_MODULE_CORE, msg); \
     free(dbus_server); \
     wl_display_destroy(server.display); \
     logger_cleanup();
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     }
 
     if (!getenv("XDG_RUNTIME_DIR")) {
-        LOG_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
+        LOG_FATAL(LOG_MODULE_CORE, "XDG_RUNTIME_DIR is not set in the environment. Aborting.");
     }
 
     server_init(&server);
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		}
     }
 
-    LOG_INFO("D-Bus server started on bus: %s", dbus_server_get_name(global_dbus_server));
+    LOG_INFO(LOG_MODULE_CORE, "D-Bus server started on bus: %s", dbus_server_get_name(global_dbus_server));
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server started on socket: %s", server.socket);
 
     server_run(&server);
