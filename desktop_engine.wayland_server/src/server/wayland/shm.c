@@ -28,6 +28,7 @@ void destroy_shm_pool(void *data) {
         SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
         
         // Destroy all buffers in this pool
+        SERVER_DEBUG("Destroying buffer in shm_pool_destructor");
         struct buffer *buffer, *tmp;
         wl_list_for_each_safe(buffer, tmp, &pool->buffers, link) {
             if (buffer->resource) {
@@ -36,11 +37,13 @@ void destroy_shm_pool(void *data) {
         }
         
         // Free mmap'ed memory
+        SERVER_DEBUG("Free mmaped memory in shm_pool_destructor");
         if (pool->data && pool->data != MAP_FAILED) {
             munmap(pool->data, pool->size);
         }
         
         // Close file descriptor
+        SERVER_DEBUG("close buffer fd in shm_pool_destructor");
         if (pool->fd >= 0) {
             close(pool->fd);
         }
