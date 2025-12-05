@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     }
 
     if (!dbus_server_init(dbus_server, server.display)) {
-        dbus_server_destroy(global_dbus_server);
+        dbus_server_destroy(dbus_server);
         EXIT_AND_ERROR("Failed to initialize dbus server");
     }
 

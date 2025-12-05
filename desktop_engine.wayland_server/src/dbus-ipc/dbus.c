@@ -84,7 +84,7 @@ bool dbus_server_init(struct dbus_server *server, struct wl_display *display) {
     }
     
     // Получаем файловый дескриптор
-    server->dbus_fd = dbus_connection_get_unix_fd(server->conn);
+    dbus_connection_get_unix_fd(server->conn, &server->dbus_fd);
     if (server->dbus_fd < 0) {
         fprintf(stderr, "Failed to get D-Bus file descriptor\n");
         dbus_connection_unref(server->conn);
