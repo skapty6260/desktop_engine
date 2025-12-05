@@ -50,6 +50,7 @@ void server_run(struct server *server) {
     wl_display_run(server->display);
 }
 
+// TODO: не чистисть списки, а делать очистку через деструкторы
 void server_cleanup(struct server *server) {
     wl_display_destroy_clients(server->display);
 

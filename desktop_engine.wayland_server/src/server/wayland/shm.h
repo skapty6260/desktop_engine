@@ -4,18 +4,16 @@
 #include <stdint.h>
 #include <wayland-server.h>
 
-void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
-
 struct shm_pool {
-    struct wl_resource *resource;   ///< Wayland resource for this pool
-    struct wl_list link;            ///< Link in server's pool list
-    int fd;                         ///< File descriptor for shared memory
-    size_t size;                    ///< Pool size in bytes
-    void *data;                     ///< Mapped memory region
-    struct wl_list buffers;         ///< List of buffers in this pool
+    struct wl_resource *resource;
+    struct wl_list link;
+    int fd;                 
+    size_t size;            
+    void *data;             
+    struct wl_list buffers;
 };
 
-void destroy_shm_pool(void *data);
+void bind_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 
 #ifdef _WIN32
 /**

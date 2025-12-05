@@ -8,57 +8,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-static void shm_buffer_destroy(struct wl_resource *resource) {
+static void shm_buffer_destructor(struct wl_resource *resource) {
     struct buffer *buffer = wl_resource_get_user_data(resource);
     
     if (buffer) {
-        // Remove buffer from pool's list
-        wl_list_remove(&buffer->link);
         SERVER_DEBUG("SHM buffer destroyed: %dx%d", buffer->width, buffer->height);
-        
-        // Free the buffer structure
         free(buffer);
     }
-}
-
-void destroy_shm_pool(void *data) {
-    struct shm_pool *pool = data;
-
-    if (pool) {
-        SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
-        
-        // Destroy all buffers in this pool
-        SERVER_DEBUG("Destroying buffer in shm_pool_destructor");
-        struct buffer *buffer, *tmp;
-        wl_list_for_each_safe(buffer, tmp, &pool->buffers, link) {
-            if (buffer->resource) {
-                wl_resource_destroy(buffer->resource);
-            }
-        }
-        
-        // Free mmap'ed memory
-        SERVER_DEBUG("Free mmaped memory in shm_pool_destructor");
-        if (pool->data && pool->data != MAP_FAILED) {
-            munmap(pool->data, pool->size);
-        }
-        
-        // Close file descriptor
-        SERVER_DEBUG("close buffer fd in shm_pool_destructor");
-        if (pool->fd >= 0) {
-            close(pool->fd);
-        }
-        
-        // Remove from server's global list
-        wl_list_remove(&pool->link);
-        free(pool);
-    }
-}
-
-static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
-    SERVER_DEBUG("Trying to call shm_pool_destroy (NOT DESTRUCTOR)");
-    // struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
-    // destroy_shm_pool(pool);
-    // wl_resource_destroy(pool_resource);
 }
 
 static bool shm_pool_check_format(uint32_t format) {
@@ -91,9 +47,7 @@ static const struct wl_buffer_interface buffer_implementation = {
     .destroy = buffer_handle_destroy,
 };
 
-static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, 
-                                  uint32_t id, int32_t offset, int32_t width, int32_t height, 
-                                  int32_t stride, uint32_t format) {
+static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource *pool_resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
 
     if (!pool) {
@@ -129,7 +83,6 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
 
-    // Создаем ресурс буфера
     struct wl_resource *buffer_resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
     if (!buffer_resource) {
         wl_client_post_no_memory(client);
@@ -152,7 +105,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     static const struct wl_buffer_interface buffer_impl = {
         .destroy = buffer_handle_destroy,
     };
-    wl_resource_set_implementation(buffer->resource, &buffer_impl, buffer, shm_buffer_destroy);
+    wl_resource_set_implementation(buffer->resource, &buffer_impl, buffer, shm_buffer_destructor);
 
     SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, format=0x%x, offset=%d=",
                 width, height, stride, format, offset);
@@ -165,10 +118,34 @@ static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_r
     SERVER_DEBUG("SHM_POOL RESIZED");
 }
 
+static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
+    SERVER_DEBUG("Client requested to destroy SHM pool");
+    wl_resource_destroy(pool_resource);
+}
+
 static void shm_pool_destructor(struct wl_resource *pool_resource) {
     struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
-    destroy_shm_pool(pool);
-    wl_resource_destroy(pool_resource);
+    if (pool) {
+        SERVER_DEBUG("Destroying SHM pool: fd=%d, size=%zu", pool->fd, pool->size);
+        
+        struct buffer *buffer, *tmp;
+        wl_list_for_each_safe(buffer, tmp, &pool->buffers, link) {
+            if (buffer->resource) {
+                wl_resource_destroy(buffer->resource);
+            }
+        }
+        
+        if (pool->data && pool->data != MAP_FAILED) {
+            munmap(pool->data, pool->size);
+        }
+        
+        if (pool->fd >= 0) {
+            close(pool->fd);
+        }
+        
+        wl_list_remove(&pool->link);
+        free(pool);
+    }
 }
 
 static const struct wl_shm_pool_interface shm_pool_implementation = {
