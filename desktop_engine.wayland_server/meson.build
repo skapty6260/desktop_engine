@@ -23,6 +23,7 @@ add_project_arguments(
 
 wayland_server = dependency('wayland-server', required: true)
 wayland_protocols = dependency('wayland-protocols', required: true)
+dbus = dependency('dbus-1', required: true)
 
 subdir('protocols')
 
@@ -37,9 +38,10 @@ executable('desktop_engine_wayland_server',
         'src/xdg-shell/xdg.c',
         'src/logger.c',
         'src/config.c',
+        'src/dbus-ipc/dbus.c',
         wl_protos_src,
     ],
-    dependencies: [wayland_server, wayland_protocols],
+    dependencies: [wayland_server, wayland_protocols, dbus],
     include_directories: [include_directories('protocols'), include_directories('include')],
     install: true
 )

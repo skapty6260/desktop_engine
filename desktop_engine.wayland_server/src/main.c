@@ -1,10 +1,16 @@
 #include <logger.h>
 #include <config.h>
+#include <dbus-ipc/dbus.h>
 #include <wayland/server.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <pthread.h>
+
+#define EXIT_AND_ERROR(msg) \
+    LOG_ERROR(msg); \
+    free(dbus_server); \
+    wl_display_destroy(server.display); \
+    logger_cleanup();
 
 static struct server *global_server = NULL;
 static volatile sig_atomic_t g_shutdown_requested = 0;
@@ -25,7 +31,7 @@ int main(int argc, char **argv) {
     logger_config_t logger_config;
     server_config_t server_config;
     struct server server = {0};
-    pthread_t network_thread;
+    struct dbus_server *dbus_server;
     
     /* Logger and config initialization */
     load_default_config(&logger_config, &server_config);
@@ -36,10 +42,20 @@ int main(int argc, char **argv) {
     }
 
     if (!getenv("XDG_RUNTIME_DIR")) {
-        SERVER_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
+        LOG_FATAL("XDG_RUNTIME_DIR is not set in the environment. Aborting.");
     }
 
     server_init(&server);
+
+    dbus_server = dbus_server_create();
+    if (!dbus_server) {
+        EXIT_AND_ERROR("Failed to allocate memory for dbus server");
+    }
+
+    if (!dbus_server_init(dbus_server, server.display)) {
+        dbus_server_destroy(global_dbus_server);
+        EXIT_AND_ERROR("Failed to initialize dbus server");
+    }
 
     /* Signal handling for graceful shutdown */
     global_server = &server;
@@ -53,9 +69,7 @@ int main(int argc, char **argv) {
 
     server.socket = wl_display_add_socket_auto(server.display);
     if (!server.socket) {
-        // TODO (cleanup)
-        wl_display_destroy(server.display);
-        SERVER_FATAL("Failed to add socket for Wayland display");
+        EXIT_AND_ERROR("Failed to add socket for Wayland display");
     }
     setenv("WAYLAND_DISPLAY", server.socket, true);
 
@@ -67,13 +81,15 @@ int main(int argc, char **argv) {
 		}
     }
 
-    LOG_INFO(LOG_MODULE_CORE, "Wayland server started on socket: %s", server.socket);
+    LOG_INFO("D-Bus server started on bus: %s", dbus_server_get_name(global_dbus_server));
+    LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server started on socket: %s", server.socket);
 
     server_run(&server);
 
-    LOG_INFO(LOG_MODULE_CORE, "Wayland server shutdown complete");
+    LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
     server_cleanup(&server);
+    dbus_server_cleanup(dbus_server);
     logger_cleanup();
 
     return 0;
