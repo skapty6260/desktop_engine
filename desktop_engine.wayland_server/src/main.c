@@ -1,6 +1,6 @@
 #include <logger.h>
 #include <config.h>
-#include <server.h>
+#include <wayland/server.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
