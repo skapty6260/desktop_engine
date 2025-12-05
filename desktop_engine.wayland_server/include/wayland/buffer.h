@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <wayland-server.h>
 #include <drm/drm_fourcc.h>
-#include <server/wayland/shm.h>
+#include <wayland/shm.h>
 
 enum pixel_format {
     PIXEL_FORMAT_UNKNOWN = 0,
