@@ -52,9 +52,10 @@ void destroy_shm_pool(void *data) {
 }
 
 static void shm_pool_destroy(struct wl_client *client, struct wl_resource *pool_resource) {
-    struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
-    destroy_shm_pool(pool);
-    wl_resource_destroy(pool_resource);
+    SERVER_DEBUG("Trying to call shm_pool_destroy (NOT DESTRUCTOR)");
+    // struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
+    // destroy_shm_pool(pool);
+    // wl_resource_destroy(pool_resource);
 }
 
 static bool shm_pool_check_format(uint32_t format) {
