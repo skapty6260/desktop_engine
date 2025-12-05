@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #include <logger.h>
-#include <server.h>
+#include <wayland/server.h>
 
 void parse_args(int argc, char **argv, logger_config_t *logger_config, server_config_t *server_config);
 void load_default_config(logger_config_t* logger_conf, server_config_t* server_config);
