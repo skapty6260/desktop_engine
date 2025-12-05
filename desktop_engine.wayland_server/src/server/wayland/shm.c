@@ -212,7 +212,7 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
         return;
     }
     
-    wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, NULL);
+    wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, shm_pool_destroy);
     wl_list_insert(&server->shm_pools, &pool->link);
 }
 

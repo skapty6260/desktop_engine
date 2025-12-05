@@ -66,7 +66,6 @@ void server_cleanup(struct server *server) {
     SERVER_DEBUG("Running shm_pool cleanup loop");
     wl_list_for_each_safe(shm_pool, shm_pool_tmp, &server->shm_pools, link) {
         wl_list_remove(&shm_pool->link);
-        // destroy_shm_pool(shm_pool);
         free(shm_pool);
     }
 
