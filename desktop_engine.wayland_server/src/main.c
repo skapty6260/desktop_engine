@@ -13,8 +13,8 @@ static void signal_handler(int signal) {
     g_shutdown_requested = 1;
     g_logger_graceful_shutdown = 1;
     
-    const char* msg = "terminated\n";
-    write(STDOUT_FILENO, msg, strlen(msg));
+    // const char* msg = "terminated\n";
+    // write(STDOUT_FILENO, msg, strlen(msg));
     
     if (global_server && global_server->display) {
         wl_display_terminate(global_server->display);

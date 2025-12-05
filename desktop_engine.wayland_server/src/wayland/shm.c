@@ -105,7 +105,7 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
     }
     
     // Вычисляем указатель на данные
-    // buffer->data = (unsigned char*)pool->data + offset;
+    buffer->data = (unsigned char*)pool->data + offset;
 
     wl_list_init(&buffer->link);
     wl_list_insert(&pool->buffers, &buffer->link);
