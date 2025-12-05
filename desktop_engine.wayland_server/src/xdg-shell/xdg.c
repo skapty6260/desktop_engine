@@ -1,6 +1,6 @@
-#include <server/server.h>
-#include <logger/logger.h>
-#include "xdg.h"
+#include <wayland/server.h>
+#include <logger.h>
+#include <xdg-shell/xdg.h>
 
 /* TODO
 Rework all modules excluding xdg_wm_base
