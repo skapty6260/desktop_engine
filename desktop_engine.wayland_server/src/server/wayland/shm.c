@@ -161,6 +161,12 @@ static void shm_pool_resize(struct wl_client *client, struct wl_resource *pool_r
     SERVER_DEBUG("SHM_POOL RESIZED");
 }
 
+static void shm_pool_destructor(struct wl_resource *pool_resource) {
+    struct shm_pool *pool = wl_resource_get_user_data(pool_resource);
+    destroy_shm_pool(pool);
+    wl_resource_destroy(pool_resource);
+}
+
 static const struct wl_shm_pool_interface shm_pool_implementation = {
     .create_buffer = shm_pool_create_buffer,
     .destroy = shm_pool_destroy,
@@ -212,7 +218,7 @@ static void shm_create_pool(struct wl_client *client, struct wl_resource *shm_re
         return;
     }
     
-    wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, shm_pool_destroy);
+    wl_resource_set_implementation(pool->resource, &shm_pool_implementation, pool, shm_pool_destructor);
     wl_list_insert(&server->shm_pools, &pool->link);
 }
 
