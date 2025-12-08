@@ -24,6 +24,10 @@ struct dbus_server {
     dbus_module_t *modules;
 };
 
+DBusHandlerResult core_message_handler(DBusConnection *connection, 
+                                      DBusMessage *message, 
+                                      void *user_data);
+
 bool dbus_core_init_connection(struct dbus_server *server);
 void dbus_core_cleanup(struct dbus_server *server);
 

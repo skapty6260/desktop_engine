@@ -5,7 +5,7 @@
 #include <string.h>
 
 /* Main message handler (delegates messages to the modules) */
-static dbus_message_handler_t core_message_handler(DBusConnection *connection, DBusMessage *message, void *user_data) {
+DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *message, void *user_data) {
     struct dbus_server *server = (struct dbus_server *)user_data;
     const char *object_path = dbus_message_get_path(message);
     const char *interface = dbus_message_get_interface(message);
@@ -21,9 +21,7 @@ static dbus_message_handler_t core_message_handler(DBusConnection *connection, D
             (strcmp(interface, module->interface_name) == 0 && 
              strcmp(object_path, module->object_path) == 0)) {
             
-            // server->message_count++;
-            
-            // Делегируем обработку модулю
+            /* Delegate handling to the module */
             if (module->handler) {
                 return module->handler(connection, message, module->user_data);
             }
@@ -88,8 +86,7 @@ bool dbus_core_init_connection(struct dbus_server *server) {
     }
 
     /* Acquiring dbus fd */
-    dbus_connection_get_unix_fd(server->connection, &server->dbus_fd);
-    if (server->dbus_fd < 0) {
+    if (!dbus_connection_get_unix_fd(server->connection, &server->dbus_fd)) {
         DBUS_ERROR("Failed to get D-Bus file descriptor");
         dbus_connection_unref(server->connection);
         server->connection = NULL;

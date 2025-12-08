@@ -18,6 +18,7 @@ static struct server *global_server = NULL;
 static volatile sig_atomic_t g_shutdown_requested = 0;
 
 static void signal_handler(int signal) {
+    (void)signal; // Shut up compiler
     g_shutdown_requested = 1;
     g_logger_graceful_shutdown = 1;
     
