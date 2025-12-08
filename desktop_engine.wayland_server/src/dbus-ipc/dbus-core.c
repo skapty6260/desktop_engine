@@ -1,3 +1,4 @@
+// TODO: better cleanup and connection handling; Message filter
 #include <dbus-ipc/dbus-core.h>
 #include <logger.h>
 #include <stdlib.h>
