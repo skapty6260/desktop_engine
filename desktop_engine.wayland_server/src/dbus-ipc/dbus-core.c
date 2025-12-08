@@ -141,4 +141,5 @@ void dbus_core_cleanup(struct dbus_server *server) {
     server->initialized = false;
     server->dbus_fd = -1;
     free(server);
+    DBUS_DEBUG("D-Bus cleaned");
 }
