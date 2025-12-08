@@ -1,8 +1,10 @@
 #ifndef DBUS_WAYLAND_INTEGRATION_H
 #define DBUS_WAYLAND_INTEGRATION_H
 
+#include <stdbool.h>
 #include <wayland-server.h>
-#include <dbus-ipc/dbus-core.h>
+
+struct dbus_server;
 
 struct dbus_wayland_integration_data {
     struct wl_display *wl_display;

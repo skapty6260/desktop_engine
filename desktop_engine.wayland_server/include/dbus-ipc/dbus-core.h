@@ -6,11 +6,7 @@
 #include <stdbool.h>
 #include <dbus/dbus.h>
 
-typedef DBusHandlerResult (*dbus_message_handler_t)(
-    DBusConnection *connection,
-    DBusMessage *message,
-    void *user_data
-);
+typedef DBusHandlerResult (*dbus_message_handler_t)(DBusConnection *, DBusMessage *, void*);
 
 typedef struct dbus_module {
     char *name;

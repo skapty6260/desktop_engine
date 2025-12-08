@@ -42,7 +42,7 @@ bool dbus_core_init_connection(struct dbus_server *server) {
     dbus_error_init(&err);
 
     /* Connect to the session bus */
-    server->connection = dbus_get_connection(DBUS_BUS_SESSION, &err);
+    server->connection = dbus_get_bus(DBUS_BUS_SESSION, &err);
     if (dbus_error_is_set(&err)) {
         DBUS_ERROR("D-Bus connection error: %s", err.message);
         dbus_error_free(&err);
