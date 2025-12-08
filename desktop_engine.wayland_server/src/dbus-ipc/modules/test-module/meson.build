@@ -26,6 +26,11 @@ test_module_headers = files(
     'test-module.h'
 )
 
+# Тестовый клиент
+test_client_source = files(
+    'test-client.c'
+)
+
 # Библиотека модуля (статическая)
 test_module_lib = static_library(
     'test-module',
@@ -34,8 +39,8 @@ test_module_lib = static_library(
         dependency('dbus-1'),
     ],
     include_directories: [
-        include_directories('../../include'),
-        include_directories('..'),
+        include_directories('../../../../include'),
+        include_directories('../../..'),
     ],
     c_args: [
         '-DTEST_MODULE_VERSION="1.0.0"',
@@ -47,4 +52,9 @@ test_module_lib = static_library(
 test_module_dep = declare_dependency(
     link_with: test_module_lib,
     include_directories: include_directories('.'),
+    sources: test_module_headers,
 )
+
+# Экспортируем переменные для основного meson.build
+test_module_sources = test_module_sources
+test_module_dep = test_module_dep

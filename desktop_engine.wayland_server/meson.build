@@ -27,6 +27,9 @@ dbus = dependency('dbus-1', required: true)
 
 subdir('protocols')
 
+# Include dbus modules
+subdir('src/dbus-ipc/modules/test-module')
+
 executable('desktop_engine_wayland_server',
     sources: [
         'src/main.c',
@@ -42,9 +45,22 @@ executable('desktop_engine_wayland_server',
         'src/dbus-ipc/dbus-server.c',
         'src/dbus-ipc/dbus-module.c',
         'src/dbus-ipc/dbus-wayland-integration.c',
+        test_module_sources,
         wl_protos_src,
     ],
-    dependencies: [wayland_server, wayland_protocols, dbus],
-    include_directories: [include_directories('protocols'), include_directories('include')],
+    dependencies: [wayland_server, wayland_protocols, dbus, test_module_dep],
+    include_directories: [include_directories('protocols'), include_directories('include'), include_directories('src/dbus-ipc/modules/test-module')],
     install: true
+)
+
+# Дополнительный исполняемый файл для тестирования D-Bus
+executable('test-dbus-client',
+    sources: [
+        'src/dbus-ipc/modules/test-module/test-client.c',
+    ],
+    dependencies: [dbus],
+    include_directories: [
+        include_directories('include'),
+    ],
+    install: false
 )
