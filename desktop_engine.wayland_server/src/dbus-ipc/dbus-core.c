@@ -34,7 +34,7 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
 }
 
 bool dbus_core_init_connection(struct dbus_server *server) {
-    if (!server || server->initialized == false) return false;
+    if (!server) return false;
 
     DBusError err;
     dbus_error_init(&err);
@@ -123,14 +123,14 @@ void dbus_core_cleanup(struct dbus_server *server) {
 
     /* Close connection */
     if (server->connection) {
-        DBusError *err;
-        dbus_error_init(err);
+        DBusError err;
+        dbus_error_init(&err);
  
         /* Release bus name */
-        dbus_bus_release_name(server->connection, BUS_NAME, err);
-        if (dbus_error_is_set(err)) {
-            DBUS_ERROR("Failed to release name: %s", err->message);
-            dbus_error_free(err);
+        dbus_bus_release_name(server->connection, BUS_NAME, &err);
+        if (dbus_error_is_set(&err)) {
+            DBUS_ERROR("Failed to release name: %s", err.message);
+            dbus_error_free(&err);
         }
 
         dbus_connection_close(server->connection);

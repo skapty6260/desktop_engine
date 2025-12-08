@@ -10,9 +10,11 @@
 #include <dbus-ipc/dbus-core.h>
 
 #define EXIT_AND_ERROR(msg) \
-    LOG_ERROR(LOG_MODULE_CORE, msg); \
-    wl_display_destroy(server.display); \
-    logger_cleanup();
+    do { \
+        LOG_ERROR(LOG_MODULE_CORE, msg); \
+        wl_display_destroy(server.display); \
+        logger_cleanup();\
+    } while(0)
 
 static struct server *global_server = NULL;
 static volatile sig_atomic_t g_shutdown_requested = 0;

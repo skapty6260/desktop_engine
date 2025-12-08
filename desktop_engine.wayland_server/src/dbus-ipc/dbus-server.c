@@ -9,6 +9,9 @@ struct dbus_server *dbus_server_create(void) {
     struct dbus_server *server = calloc(1, sizeof(struct dbus_server));
     if (server) {
         server->dbus_fd = -1;
+        server->initialized = false;  // ИСПРАВЛЕНО: инициализируем как false
+        server->connection = NULL;
+        server->modules = NULL;
     }
     return server;
 }
@@ -17,6 +20,7 @@ struct dbus_wayland_integration_data *dbus_wayland_integration_create(struct wl_
     struct dbus_wayland_integration_data *data = calloc(1, sizeof(struct dbus_wayland_integration_data));
     if (data) {
         data->wl_display = display;
+        data->wl_fd_source = NULL;
     }
     return data;
 }
