@@ -1,10 +1,13 @@
 #include <logger.h>
 #include <config.h>
-#include <dbus-ipc/dbus.h>
 #include <wayland/server.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+
+#include <dbus-ipc/dbus-server.h>
+#include <dbus-ipc/dbus-wayland-integration.h>
+#include <dbus-ipc/dbus-core.h>
 
 #define EXIT_AND_ERROR(msg) \
     LOG_ERROR(LOG_MODULE_CORE, msg); \
@@ -31,7 +34,6 @@ int main(int argc, char **argv) {
     logger_config_t logger_config;
     server_config_t server_config;
     struct server server = {0};
-    struct dbus_server *dbus_server;
     
     /* Logger and config initialization */
     load_default_config(&logger_config, &server_config);
@@ -46,16 +48,6 @@ int main(int argc, char **argv) {
     }
 
     server_init(&server);
-
-    dbus_server = dbus_server_create();
-    if (!dbus_server) {
-        EXIT_AND_ERROR("Failed to allocate memory for dbus server");
-    }
-
-    if (!dbus_server_init(dbus_server, server.display)) {
-        dbus_server_cleanup(dbus_server);
-        EXIT_AND_ERROR("Failed to initialize dbus server");
-    }
 
     /* Signal handling for graceful shutdown */
     global_server = &server;
@@ -73,6 +65,18 @@ int main(int argc, char **argv) {
     }
     setenv("WAYLAND_DISPLAY", server.socket, true);
 
+    /* Run D-Bus server */
+    struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(display);
+    struct dbus_server *dbus_server = dbus_server_create();
+
+    if (!dbus_server_init(dbus_server, dbus_wayland_integration_data)) {
+        dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
+        dbus_core_cleanup(dbus_server);
+        EXIT_AND_ERROR("Failed to init dbus server");
+    }
+
+    /* Register modules here */
+
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
         LOG_DEBUG(LOG_MODULE_CORE, "TESTBED startup cmd: %s", server_config.startup_cmd);
@@ -81,15 +85,16 @@ int main(int argc, char **argv) {
 		}
     }
 
-    LOG_INFO(LOG_MODULE_CORE, "D-Bus server started on bus: %s", dbus_server_get_name(dbus_server));
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server started on socket: %s", server.socket);
 
     server_run(&server);
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
+    /* Unregister modules here */
+    dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
+    dbus_core_cleanup(dbus_server);
     server_cleanup(&server);
-    dbus_server_cleanup(dbus_server);
     logger_cleanup();
 
     return 0;

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Смысл и устройство проекта.md",
+                "file": "Architecture/communication/DBUS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Смысл и устройство проекта"
+              "title": "DBUS"
             }
           }
         ]
@@ -187,7 +187,7 @@
   "lastOpenFiles": [
     "Смысл и устройство проекта.md",
     "Untitled.base",
-    "Architecture/communication/Untitled.md",
+    "Architecture/communication/DBUS.md",
     "Architecture/Main scheme.canvas",
     "readme.md",
     "Architecture/window_server/architecture.md",

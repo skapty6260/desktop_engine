@@ -20,8 +20,7 @@ typedef enum {
 
 typedef enum {
     LOG_MODULE_SERVER,
-    LOG_MODULE_IPC_GET,
-    LOG_MODULE_IPC_SEND,
+    LOG_MODULE_DBUS,
     LOG_MODULE_CORE
 } log_module_t;
 
@@ -79,16 +78,11 @@ void logger_log(log_level_t level, log_module_t module, const char* file, int li
 #define SERVER_ERROR(...)    LOG_ERROR(LOG_MODULE_SERVER, __VA_ARGS__)
 #define SERVER_FATAL(...)    LOG_FATAL(LOG_MODULE_SERVER, __VA_ARGS__)
 
-#define IPC_GET_DEBUG(...)       LOG_DEBUG(LOG_MODULE_IPC_GET, __VA_ARGS__)
-#define IPC_GET_INFO(...)        LOG_INFO(LOG_MODULE_IPC_GET, __VA_ARGS__)
-#define IPC_GET_WARN(...)        LOG_WARN(LOG_MODULE_IPC_GET, __VA_ARGS__)
-#define IPC_GET_ERROR(...)       LOG_ERROR(LOG_MODULE_IPC_GET, __VA_ARGS__)
-#define IPC_GET_FATAL(...)       LOG_FATAL(LOG_MODULE_IPC_GET, __VA_ARGS__)
-
-#define IPC_SEND_DEBUG(...)       LOG_DEBUG(LOG_MODULE_IPC_SEND, __VA_ARGS__)
-#define IPC_SEND_INFO(...)        LOG_INFO(LOG_MODULE_IPC_SEND, __VA_ARGS__)
-#define IPC_SEND_WARN(...)        LOG_WARN(LOG_MODULE_IPC_SEND, __VA_ARGS__)
-#define IPC_SEND_ERROR(...)       LOG_ERROR(LOG_MODULE_IPC_SEND, __VA_ARGS__)
-#define IPC_SEND_FATAL(...)       LOG_FATAL(LOG_MODULE_IPC_SEND, __VA_ARGS__)
+// DBus log macros
+#define DBUS_DEBUG(...)    LOG_DEBUG(LOG_MODULE_DBUS, __VA_ARGS__)
+#define DBUS_INFO(...)     LOG_INFO(LOG_MODULE_DBUS, __VA_ARGS__)
+#define DBUS_WARN(...)     LOG_WARN(LOG_MODULE_DBUS, __VA_ARGS__)
+#define DBUS_ERROR(...)    LOG_ERROR(LOG_MODULE_DBUS, __VA_ARGS__)
+#define DBUS_FATAL(...)    LOG_FATAL(LOG_MODULE_DBUS, __VA_ARGS__)
 
 #endif
