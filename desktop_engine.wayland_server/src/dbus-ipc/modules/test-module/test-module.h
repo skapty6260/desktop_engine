@@ -2,6 +2,7 @@
 #define TEST_MODULE_H
 
 #include <dbus-ipc/dbus-server.h>
+#include <dbus/dbus.h>
 
 // Структура данных модуля
 typedef struct test_module_data {

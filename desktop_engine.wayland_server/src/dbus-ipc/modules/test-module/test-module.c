@@ -672,7 +672,7 @@ void test_module_unregister(struct dbus_server *server) {
 bool test_module_send_event(struct dbus_server *server,
                            const char *event_type,
                            const char *data) {
-    if (!server || !server->conn_ref || !server->conn_ref->connection) {
+    if (!server || !server->connection) {
         return false;
     }
     
@@ -710,7 +710,7 @@ bool test_module_send_event(struct dbus_server *server,
                                   DBUS_TYPE_UINT64,
                                   &timestamp);
     
-    dbus_connection_send(server->conn_ref->connection, signal, NULL);
+    dbus_connection_send(server->connection, signal, NULL);
     dbus_message_unref(signal);
     
     DBUS_DEBUG("TestModule event sent: %s", event_type);
