@@ -127,13 +127,13 @@ void dbus_core_cleanup(struct dbus_server *server) {
     /* Close connection */
     if (server->connection) {
         DBusError *err;
-        dbus_error_init(&err);
+        dbus_error_init(err);
  
         /* Release bus name */
-        dbus_bus_release_name(server->connection, BUS_NAME, &err);
-        if (dbus_error_is_set(&err)) {
-            DBUS_ERROR("Failed to release name: %s", err.message);
-            dbus_error_free(&err);
+        dbus_bus_release_name(server->connection, BUS_NAME, err);
+        if (dbus_error_is_set(err)) {
+            DBUS_ERROR("Failed to release name: %s", err->message);
+            dbus_error_free(err);
         }
 
         dbus_connection_close(server->connection);
