@@ -13,9 +13,9 @@ typedef DBusHandlerResult (*dbus_message_handler_t)(
 );
 
 typedef struct dbus_module {
-    const char *name;
-    const char *interface_name;
-    const char *object_path;
+    char *name;
+    char *interface_name;
+    char *object_path;
     dbus_message_handler_t handler;
     void *user_data;
     struct dbus_module *next;
