@@ -11,7 +11,6 @@
 
 #define EXIT_AND_ERROR(msg) \
     LOG_ERROR(LOG_MODULE_CORE, msg); \
-    free(dbus_server); \
     wl_display_destroy(server.display); \
     logger_cleanup();
 
@@ -66,7 +65,7 @@ int main(int argc, char **argv) {
     setenv("WAYLAND_DISPLAY", server.socket, true);
 
     /* Run D-Bus server */
-    struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(display);
+    struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
     struct dbus_server *dbus_server = dbus_server_create();
 
     if (!dbus_server_init(dbus_server, dbus_wayland_integration_data)) {
