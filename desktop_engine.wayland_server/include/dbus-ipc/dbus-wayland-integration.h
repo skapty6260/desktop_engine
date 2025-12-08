@@ -2,6 +2,7 @@
 #define DBUS_WAYLAND_INTEGRATION_H
 
 #include <wayland-server.h>
+#include <dbus-ipc/dbus-core.h>
 
 struct dbus_wayland_integration_data {
     struct wl_display *wl_display;
