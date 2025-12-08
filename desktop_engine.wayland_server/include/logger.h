@@ -56,7 +56,6 @@ typedef struct {
     char log_file_path[256];
 } logger_config_t;
 
-// Добавляем флаг graceful shutdown
 extern volatile sig_atomic_t g_logger_graceful_shutdown;
 
 int logger_init(const logger_config_t* config);
