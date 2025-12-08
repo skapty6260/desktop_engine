@@ -11,14 +11,17 @@
             "id": "273a28753e7659ce",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "Architecture/communication/DBUS.md",
-                "mode": "source",
-                "source": false
+                "file": "Architecture/Main scheme.canvas",
+                "viewState": {
+                  "x": -555.7562037814712,
+                  "y": 620.5971746494193,
+                  "zoom": -1.2708992865745163
+                }
               },
-              "icon": "lucide-file",
-              "title": "DBUS"
+              "icon": "lucide-layout-dashboard",
+              "title": "Main scheme"
             }
           }
         ]
@@ -185,9 +188,9 @@
   },
   "active": "273a28753e7659ce",
   "lastOpenFiles": [
+    "Architecture/communication/DBUS.md",
     "Смысл и устройство проекта.md",
     "Untitled.base",
-    "Architecture/communication/DBUS.md",
     "Architecture/Main scheme.canvas",
     "readme.md",
     "Architecture/window_server/architecture.md",

@@ -9,6 +9,8 @@
 #include <dbus-ipc/dbus-wayland-integration.h>
 #include <dbus-ipc/dbus-core.h>
 
+#include "dbus-ipc/modules/test-module/test-module.h"
+
 #define EXIT_AND_ERROR(msg) \
     do { \
         LOG_ERROR(LOG_MODULE_CORE, msg); \
@@ -78,6 +80,17 @@ int main(int argc, char **argv) {
     }
 
     /* Register modules here */
+    if (!test_module_register(dbus_server)) {
+        LOG_WARN(LOG_MODULE_CORE, "Failed to register test module");
+    } else {
+        LOG_INFO(LOG_MODULE_CORE, "Test module registered successfully");
+        
+        // Пример отправки тестового события через 2 секунды
+        struct timespec ts = { .tv_sec = 2, .tv_nsec = 0 };
+        nanosleep(&ts, NULL);
+        
+        test_module_send_event(dbus_server, "startup", "Server started successfully");
+    }
 
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
@@ -94,6 +107,8 @@ int main(int argc, char **argv) {
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
     /* Unregister modules here */
+    test_module_unregister(dbus_server);
+
     dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
     dbus_core_cleanup(dbus_server);
     server_cleanup(&server);

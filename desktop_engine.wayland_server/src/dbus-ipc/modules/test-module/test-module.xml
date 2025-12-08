@@ -1,0 +1,75 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+        "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+    <interface name="org.skapty6260.DesktopEngine.TestModule">
+        <!-- Простой метод для проверки связи -->
+        <method name="Ping">
+            <arg name="message" type="s" direction="in"/>
+            <arg name="reply" type="s" direction="out"/>
+            <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
+        </method>
+        
+        <!-- Метод для получения информации о системе -->
+        <method name="GetSystemInfo">
+            <arg name="name" type="s" direction="out"/>
+            <arg name="version" type="s" direction="out"/>
+            <arg name="uptime" type="t" direction="out"/>
+            <arg name="pid" type="u" direction="out"/>
+        </method>
+        
+        <!-- Метод для математических операций -->
+        <method name="Calculate">
+            <arg name="operation" type="s" direction="in"/>
+            <arg name="a" type="d" direction="in"/>
+            <arg name="b" type="d" direction="in"/>
+            <arg name="result" type="d" direction="out"/>
+            <arg name="error_message" type="s" direction="out"/>
+        </method>
+        
+        <!-- Метод для получения статистики -->
+        <method name="GetStats">
+            <arg name="call_count" type="u" direction="out"/>
+            <arg name="last_called" type="t" direction="out"/>
+            <arg name="average_time" type="d" direction="out"/>
+        </method>
+        
+        <!-- Метод с массивом в ответе -->
+        <method name="GetList">
+            <arg name="items" type="as" direction="out"/>
+        </method>
+        
+        <!-- Метод со словарем в ответе -->
+        <method name="GetConfig">
+            <arg name="config" type="a{sv}" direction="out"/>
+        </method>
+        
+        <!-- Сигналы (события) -->
+        <signal name="TestEvent">
+            <arg name="event_type" type="s"/>
+            <arg name="data" type="v"/>
+            <arg name="timestamp" type="t"/>
+        </signal>
+        
+        <signal name="CounterUpdated">
+            <arg name="counter" type="i"/>
+            <arg name="delta" type="i"/>
+        </signal>
+        
+        <!-- Свойства (properties) -->
+        <property name="Enabled" type="b" access="readwrite">
+            <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+        </property>
+        
+        <property name="Version" type="s" access="read">
+            <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"/>
+        </property>
+        
+        <property name="CallCount" type="u" access="read">
+            <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+        </property>
+        
+        <property name="Temperature" type="d" access="read">
+            <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"/>
+        </property>
+    </interface>
+</node>
