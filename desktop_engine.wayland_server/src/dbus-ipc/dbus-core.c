@@ -133,7 +133,7 @@ void dbus_core_cleanup(struct dbus_server *server) {
             dbus_error_free(&err);
         }
 
-        dbus_connection_close(server->connection);
+        // dbus_connection_close(server->connection);
         dbus_connection_unref(server->connection);
         server->connection = NULL;
     }
