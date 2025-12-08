@@ -1,4 +1,6 @@
 #include <dbus-ipc/dbus-server.h>
+#include <dbus-ipc/dbus-wayland-integration.h>
+#include <dbus-ipc/dbus-core.h>
 #include <logger.h>
 #include <stdlib.h>
 #include <stdio.h>
