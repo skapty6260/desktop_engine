@@ -3,6 +3,7 @@
 
 #include <dbus-ipc/dbus-server.h>
 #include <dbus/dbus.h>
+#include <time.h>
 
 // Структура данных модуля
 typedef struct test_module_data {

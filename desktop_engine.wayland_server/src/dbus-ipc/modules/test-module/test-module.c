@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <math.h>
+#include <time.h>        // Для clock_gettime, timespec
+#include <unistd.h>      // Для getpid()
+#include <sys/time.h>    // Для gettimeofday()
+#include <math.h>        // Для pow()
+#include <stdbool.h>     // Для bool типа
 
 // Данные модуля (синглтон)
 static test_module_data_t *module_data = NULL;

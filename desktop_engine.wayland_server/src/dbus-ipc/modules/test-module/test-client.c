@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <dbus/dbus.h>
 
 #define BUS_NAME "org.skapty6260.DesktopEngine"
