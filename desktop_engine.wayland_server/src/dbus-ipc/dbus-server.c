@@ -16,7 +16,7 @@ struct dbus_wayland_integration_data *dbus_wayland_integration_create(struct wl_
     if (data) {
         data->wl_display = display;
     }
-    return data
+    return data;
 }
 
 bool dbus_server_init(struct dbus_server *server, struct dbus_wayland_integration_data *wayland_integration_data) {
@@ -27,7 +27,7 @@ bool dbus_server_init(struct dbus_server *server, struct dbus_wayland_integratio
 
     /* 2. Integrate with wayland event loop */
     if (!dbus_wayland_integration_init(server, wayland_integration_data)) {
-        dbus_core_cleanup();
+        dbus_core_cleanup(server);
         return false;
     }
 
