@@ -151,10 +151,10 @@ else
     fi
 fi
 
-echo -e "\n=== D-Bus Monitor Log Summary ==="
-echo "Last 20 lines from dbus-monitor:"
-tail -20 "$DBUS_MONITOR_LOG" | while IFS= read -r line; do
-    echo "  $line"
+# echo -e "\n=== D-Bus Monitor Log Summary ==="
+# echo "Last 20 lines from dbus-monitor:"
+# tail -20 "$DBUS_MONITOR_LOG" | while IFS= read -r line; do
+#     echo "  $line"
 done
 
 echo -e "\nStopping D-Bus monitor..."
@@ -166,7 +166,7 @@ kill $SERVER_PID 2>/dev/null
 wait $SERVER_PID 2>/dev/null
 
 # Сохраняем полный лог dbus-monitor
-echo -e "\nFull D-Bus monitor log saved to: $DBUS_MONITOR_LOG"
-echo "To view: cat $DBUS_MONITOR_LOG"
+# echo -e "\nFull D-Bus monitor log saved to: $DBUS_MONITOR_LOG"
+# echo "To view: cat $DBUS_MONITOR_LOG"
 
-echo -e "\nAll tests completed!"
+# echo -e "\nAll tests completed!"
