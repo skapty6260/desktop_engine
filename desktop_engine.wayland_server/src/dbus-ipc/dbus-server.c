@@ -52,11 +52,11 @@ bool dbus_server_init(struct dbus_server *server, struct dbus_wayland_integratio
     }
 
     /* 3. Register modules */
-    if (!test_module_register(dbus_server)) {
+    if (!test_module_register(server)) {
         LOG_WARN(LOG_MODULE_CORE, "Failed to register test module");
     } else {
         LOG_INFO(LOG_MODULE_CORE, "Test module registered successfully");
-        test_module_send_event(dbus_server, "startup", "Server started successfully");
+        test_module_send_event(server, "startup", "Server started successfully");
     }
 
     return true;
