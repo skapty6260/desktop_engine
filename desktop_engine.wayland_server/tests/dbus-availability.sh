@@ -14,7 +14,7 @@ echo "Using D-Bus address: $DBUS_SESSION_BUS_ADDRESS"
 echo "Starting server with --no-async --log-level debug..."
 
 # Запускаем сервер
-./build/desktop_engine_wayland_server --no-async --log-level debug &
+../build/desktop_engine_wayland_server --no-async --log-level debug &
 SERVER_PID=$!
 echo "Server started with PID: $SERVER_PID"
 
