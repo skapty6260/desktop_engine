@@ -8,10 +8,14 @@ int dbus_wayland_fd_callback(int fd, uint32_t mask, void *data) {
     struct dbus_server *server = (struct dbus_server *)data;
 
     if (!server || !server->connection) {
+        DBUS_ERROR("fd_callback error: failed to get server from passed data");
         return 0;
     }
 
+    DBUS_DEBUG("D-Bus fd callback triggered, mask: %u", mask);
+
     /* Handle D-Bus incoming messages */
+    dbus_connection_read_write(server->connection, 0);
     while (dbus_connection_get_dispatch_status(server->connection) == DBUS_DISPATCH_DATA_REMAINS) {
         dbus_connection_dispatch(server->connection);
     }
