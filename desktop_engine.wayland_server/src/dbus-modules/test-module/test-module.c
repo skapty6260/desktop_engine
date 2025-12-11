@@ -608,7 +608,21 @@ DBusHandlerResult test_module_message_handler(DBusConnection *connection,
         return DBUS_HANDLER_RESULT_HANDLED;
     }
     
-    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    // Если метод неизвестен, возвращаем ошибку НЕМЕДЛЕННО
+    DBUS_ERROR("Unknown method: %s", method);
+    
+    // Создаем сообщение об ошибке
+    DBusMessage *error = dbus_message_new_error(message,
+        DBUS_ERROR_UNKNOWN_METHOD,
+        "Unknown method");
+    
+    if (error) {
+        dbus_connection_send(connection, error, NULL);
+        dbus_connection_flush(connection);  // Важно: флашим соединение
+        dbus_message_unref(error);
+    }
+    
+    return DBUS_HANDLER_RESULT_HANDLED;
 }
 
 // Получение XML описания интерфейса
