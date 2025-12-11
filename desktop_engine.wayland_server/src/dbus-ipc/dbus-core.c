@@ -54,6 +54,10 @@ bool dbus_core_init_connection(struct dbus_server *server) {
         return false;
     }
 
+    dbus_connection_set_exit_on_disconnect(server->connection, FALSE);
+
+    dbus_connection_add_filter(server->connection, core_message_handler, server, NULL); // Last is destructor (TODO)
+
     /* Requesting dbus service name */
     int ret = dbus_bus_request_name(server->connection,
                                     BUS_NAME,
@@ -71,10 +75,6 @@ bool dbus_core_init_connection(struct dbus_server *server) {
         return false;
     }
 
-    /* Add filter (message handler) */
-    dbus_connection_add_filter(server->connection, core_message_handler, server, NULL); // Last is destructor (TODO)
-    dbus_connection_flush(server->connection); // Flush to activate filter
-
     /* Acquiring dbus fd */
     if (!dbus_connection_get_unix_fd(server->connection, &server->dbus_fd)) {
         DBUS_ERROR("Failed to get D-Bus file descriptor");
@@ -82,6 +82,9 @@ bool dbus_core_init_connection(struct dbus_server *server) {
         server->connection = NULL;
         return false;
     }
+
+    /* Force flush to activate connection */
+    dbus_connection_flush(server->connection);
 
     server->initialized = true;
     DBUS_INFO("D-Bus core initialized with bus name: %s", BUS_NAME);

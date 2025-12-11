@@ -14,45 +14,21 @@ int dbus_wayland_fd_callback(int fd, uint32_t mask, void *data) {
 
     DBUS_DEBUG("D-Bus fd callback triggered, mask: %u", mask);
 
+    /* Check if connection is still valid */
+    if (!dbus_connection_get_is_connected(server->connection)) {
+        DBUS_ERROR("D-Bus connection lost");
+        return 0;
+    }
+
     /* Handle D-Bus incoming messages */
-    dbus_connection_read_write(server->connection, 0);
-    while (dbus_connection_get_dispatch_status(server->connection) == DBUS_DISPATCH_DATA_REMAINS) {
-        dbus_connection_dispatch(server->connection);
-    }
+    // dbus_connection_read_write(server->connection, 0);
+    // while (dbus_connection_get_dispatch_status(server->connection) == DBUS_DISPATCH_DATA_REMAINS) {
+    //     dbus_connection_dispatch(server->connection);
+    // }
 
-    // WL_EVENT_READABLE: Входящие данные (читаем сообщения)
-    if (mask & WL_EVENT_READABLE) {
-        dbus_connection_read_write(server->connection, 0);  // 0 = non-blocking (timeout 0 ms)
-        // CRITICAL: Dispatch после read (process messages, call filter)
-        DBusDispatchStatus status = dbus_connection_dispatch(server->connection);
-        if (status == DBUS_DISPATCH_COMPLETE) {
-            // fde_log(FDE_DEBUG, "D-Bus dispatch: complete (messages processed)");
-        } else if (status == DBUS_DISPATCH_DATA_REMAINS) {
-            // fde_log(FDE_DEBUG, "D-Bus dispatch: data remains (more to process next poll)");
-        } else if (status == DBUS_DISPATCH_NEED_MEMORY) {
-            // fde_log(FDE_DEBUG, "D-Bus dispatch: need memory (retry later)");
-        }
-    }
-   
-    // WRITABLE: Исходящие (replies/signals) — flush queue
-    if (mask & WL_EVENT_WRITABLE) {
-        dbus_connection_read_write(server->connection, 0);
-        // fde_log(FDE_DEBUG, "D-Bus writable: flushed outgoing");
-    }
+    dbus_connection_read_write_dispatch(server->connection, 0);  // 0 = non-blocking
 
-    // HANGUP/ERROR: Disconnect (bus down или pipe error)
-    if (mask & (WL_EVENT_HANGUP | WL_EVENT_ERROR)) {
-        // fde_log(FDE_ERROR, "D-Bus fd error/hangup (fd=%d, mask=0x%x)", fd, mask);
-        if (server->connection) {
-            dbus_connection_unref(server->connection);
-            server->connection = NULL;
-        }
-
-        // Опционально: Reconnect logic (но для простоты — disable)
-        return 0;  // Loop удалит source
-    }
-
-    return 0;
+    return 1; // 0
 }
 
 bool dbus_wayland_integration_init(struct dbus_server *server, struct dbus_wayland_integration_data *integration_data) {
