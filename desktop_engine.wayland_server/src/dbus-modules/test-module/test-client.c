@@ -63,7 +63,7 @@ static int wait_for_service(DBusConnection *conn, const char *service_name, int 
         }
         
         // Ждем перед следующей попыткой
-        sleep(500000); // 500ms
+        sleep(5000);
     }
     
     return 0;
@@ -106,7 +106,7 @@ static int test_with_retry(DBusConnection *conn,
             dbus_error_free(&err);
             
             if (attempt < retries) {
-                sleep(300000); // 300ms перед ретраем
+                sleep(3000);
                 continue;
             }
             return 0;
@@ -116,7 +116,7 @@ static int test_with_retry(DBusConnection *conn,
             printf("ERROR: No reply received");
             if (attempt < retries) {
                 printf(" (retrying...)\n");
-                sleep(300000);
+                sleep(3000);
                 continue;
             } else {
                 printf("\n");
