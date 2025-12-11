@@ -35,8 +35,22 @@ static void signal_handler(int signal) {
 }
 
 static void run_module_test_after_startup(struct dbus_server *dbus_server) {
-    // Ждем немного, чтобы сервер полностью запустился
-    sleep(2);
+    // Wait for D-Bus server to be fully ready
+    int attempts = 0;
+    while (attempts < 10) {
+        if (dbus_server->connection && dbus_connection_get_is_connected(dbus_server->connection)) {
+            break;
+        }
+        sleep(1);
+        attempts++;
+    }
+    
+    if (attempts >= 10) {
+        LOG_ERROR(LOG_MODULE_CORE, "D-Bus server not ready after 10 seconds");
+        exit(1);
+    }
+    
+    sleep(1); // Additional safety margin
     
     LOG_INFO(LOG_MODULE_CORE, "Starting test module self-test...");
     

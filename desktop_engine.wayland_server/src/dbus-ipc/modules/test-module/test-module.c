@@ -725,6 +725,11 @@ bool test_module_run_full_test(struct dbus_server *server) {
         DBUS_ERROR("Cannot run full test: invalid server or connection");
         return false;
     }
+
+    if (!dbus_connection_get_is_connected(server->connection)) {
+        DBUS_ERROR("D-Bus connection is not connected");
+        return false;
+    }
     
     DBUS_INFO("=== Running TestModule Full Test ===");
     
