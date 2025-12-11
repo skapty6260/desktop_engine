@@ -30,25 +30,6 @@ bool dbus_module_register(struct dbus_server *server, const char *name, const ch
     module->user_data = user_data;
     module->next = NULL;
 
-    /* Register path for this module */
-    DBusObjectPathVTable vtable = {
-        .unregister_function = NULL,
-        .message_function = handler,
-        .dbus_internal_pad1 = NULL,
-        .dbus_internal_pad2 = NULL,
-        .dbus_internal_pad3 = NULL,
-        .dbus_internal_pad4 = NULL
-    };
-
-    if (!dbus_connection_register_object_path(server->connection, object_path, &vtable, user_data)) {
-        DBUS_ERROR("Failed to register object path: %s", object_path);
-        free(module->name);
-        free(module->interface_name);
-        free(module->object_path);
-        free(module);
-        return false;
-    }
-
     /* Add module to server modules list */
     if (!server->modules) {
         server->modules = module;
