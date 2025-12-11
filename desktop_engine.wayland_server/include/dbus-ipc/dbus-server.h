@@ -11,5 +11,6 @@ struct dbus_server *dbus_server_create(void);
 struct dbus_wayland_integration_data *dbus_wayland_integration_create(struct wl_display *display);
 
 bool dbus_server_init(struct dbus_server *server, struct dbus_wayland_integration_data *wayland_integration_data);
+void dbus_server_cleanup(struct dbus_server *server, struct dbus_wayland_integration_data *wayland_integration_data);
 
 #endif

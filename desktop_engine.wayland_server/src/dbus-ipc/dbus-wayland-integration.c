@@ -91,5 +91,4 @@ void dbus_wayland_integration_cleanup(struct dbus_wayland_integration_data *inte
     }
 
     integration_data->wl_display = NULL;
-    free(integration_data);
 }

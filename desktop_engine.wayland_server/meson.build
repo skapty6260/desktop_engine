@@ -28,7 +28,7 @@ dbus = dependency('dbus-1', required: true)
 subdir('protocols')
 
 # Include dbus modules
-subdir('src/dbus-ipc/modules/test-module')
+subdir('src/dbus-modules/test-module')
 
 executable('desktop_engine_wayland_server',
     sources: [
@@ -56,7 +56,7 @@ executable('desktop_engine_wayland_server',
 # Дополнительный исполняемый файл для тестирования D-Bus
 executable('test-dbus-client',
     sources: [
-        'src/dbus-ipc/modules/test-module/test-client.c',
+        'src/dbus-modules/test-module/test-client.c',
     ],
     dependencies: [dbus],
     include_directories: [

@@ -9,8 +9,6 @@
 #include <dbus-ipc/dbus-wayland-integration.h>
 #include <dbus-ipc/dbus-core.h>
 
-#include "dbus-ipc/modules/test-module/test-module.h"
-
 #define EXIT_AND_ERROR(msg) \
     do { \
         LOG_ERROR(LOG_MODULE_CORE, msg); \
@@ -31,35 +29,6 @@ static void signal_handler(int signal) {
     
     if (global_server && global_server->display) {
         wl_display_terminate(global_server->display);
-    }
-}
-
-static void run_module_test_after_startup(struct dbus_server *dbus_server) {
-    // Wait for D-Bus server to be fully ready
-    int attempts = 0;
-    while (attempts < 10) {
-        if (dbus_server->connection && dbus_connection_get_is_connected(dbus_server->connection)) {
-            break;
-        }
-        sleep(1);
-        attempts++;
-    }
-    
-    if (attempts >= 10) {
-        LOG_ERROR(LOG_MODULE_CORE, "D-Bus server not ready after 10 seconds");
-        exit(1);
-    }
-    
-    sleep(1); // Additional safety margin
-    
-    LOG_INFO(LOG_MODULE_CORE, "Starting test module self-test...");
-    
-    if (test_module_run_full_test(dbus_server)) {
-        LOG_INFO(LOG_MODULE_CORE, "✅ dbus test-module self-test PASSED");
-        test_module_send_event(dbus_server, "test_passed", "All tests passed successfully");
-    } else {
-        LOG_ERROR(LOG_MODULE_CORE, "❌ dbus test-module self-test FAILED");
-        test_module_send_event(dbus_server, "test_failed", "Some tests failed");
     }
 }
 
@@ -108,19 +77,6 @@ int main(int argc, char **argv) {
         EXIT_AND_ERROR("Failed to init dbus server");
     }
 
-    /* Register modules here */
-    if (!test_module_register(dbus_server)) {
-        LOG_WARN(LOG_MODULE_CORE, "Failed to register test module");
-    } else {
-        LOG_INFO(LOG_MODULE_CORE, "Test module registered successfully");
-        
-        // Пример отправки тестового события через 2 секунды
-        struct timespec ts = { .tv_sec = 2, .tv_nsec = 0 };
-        nanosleep(&ts, NULL);
-        
-        test_module_send_event(dbus_server, "startup", "Server started successfully");
-    }
-
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
         LOG_DEBUG(LOG_MODULE_CORE, "TESTBED startup cmd: %s", server_config.startup_cmd);
@@ -131,26 +87,11 @@ int main(int argc, char **argv) {
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server started on socket: %s", server.socket);
 
-    // Запускаем тест модуля в отдельном потоке/процессе после запуска сервера
-    pid_t test_pid = fork();
-    if (test_pid == 0) {
-        // Дочерний процесс для тестирования
-        LOG_INFO(LOG_MODULE_CORE, "Test process started (PID: %d)", getpid());
-        run_module_test_after_startup(dbus_server);
-        exit(0);
-    } else if (test_pid > 0) {
-        LOG_DEBUG(LOG_MODULE_CORE, "Started test process with PID: %d", test_pid);
-    }
-
     server_run(&server);
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
-    /* Unregister modules here */
-    test_module_unregister(dbus_server);
-
-    dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
-    dbus_core_cleanup(dbus_server);
+    dbus_server_cleanup(server, dbus_wayland_integration_data);
     server_cleanup(&server);
     logger_cleanup();
 
