@@ -47,13 +47,13 @@ if [ $? -eq 0 ]; then
     SERVICE_NAME="org.skapty6260.DesktopEngine"
 else
     # Проверяем альтернативное имя (с 'g' вместо 'y')
-    echo "Checking alternative service name (org.skaptg6260.DesktopEngine)..."
+    echo "Checking alternative service name (org.skapty6260.DesktopEngine)..."
     dbus-send --session --dest=org.freedesktop.DBus \
         --type=method_call --print-reply \
-        /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -q "org.skaptg6260.DesktopEngine"
+        /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -q "org.skapty6260.DesktopEngine"
     if [ $? -eq 0 ]; then
         echo "✓ Service is available (with 'g')"
-        SERVICE_NAME="org.skaptg6260.DesktopEngine"
+        SERVICE_NAME="org.skapty6260.DesktopEngine"
     else
         echo "✗ Service not found"
         echo "Showing all services containing 'skapt':"
