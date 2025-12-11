@@ -60,6 +60,7 @@ static uint64_t get_time_us(void) {
 }
 
 // Обработчик метода Ping
+// Обработчик метода Ping - ИСПРАВЛЕННАЯ ВЕРСИЯ
 static DBusHandlerResult handle_ping(DBusConnection *connection,
                                     DBusMessage *message,
                                     test_module_data_t *data) {
@@ -78,14 +79,16 @@ static DBusHandlerResult handle_ping(DBusConnection *connection,
         DBusMessage *reply = dbus_message_new_error(message,
             DBUS_ERROR_INVALID_ARGS, "Expected a string argument");
         if (reply) {
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем flush после отправки
             dbus_connection_send(connection, reply, NULL);
+            dbus_connection_flush(connection);  // <-- ДОБАВИТЬ ЭТО
             dbus_message_unref(reply);
         }
         return DBUS_HANDLER_RESULT_HANDLED;
     }
     
     data->call_count++;
-    DBUS_DEBUG("TestModule.Ping called with: %s", input_message);
+    DBUS_DEBUG("TestModule.Ping called with: %s (call #%u)", input_message, data->call_count);
     
     // Создаем ответ
     char reply_msg[256];
@@ -102,8 +105,12 @@ static DBusHandlerResult handle_ping(DBusConnection *connection,
                             DBUS_TYPE_STRING, &reply_msg,
                             DBUS_TYPE_INVALID);
     
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Отправляем И флашим
     dbus_connection_send(connection, reply, NULL);
+    dbus_connection_flush(connection);  // <-- ЭТО САМОЕ ВАЖНОЕ
     dbus_message_unref(reply);
+    
+    DBUS_DEBUG("Ping reply sent and flushed");
     
     return DBUS_HANDLER_RESULT_HANDLED;
 }

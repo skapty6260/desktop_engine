@@ -61,11 +61,6 @@ void dbus_module_unregister(struct dbus_server *server, const char *name) {
                 server->modules = current->next;
             }
             
-            /* Cancel object registration */
-            if (server->connection) {
-                dbus_connection_unregister_object_path(server->connection, current->object_path);
-            }
-            
             /* Cleanup module*/
             free(current->name);
             free(current->interface_name);
