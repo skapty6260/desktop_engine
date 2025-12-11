@@ -24,9 +24,17 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
 
+    /* Handling destinations only including our BUS_NAME */
+    if (destination && strcmp(destination, BUS_NAME) != 0) {
+        DBUS_DEBUG("Message not for us, ignoring. Destination: %s", destination);
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
     /* Search for module registered for this path */
     dbus_module_t *module = server->modules;
     while (module) {
+        DBUS_DEBUG("Found matching module: %s", module->name);
+
         if (strcmp(module->object_path, object_path) == 0 ||
             (strcmp(interface, module->interface_name) == 0 && 
              strcmp(object_path, module->object_path) == 0)) {
@@ -40,6 +48,7 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
         module = module->next;
     }
 
+    DBUS_DEBUG("No module found for path: %s", object_path);
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
@@ -74,26 +83,21 @@ bool dbus_core_init_connection(struct dbus_server *server) {
         return false;
     }
 
-    /* Register core message handler */
-    DBusObjectPathVTable vtable = {
-        .unregister_function = NULL,
-        .message_function = core_message_handler,
-        .dbus_internal_pad1 = NULL,
-        .dbus_internal_pad2 = NULL,
-        .dbus_internal_pad3 = NULL,
-        .dbus_internal_pad4 = NULL
-    };
-
-    /* Register root path for message handling */
-    if (!dbus_connection_register_object_path(server->connection,
-                                              "/",
-                                              &vtable,
-                                              server)) {
-        DBUS_ERROR("Failed to register D-Bus objectr path");
+    /* Adding message handlers filter */
+    if (!dbus_connection_add_filter(server->connection, core_message_handler, server, NULL)) {
+        DBUS_ERROR("Failed to add message filter");
         dbus_connection_unref(server->connection);
         server->connection = NULL;
         return false;
     }
+
+    /* Create watch function for wayland integration */
+    // if (!dbus_connection_set_watch_functions(server->connection,
+    //                                         add_watch, remove_watch,
+    //                                         watch_toggled, server, NULL)) {
+    //     DBUS_ERROR("Failed to set watch functions");
+    //     // Не прерываем инициализацию, но логируем ошибку
+    // }
 
     /* Acquiring dbus fd */
     if (!dbus_connection_get_unix_fd(server->connection, &server->dbus_fd)) {
