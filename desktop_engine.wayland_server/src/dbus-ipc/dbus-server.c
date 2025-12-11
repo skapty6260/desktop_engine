@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 // Modules
-#include <test-module/test-module.h>
+#include <test-module.h>
 
 struct dbus_server *dbus_server_create(void) {
     struct dbus_server *server = calloc(1, sizeof(struct dbus_server));

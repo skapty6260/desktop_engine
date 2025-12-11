@@ -30,26 +30,34 @@ subdir('protocols')
 # Include dbus modules
 subdir('src/dbus-modules/test-module')
 
+src_files = [
+    'src/main.c',
+    'src/wayland/server.c',
+    'src/wayland/compositor.c',
+    'src/wayland/compositor_surface_dummies.c',
+    'src/wayland/shm.c',
+    'src/wayland/buffer.c',
+    'src/xdg-shell/xdg.c',
+    'src/logger.c',
+    'src/config.c',
+    'src/dbus-ipc/dbus-core.c',
+    'src/dbus-ipc/dbus-server.c',
+    'src/dbus-ipc/dbus-module.c',
+    'src/dbus-ipc/dbus-wayland-integration.c',
+    test_module_sources,
+    wl_protos_src,
+]
+
+include_files = [
+    include_directories('protocols'), 
+    include_directories('include'), 
+    include_directories('src/dbus-modules/test-module')
+]
+
 executable('desktop_engine_wayland_server',
-    sources: [
-        'src/main.c',
-        'src/wayland/server.c',
-        'src/wayland/compositor.c',
-        'src/wayland/compositor_surface_dummies.c',
-        'src/wayland/shm.c',
-        'src/wayland/buffer.c',
-        'src/xdg-shell/xdg.c',
-        'src/logger.c',
-        'src/config.c',
-        'src/dbus-ipc/dbus-core.c',
-        'src/dbus-ipc/dbus-server.c',
-        'src/dbus-ipc/dbus-module.c',
-        'src/dbus-ipc/dbus-wayland-integration.c',
-        test_module_sources,
-        wl_protos_src,
-    ],
+    sources: src_files,
     dependencies: [wayland_server, wayland_protocols, dbus, test_module_dep],
-    include_directories: [include_directories('protocols'), include_directories('include'), include_directories('src/dbus-ipc/modules/test-module')],
+    include_directories: include_files,
     install: true
 )
 
