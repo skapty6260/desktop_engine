@@ -717,3 +717,212 @@ bool test_module_send_event(struct dbus_server *server,
     DBUS_DEBUG("TestModule event sent: %s", event_type);
     return true;
 }
+
+// Функция для тестирования всех методов модуля
+// Полный тест всех методов модуля
+bool test_module_run_full_test(struct dbus_server *server) {
+    if (!server || !server->connection) {
+        DBUS_ERROR("Cannot run full test: invalid server or connection");
+        return false;
+    }
+    
+    DBUS_INFO("=== Running TestModule Full Test ===");
+    
+    bool all_tests_passed = true;
+    DBusError err;
+    dbus_error_init(&err);
+    
+    // 1. Test Ping
+    DBUS_INFO("Test 1: Ping method");
+    DBusMessage *msg = dbus_message_new_method_call(
+        "org.skapty6260.DesktopEngine",
+        "/org/skapty6260/DesktopEngine/TestModule",
+        "org.skapty6260.DesktopEngine.TestModule",
+        "Ping");
+    
+    const char *ping_msg = "Full test ping";
+    dbus_message_append_args(msg, DBUS_TYPE_STRING, &ping_msg, DBUS_TYPE_INVALID);
+    
+    DBusMessage *reply = dbus_connection_send_with_reply_and_block(
+        server->connection, msg, 3000, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("  ✗ Ping failed: %s", err.message);
+        dbus_error_free(&err);
+        all_tests_passed = false;
+    } else if (reply) {
+        const char *response;
+        if (dbus_message_get_args(reply, NULL, DBUS_TYPE_STRING, &response, DBUS_TYPE_INVALID)) {
+            DBUS_INFO("  ✓ Ping: %s", response);
+        }
+        dbus_message_unref(reply);
+    }
+    dbus_message_unref(msg);
+    
+    // 2. Test GetSystemInfo
+    DBUS_INFO("Test 2: GetSystemInfo method");
+    msg = dbus_message_new_method_call(
+        "org.skapty6260.DesktopEngine",
+        "/org/skapty6260/DesktopEngine/TestModule",
+        "org.skapty6260.DesktopEngine.TestModule",
+        "GetSystemInfo");
+    
+    reply = dbus_connection_send_with_reply_and_block(
+        server->connection, msg, 3000, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("  ✗ GetSystemInfo failed: %s", err.message);
+        dbus_error_free(&err);
+        all_tests_passed = false;
+    } else if (reply) {
+        const char *name, *version;
+        dbus_uint64_t uptime;
+        dbus_uint32_t pid;
+        
+        if (dbus_message_get_args(reply, NULL,
+                                 DBUS_TYPE_STRING, &name,
+                                 DBUS_TYPE_STRING, &version,
+                                 DBUS_TYPE_UINT64, &uptime,
+                                 DBUS_TYPE_UINT32, &pid,
+                                 DBUS_TYPE_INVALID)) {
+            DBUS_INFO("  ✓ GetSystemInfo: %s v%s (PID: %u)", name, version, pid);
+        }
+        dbus_message_unref(reply);
+    }
+    dbus_message_unref(msg);
+    
+    // 3. Test Calculate (add)
+    DBUS_INFO("Test 3: Calculate method (add)");
+    msg = dbus_message_new_method_call(
+        "org.skapty6260.DesktopEngine",
+        "/org/skapty6260/DesktopEngine/TestModule",
+        "org.skapty6260.DesktopEngine.TestModule",
+        "Calculate");
+    
+    const char *op = "add";
+    double a = 10.5, b = 5.5;
+    dbus_message_append_args(msg,
+                            DBUS_TYPE_STRING, &op,
+                            DBUS_TYPE_DOUBLE, &a,
+                            DBUS_TYPE_DOUBLE, &b,
+                            DBUS_TYPE_INVALID);
+    
+    reply = dbus_connection_send_with_reply_and_block(
+        server->connection, msg, 3000, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("  ✗ Calculate failed: %s", err.message);
+        dbus_error_free(&err);
+        all_tests_passed = false;
+    } else if (reply) {
+        double result;
+        const char *error_msg;
+        if (dbus_message_get_args(reply, NULL,
+                                 DBUS_TYPE_DOUBLE, &result,
+                                 DBUS_TYPE_STRING, &error_msg,
+                                 DBUS_TYPE_INVALID)) {
+            if (strlen(error_msg) == 0) {
+                DBUS_INFO("  ✓ Calculate: %.2f + %.2f = %.2f", a, b, result);
+            } else {
+                DBUS_ERROR("  ✗ Calculate error: %s", error_msg);
+                all_tests_passed = false;
+            }
+        }
+        dbus_message_unref(reply);
+    }
+    dbus_message_unref(msg);
+    
+    // 4. Test GetStats
+    DBUS_INFO("Test 4: GetStats method");
+    msg = dbus_message_new_method_call(
+        "org.skapty6260.DesktopEngine",
+        "/org/skapty6260/DesktopEngine/TestModule",
+        "org.skapty6260.DesktopEngine.TestModule",
+        "GetStats");
+    
+    reply = dbus_connection_send_with_reply_and_block(
+        server->connection, msg, 3000, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("  ✗ GetStats failed: %s", err.message);
+        dbus_error_free(&err);
+        all_tests_passed = false;
+    } else if (reply) {
+        dbus_uint32_t call_count;
+        dbus_uint64_t last_called;
+        double avg_time;
+        
+        if (dbus_message_get_args(reply, NULL,
+                                 DBUS_TYPE_UINT32, &call_count,
+                                 DBUS_TYPE_UINT64, &last_called,
+                                 DBUS_TYPE_DOUBLE, &avg_time,
+                                 DBUS_TYPE_INVALID)) {
+            DBUS_INFO("  ✓ GetStats: call_count=%u", call_count);
+        }
+        dbus_message_unref(reply);
+    }
+    dbus_message_unref(msg);
+    
+    // 5. Test Properties
+    DBUS_INFO("Test 5: Properties.Get (Enabled)");
+    msg = dbus_message_new_method_call(
+        "org.skapty6260.DesktopEngine",
+        "/org/skapty6260/DesktopEngine/TestModule",
+        "org.freedesktop.DBus.Properties",
+        "Get");
+    
+    const char *iface = "org.skapty6260.DesktopEngine.TestModule";
+    const char *prop = "Enabled";
+    dbus_message_append_args(msg,
+                            DBUS_TYPE_STRING, &iface,
+                            DBUS_TYPE_STRING, &prop,
+                            DBUS_TYPE_INVALID);
+    
+    reply = dbus_connection_send_with_reply_and_block(
+        server->connection, msg, 3000, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("  ✗ Properties.Get failed: %s", err.message);
+        dbus_error_free(&err);
+        all_tests_passed = false;
+    } else if (reply) {
+        DBUS_INFO("  ✓ Properties.Get successful");
+        dbus_message_unref(reply);
+    }
+    dbus_message_unref(msg);
+    
+    // 6. Send test events
+    DBUS_INFO("Test 6: Sending test events");
+    test_module_send_event(server, "test_event_1", "Test event 1 data");
+    test_module_send_event(server, "test_event_2", "Test event 2 data");
+    test_module_send_event(server, "test_complete", "All tests completed");
+    
+    // 7. Test Introspection
+    DBUS_INFO("Test 7: Introspection");
+    msg = dbus_message_new_method_call(
+        "org.skapty6260.DesktopEngine",
+        "/org/skapty6260/DesktopEngine/TestModule",
+        "org.freedesktop.DBus.Introspectable",
+        "Introspect");
+    
+    reply = dbus_connection_send_with_reply_and_block(
+        server->connection, msg, 3000, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("  ✗ Introspection failed: %s", err.message);
+        dbus_error_free(&err);
+        all_tests_passed = false;
+    } else if (reply) {
+        const char *xml;
+        if (dbus_message_get_args(reply, NULL, DBUS_TYPE_STRING, &xml, DBUS_TYPE_INVALID)) {
+            DBUS_INFO("  ✓ Introspection successful (%zu bytes)", strlen(xml));
+        }
+        dbus_message_unref(reply);
+    }
+    dbus_message_unref(msg);
+    
+    DBUS_INFO("=== TestModule Full Test Complete ===");
+    DBUS_INFO("Result: %s", all_tests_passed ? "PASSED" : "FAILED");
+    
+    return all_tests_passed;
+}

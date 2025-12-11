@@ -11,14 +11,6 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
     const char *object_path = dbus_message_get_path(message);
     const char *interface = dbus_message_get_interface(message);
     const char *destination = dbus_message_get_destination(message);
-    const char *sender = dbus_message_get_sender(message);
-
-    DBUS_DEBUG("Received message: type=%d, path=%s, interface=%s, destination=%s, sender=%s",
-               dbus_message_get_type(message),
-               object_path ? object_path : "NULL",
-               interface ? interface : "NULL",
-               destination ? destination : "NULL",
-               sender ? sender : "NULL");
 
     if (!object_path || !interface) {
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
@@ -26,15 +18,12 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
 
     /* Handling destinations only including our BUS_NAME */
     if (destination && strcmp(destination, BUS_NAME) != 0) {
-        DBUS_DEBUG("Message not for us, ignoring. Destination: %s", destination);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
 
     /* Search for module registered for this path */
     dbus_module_t *module = server->modules;
     while (module) {
-        DBUS_DEBUG("Found matching module: %s", module->name);
-
         if (strcmp(module->object_path, object_path) == 0 ||
             (strcmp(interface, module->interface_name) == 0 && 
              strcmp(object_path, module->object_path) == 0)) {
@@ -48,7 +37,6 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
         module = module->next;
     }
 
-    DBUS_DEBUG("No module found for path: %s", object_path);
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
@@ -144,5 +132,4 @@ void dbus_core_cleanup(struct dbus_server *server) {
     server->initialized = false;
     server->dbus_fd = -1;
     free(server);
-    DBUS_DEBUG("D-Bus cleaned");
 }

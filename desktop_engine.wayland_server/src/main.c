@@ -90,6 +90,13 @@ int main(int argc, char **argv) {
         nanosleep(&ts, NULL);
         
         test_module_send_event(dbus_server, "startup", "Server started successfully");
+        
+        /* Run module self-test */
+        if (test_module_run_full_test(dbus_server)) {
+            LOG_INFO(LOG_MODULE_CORE, "dbus test-module self-test passed");
+        } else {
+            LOG_ERROR(LOG_MODULE_CORE, "dbus test-module self-test failed");
+        }
     }
 
     /* Test bed (test client) */

@@ -30,4 +30,6 @@ bool test_module_send_event(struct dbus_server *server,
                            const char *data);
 bool test_module_update_counter(struct dbus_server *server, int delta);
 
+bool test_module_run_full_test(struct dbus_server *server)
+
 #endif // TEST_MODULE_H
