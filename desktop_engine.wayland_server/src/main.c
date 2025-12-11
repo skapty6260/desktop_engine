@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
-    dbus_server_cleanup(server, dbus_wayland_integration_data);
+    dbus_server_cleanup(dbus_server, dbus_wayland_integration_data);
     server_cleanup(&server);
     logger_cleanup();
 
