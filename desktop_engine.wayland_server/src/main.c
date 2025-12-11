@@ -34,6 +34,21 @@ static void signal_handler(int signal) {
     }
 }
 
+static void run_module_test_after_startup(struct dbus_server *dbus_server) {
+    // Ждем немного, чтобы сервер полностью запустился
+    sleep(2);
+    
+    LOG_INFO(LOG_MODULE_CORE, "Starting test module self-test...");
+    
+    if (test_module_run_full_test(dbus_server)) {
+        LOG_INFO(LOG_MODULE_CORE, "✅ dbus test-module self-test PASSED");
+        test_module_send_event(dbus_server, "test_passed", "All tests passed successfully");
+    } else {
+        LOG_ERROR(LOG_MODULE_CORE, "❌ dbus test-module self-test FAILED");
+        test_module_send_event(dbus_server, "test_failed", "Some tests failed");
+    }
+}
+
 int main(int argc, char **argv) {
     logger_config_t logger_config;
     server_config_t server_config;
@@ -90,13 +105,6 @@ int main(int argc, char **argv) {
         nanosleep(&ts, NULL);
         
         test_module_send_event(dbus_server, "startup", "Server started successfully");
-        
-        /* Run module self-test */
-        if (test_module_run_full_test(dbus_server)) {
-            LOG_INFO(LOG_MODULE_CORE, "dbus test-module self-test passed");
-        } else {
-            LOG_ERROR(LOG_MODULE_CORE, "dbus test-module self-test failed");
-        }
     }
 
     /* Test bed (test client) */
@@ -108,6 +116,17 @@ int main(int argc, char **argv) {
     }
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server started on socket: %s", server.socket);
+
+    // Запускаем тест модуля в отдельном потоке/процессе после запуска сервера
+    pid_t test_pid = fork();
+    if (test_pid == 0) {
+        // Дочерний процесс для тестирования
+        LOG_INFO(LOG_MODULE_CORE, "Test process started (PID: %d)", getpid());
+        run_module_test_after_startup(dbus_server);
+        exit(0);
+    } else if (test_pid > 0) {
+        LOG_DEBUG(LOG_MODULE_CORE, "Started test process with PID: %d", test_pid);
+    }
 
     server_run(&server);
 
