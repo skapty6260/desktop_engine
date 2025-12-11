@@ -60,7 +60,6 @@ static uint64_t get_time_us(void) {
 }
 
 // Обработчик метода Ping
-// Обработчик метода Ping - ИСПРАВЛЕННАЯ ВЕРСИЯ
 static DBusHandlerResult handle_ping(DBusConnection *connection,
                                     DBusMessage *message,
                                     test_module_data_t *data) {
@@ -105,8 +104,24 @@ static DBusHandlerResult handle_ping(DBusConnection *connection,
                             DBUS_TYPE_STRING, &reply_msg,
                             DBUS_TYPE_INVALID);
     
-    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Отправляем И флашим
-    dbus_connection_send(connection, reply, NULL);
+                            if (!dbus_connection_get_is_connected(connection)) {
+        DBUS_ERROR("D-Bus connection is not connected, cannot send reply");
+        dbus_message_unref(reply);
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+    
+    // Отправляем с серийным номером
+    dbus_uint32_t serial = dbus_message_get_serial(message);
+    if (serial) {
+        dbus_message_set_reply_serial(reply, serial);
+    }
+
+    if (!dbus_connection_send(connection, reply, NULL)) {
+        DBUS_ERROR("Failed to send reply");
+        dbus_message_unref(reply);
+        return DBUS_HANDLER_RESULT_NEED_MEMORY;
+    }
+
     dbus_connection_flush(connection);  // <-- ЭТО САМОЕ ВАЖНОЕ
     dbus_message_unref(reply);
     
