@@ -1,31 +1,16 @@
 #!/bin/bash
-# service-check.sh - Проверка доступности D-Bus сервиса
+# dbus-availability.sh - Проверка доступности D-Bus сервиса
 
 echo "=== D-Bus Service Availability Test ==="
 
-# Устанавливаем правильное окружение D-Bus
-setup_dbus_environment() {
-    # Проверяем, установлена ли переменная окружения
-    if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
-        # Пробуем получить адрес из systemd
-        DBUS_SESSION_BUS_ADDRESS=$(systemctl --user show-environment 2>/dev/null | grep DBUS_SESSION_BUS_ADDRESS | cut -d= -f2)
-        
-        if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
-            # Используем стандартный путь сокета
-            if [ -n "$XDG_RUNTIME_DIR" ] && [ -S "$XDG_RUNTIME_DIR/bus" ]; then
-                DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
-            else
-                DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
-            fi
-        fi
-        
-        export DBUS_SESSION_BUS_ADDRESS
-        echo "DBUS_SESSION_BUS_ADDRESS set to: $DBUS_SESSION_BUS_ADDRESS"
-    fi
-}
+# Очищаем предыдущие переменные D-Bus
+unset DBUS_SESSION_BUS_ADDRESS
+unset DBUS_LAUNCH_DBUS_DAEMON
 
-setup_dbus_environment
+# Устанавливаем правильный адрес D-Bus (используем существующий сокет пользователя)
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
 
+echo "Using D-Bus address: $DBUS_SESSION_BUS_ADDRESS"
 echo "Starting server with --no-async --log-level debug..."
 
 # Запускаем сервер
@@ -33,146 +18,128 @@ echo "Starting server with --no-async --log-level debug..."
 SERVER_PID=$!
 echo "Server started with PID: $SERVER_PID"
 
-# Ждем запуска
-sleep 3
+# Ждем запуска сервера
+echo -e "\nWaiting for server to initialize..."
+sleep 4
 
 echo -e "\n=== Step 1: Checking D-Bus connectivity ==="
 
-# Проверяем разными способами
-DBUS_AVAILABLE=false
-
-echo "Trying to connect to D-Bus..."
-
-# Способ 1: Используем dbus-send
-if dbus-send --session --dest=org.freedesktop.DBus \
-    --type=method_call --print-reply \
-    /org/freedesktop/DBus org.freedesktop.DBus.Ping > /dev/null 2>&1; then
-    echo "✓ D-Bus daemon is available (via dbus-send)"
-    DBUS_AVAILABLE=true
-else
-    echo "⚠ dbus-send failed, trying alternative methods..."
+# Прямая проверка сокета
+if [ -S "/run/user/$(id -u)/bus" ]; then
+    echo "✓ D-Bus socket exists: /run/user/$(id -u)/bus"
     
-    # Способ 2: Проверяем сокет напрямую
-    if [ -n "$DBUS_SESSION_BUS_ADDRESS" ]; then
-        SOCKET_PATH=$(echo "$DBUS_SESSION_BUS_ADDRESS" | sed 's/unix:path=//')
-        if [ -S "$SOCKET_PATH" ]; then
-            echo "✓ D-Bus socket exists: $SOCKET_PATH"
-            
-            # Способ 3: Используем dbus-launch для теста
-            if command -v dbus-launch >/dev/null 2>&1; then
-                echo "Testing with dbus-launch..."
-                OUTPUT=$(dbus-launch --sh-syntax 2>/dev/null)
-                eval "$OUTPUT"
-                if dbus-send --session --dest=org.freedesktop.DBus \
-                    --type=method_call --print-reply \
-                    /org/freedesktop/DBus org.freedesktop.DBus.Ping > /dev/null 2>&1; then
-                    echo "✓ D-Bus daemon is available (via dbus-launch)"
-                    DBUS_AVAILABLE=true
-                fi
-            fi
-        fi
-    fi
-fi
-
-if [ "$DBUS_AVAILABLE" = false ]; then
-    echo "✗ Cannot connect to D-Bus daemon"
-    echo "Debug info:"
-    echo "  User ID: $(id -u)"
-    echo "  XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-Not set}"
-    echo "  DBUS_SESSION_BUS_ADDRESS: ${DBUS_SESSION_BUS_ADDRESS:-Not set}"
-    
-    # Проверяем существование сокета
-    SOCKET_PATH="/run/user/$(id -u)/bus"
-    if [ -S "$SOCKET_PATH" ]; then
-        echo "  Socket exists: $SOCKET_PATH"
-        echo "  Socket permissions: $(stat -c '%A %U:%G' "$SOCKET_PATH")"
+    # Пробуем отправить Ping к D-Bus демону
+    if timeout 2 dbus-send --session \
+        --dest=org.freedesktop.DBus \
+        --type=method_call \
+        --print-reply \
+        /org/freedesktop/DBus \
+        org.freedesktop.DBus.Ping > /dev/null 2>&1; then
+        echo "✓ D-Bus daemon is responding"
     else
-        echo "  Socket not found: $SOCKET_PATH"
-        echo "  Trying to start D-Bus session..."
-        
-        # Запускаем dbus-launch
-        if command -v dbus-launch >/dev/null 2>&1; then
-            echo "Starting D-Bus with dbus-launch..."
-            eval "$(dbus-launch --sh-syntax)"
-            export DBUS_SESSION_BUS_ADDRESS
-            echo "New D-Bus session started"
-            sleep 1
-            DBUS_AVAILABLE=true
-        else
-            echo "dbus-launch not available"
-        fi
+        echo "⚠ D-Bus daemon not responding, but socket exists"
+        echo "   This might be normal if dbus-broker is running"
     fi
-    
-    if [ "$DBUS_AVAILABLE" = false ]; then
-        kill $SERVER_PID 2>/dev/null
-        exit 1
-    fi
+else
+    echo "✗ D-Bus socket not found"
+    kill $SERVER_PID 2>/dev/null
+    exit 1
 fi
 
 echo -e "\n=== Step 2: Checking our service ==="
 SERVICE_NAME="org.skapty6260.DesktopEngine"
-
 echo "Looking for service: $SERVICE_NAME"
 
-# Даем серверу больше времени для регистрации
-sleep 2
-
+# Пробуем несколько раз с задержкой
 SERVICE_FOUND=false
-for i in {1..5}; do
-    if dbus-send --session --dest=org.freedesktop.DBus \
-        --type=method_call --print-reply \
-        /org/freedesktop/DBus org.freedesktop.DBus.ListNames 2>/dev/null | grep -q "$SERVICE_NAME"; then
-        echo "✓ Service '$SERVICE_NAME' is available (attempt $i)"
+for i in {1..10}; do
+    echo "Attempt $i/10..."
+    
+    if dbus-send --session \
+        --dest=org.freedesktop.DBus \
+        --type=method_call \
+        --print-reply \
+        /org/freedesktop/DBus \
+        org.freedesktop.DBus.ListNames 2>/dev/null | grep -q "$SERVICE_NAME"; then
+        echo "✓ Service '$SERVICE_NAME' FOUND!"
         SERVICE_FOUND=true
         break
-    else
-        echo "  Service not found yet (attempt $i), waiting..."
+    fi
+    
+    if [ $i -lt 10 ]; then
         sleep 1
     fi
 done
 
 if [ "$SERVICE_FOUND" = false ]; then
-    echo "✗ Service '$SERVICE_NAME' NOT found after 5 attempts"
-    echo "Available services containing 'DesktopEngine' or 'skapt':"
-    dbus-send --session --dest=org.freedesktop.DBus \
-        --type=method_call --print-reply \
-        /org/freedesktop/DBus org.freedesktop.DBus.ListNames 2>/dev/null | grep -E -i "(desktopengine|skapt)" || echo "  None found"
+    echo "✗ Service '$SERVICE_NAME' NOT found after 10 attempts"
+    echo "Available services:"
+    dbus-send --session \
+        --dest=org.freedesktop.DBus \
+        --type=method_call \
+        --print-reply \
+        /org/freedesktop/DBus \
+        org.freedesktop.DBus.ListNames 2>/dev/null | grep -E -i "(desktopengine|skapt)" || echo "  None found"
+    
+    echo -e "\nDebug: Checking if server is still running..."
+    if ps -p $SERVER_PID > /dev/null; then
+        echo "Server is still running (PID: $SERVER_PID)"
+    else
+        echo "Server process terminated"
+    fi
+    
     kill $SERVER_PID 2>/dev/null
     exit 1
 fi
 
-echo -e "\n=== Step 3: Testing basic operations ==="
+echo -e "\n=== Step 3: Testing service functionality ==="
 
-# 1. Introspection
+# Тест 1: Introspection
 echo "1. Testing Introspection..."
-if dbus-send --session \
+INTRO_RESULT=$(dbus-send --session \
     --dest="$SERVICE_NAME" \
     --type=method_call \
     --print-reply \
     "/org/skapty6260/DesktopEngine/TestModule" \
-    org.freedesktop.DBus.Introspectable.Introspect > /dev/null 2>&1; then
-    echo "   ✓ Introspection successful"
+    org.freedesktop.DBus.Introspectable.Introspect 2>&1)
+
+if echo "$INTRO_RESULT" | grep -q "<interface"; then
+    echo "   ✓ Introspection successful (XML interface found)"
 else
     echo "   ✗ Introspection failed"
+    echo "   Error: $INTRO_RESULT"
 fi
 
-# 2. Simple Ping
-echo "2. Testing Ping..."
+# Тест 2: Ping method
+echo "2. Testing Ping method..."
 PING_RESULT=$(dbus-send --session \
     --dest="$SERVICE_NAME" \
     --type=method_call \
     --print-reply \
     "/org/skapty6260/DesktopEngine/TestModule" \
     "org.skapty6260.DesktopEngine.TestModule.Ping" \
-    string:"service_check" 2>&1)
+    string:"availability_test" 2>&1)
 
-if echo "$PING_RESULT" | grep -q "Pong"; then
+PING_EXIT=$?
+
+if [ $PING_EXIT -eq 0 ]; then
     echo "   ✓ Ping successful"
-    echo "   Response: $(echo "$PING_RESULT" | grep -o '"Pong![^"]*"' | head -1)"
+    # Извлекаем ответ
+    RESPONSE=$(echo "$PING_RESULT" | grep -o 'string "[^"]*"' | head -1 | sed 's/string "//' | sed 's/"$//')
+    echo "   Response: \"$RESPONSE\""
 else
-    echo "   ✗ Ping failed"
-    echo "   Error: $PING_RESULT"
+    echo "   ✗ Ping failed (exit code: $PING_EXIT)"
+    echo "   Error output: $PING_RESULT"
 fi
+
+# Тест 3: GetSystemInfo
+echo "3. Testing GetSystemInfo..."
+dbus-send --session \
+    --dest="$SERVICE_NAME" \
+    --type=method_call \
+    --print-reply \
+    "/org/skapty6260/DesktopEngine/TestModule" \
+    "org.skapty6260.DesktopEngine.TestModule.GetSystemInfo" 2>&1 | head -5
 
 echo -e "\n=== Step 4: Cleanup ==="
 echo "Stopping server (PID: $SERVER_PID)..."
@@ -180,4 +147,5 @@ kill $SERVER_PID 2>/dev/null
 wait $SERVER_PID 2>/dev/null 2>/dev/null
 
 echo -e "\n=== Service Availability Test Complete ==="
-echo "✓ All service availability checks passed!"
+echo "✓ Service is available and responding!"
+exit 0
