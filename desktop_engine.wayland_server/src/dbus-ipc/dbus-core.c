@@ -61,7 +61,7 @@ bool dbus_core_init_connection(struct dbus_server *server) {
     /* Connect to the session bus */
     server->connection = dbus_bus_get(DBUS_BUS_SESSION, &err);
     if (dbus_error_is_set(&err)) {
-        DBUS_ERROR("D-Bus connection error: %s", err.message);
+        DBUS_ERROR("D-Bus connection failed: %s", err.message);
         dbus_error_free(&err);
         return false;
     }
@@ -69,7 +69,7 @@ bool dbus_core_init_connection(struct dbus_server *server) {
     /* Requesting dbus service name */
     int ret = dbus_bus_request_name(server->connection,
                                     BUS_NAME,
-                                    DBUS_NAME_FLAG_REPLACE_EXISTING,
+                                    DBUS_NAME_FLAG_DO_NOT_QUEUE | DBUS_NAME_FLAG_REPLACE_EXISTING,
                                     &err);
     if (dbus_error_is_set(&err) || ret != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
         if (dbus_error_is_set(&err)) {
@@ -83,21 +83,9 @@ bool dbus_core_init_connection(struct dbus_server *server) {
         return false;
     }
 
-    /* Adding message handlers filter */
-    if (!dbus_connection_add_filter(server->connection, core_message_handler, server, NULL)) {
-        DBUS_ERROR("Failed to add message filter");
-        dbus_connection_unref(server->connection);
-        server->connection = NULL;
-        return false;
-    }
-
-    /* Create watch function for wayland integration */
-    // if (!dbus_connection_set_watch_functions(server->connection,
-    //                                         add_watch, remove_watch,
-    //                                         watch_toggled, server, NULL)) {
-    //     DBUS_ERROR("Failed to set watch functions");
-    //     // Не прерываем инициализацию, но логируем ошибку
-    // }
+    /* Add filter (message handler) */
+    dbus_connection_add_filter(server->connection, core_message_handler, server, NULL); // Last is destructor (TODO)
+    dbus_connection_flush(server->connection); // Flush to activate filter
 
     /* Acquiring dbus fd */
     if (!dbus_connection_get_unix_fd(server->connection, &server->dbus_fd)) {
@@ -109,6 +97,7 @@ bool dbus_core_init_connection(struct dbus_server *server) {
 
     server->initialized = true;
     DBUS_INFO("D-Bus core initialized with bus name: %s", BUS_NAME);
+    dbus_error_free(&err);
 
     return true;
 }
