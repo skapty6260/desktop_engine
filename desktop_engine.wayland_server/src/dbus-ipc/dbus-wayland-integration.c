@@ -26,6 +26,13 @@ int dbus_wayland_fd_callback(int fd, uint32_t mask, void *data) {
 bool dbus_wayland_integration_init(struct dbus_server *server, struct dbus_wayland_integration_data *integration_data) {
     if (!server || !server->initialized || !integration_data->wl_display) return false;
 
+    if (server->dbus_fd <= 0) {
+        DBUS_ERROR("Invalid dbus file descriptior: %d", server->dbus_fd);
+        return false;
+    }
+
+    DBUS_DEBUG("Adding D-Bus fd %d to Wayland event loop", server->dbus_fd);
+
     /* Add D-Bus fd into wayland event loop */
     integration_data->wl_fd_source = wl_event_loop_add_fd(
         wl_display_get_event_loop(integration_data->wl_display),
@@ -40,7 +47,7 @@ bool dbus_wayland_integration_init(struct dbus_server *server, struct dbus_wayla
         return false;
     }
 
-    DBUS_INFO("D-Bus integrated with wayland event loop");
+    DBUS_INFO("D-Bus integrated with wayland event loop fd: (%d)", server->dbus_fd);
     return true;
 }
 
