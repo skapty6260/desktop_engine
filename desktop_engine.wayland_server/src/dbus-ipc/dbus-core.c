@@ -10,6 +10,15 @@ DBusHandlerResult core_message_handler(DBusConnection *connection, DBusMessage *
     struct dbus_server *server = (struct dbus_server *)user_data;
     const char *object_path = dbus_message_get_path(message);
     const char *interface = dbus_message_get_interface(message);
+    const char *destination = dbus_message_get_destination(message);
+    const char *sender = dbus_message_get_sender(message);
+
+    DBUS_DEBUG("Received message: type=%d, path=%s, interface=%s, destination=%s, sender=%s",
+               dbus_message_get_type(message),
+               object_path ? object_path : "NULL",
+               interface ? interface : "NULL",
+               destination ? destination : "NULL",
+               sender ? sender : "NULL");
 
     if (!object_path || !interface) {
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
