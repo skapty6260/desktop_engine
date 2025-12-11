@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>  // Для usleep()
+#include <unistd.h>  // Для sleep()
 #include <dbus/dbus.h>
 
 #define BUS_NAME "org.skapty6260.DesktopEngine"
@@ -63,7 +63,7 @@ static int wait_for_service(DBusConnection *conn, const char *service_name, int 
         }
         
         // Ждем перед следующей попыткой
-        usleep(500000); // 500ms
+        sleep(500000); // 500ms
     }
     
     return 0;
@@ -106,7 +106,7 @@ static int test_with_retry(DBusConnection *conn,
             dbus_error_free(&err);
             
             if (attempt < retries) {
-                usleep(300000); // 300ms перед ретраем
+                sleep(300000); // 300ms перед ретраем
                 continue;
             }
             return 0;
@@ -116,7 +116,7 @@ static int test_with_retry(DBusConnection *conn,
             printf("ERROR: No reply received");
             if (attempt < retries) {
                 printf(" (retrying...)\n");
-                usleep(300000);
+                sleep(300000);
                 continue;
             } else {
                 printf("\n");
