@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     }
 
     if (!dbus_start_main_loop(dbus_server)) {
-        dbus_server_cleanup(dbus_server);
+        dbus_server_cleanup(dbus_server); // This cleanup doesn't work properly
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
 

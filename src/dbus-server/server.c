@@ -235,6 +235,7 @@ void dbus_server_stop(struct dbus_server *server) {
         sleep(1);
     }
 
+    pthread_mutex_destroy(&server->mutex);
     dbus_server_cleanup(server);
 }
 
@@ -251,8 +252,7 @@ void dbus_server_cleanup(struct dbus_server *server) {
         dbus_connection_unref(server->connection);
         server->connection = NULL;
     }
-    
-    pthread_mutex_destroy(&server->mutex);
+
     free(server);
 
     DBUS_INFO("D-Bus server cleaned up");
