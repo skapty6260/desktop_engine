@@ -9,6 +9,6 @@ struct dbus_server {
     char *bus_name;
 };
 
-struct dbus_server *dbus_create_server(const char *bus_name);
+struct dbus_server *dbus_create_server(char *bus_name);
 
 #endif
