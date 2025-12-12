@@ -34,6 +34,8 @@ static int request_bus_name(DBusConnection *conn, const char *name) {
         dbus_error_free(&err);
         return -1;
     }
+
+    return ret;
 }
 
 struct dbus_server *create_server(const char *bus_name) {
