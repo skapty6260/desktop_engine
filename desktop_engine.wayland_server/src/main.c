@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
         EXIT_AND_ERROR("Failed to create dbus server");
     }
 
-    if (!dbus_start_main_loop(dbus_server)) {
+    if (dbus_start_main_loop(dbus_server) != 0) {
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
     // struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
