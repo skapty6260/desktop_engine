@@ -74,16 +74,9 @@ int main(int argc, char **argv) {
     }
 
     if (dbus_start_main_loop(dbus_server) != 0) {
+        dbus_server_cleanup(dbus_server);
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
-    // struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
-    // struct dbus_server *dbus_server = dbus_server_create();
-
-    // if (!dbus_server_init(dbus_server, dbus_wayland_integration_data)) {
-    //     dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
-    //     dbus_core_cleanup(dbus_server);
-    //     EXIT_AND_ERROR("Failed to init dbus server");
-    // }
 
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
@@ -97,10 +90,9 @@ int main(int argc, char **argv) {
 
     server_run(&server);
 
-    LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
+    LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown");
 
-    // dbus_server_cleanup(dbus_server, dbus_wayland_integration_data);
-    dbus_server_cleanup(dbus_server);
+    dbus_server_stop(dbus_server);
     server_cleanup(&server);
     logger_cleanup();
 
