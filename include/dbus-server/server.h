@@ -11,6 +11,9 @@ struct dbus_server {
     bool is_running;
     pthread_t thread_id;
     pthread_mutex_t mutex;
+    int wakeup_pipe[2];
+    struct pollfd *pollfds;
+    int pollfd_count;
 };
 
 struct dbus_server *dbus_create_server(char *bus_name);

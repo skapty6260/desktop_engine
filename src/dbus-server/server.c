@@ -87,21 +87,60 @@ static void *dbus_main_loop_thread(void *arg) {
         return NULL;
     }
 
-    DBUS_INFO("D-Bus main loop thread started");
+    DBUS_INFO("D-Bus async main loop thread started");
 
+    /* Set connection to non-blocking */
+    dbus_connection_set_exit_on_disconnect(server->connection, FALSE);
+
+    /* Enable async dispatch (This tells D-Bus to queue messages instead of dispatching immediately) */
+    dbus_connection_set_dispatch_status_function(server->connection, NULL, NULL, NULL);
+    
     // TODO: Filter
     // dbus_connection_add_filter(server->connection, NULL, NULL, NULL);
 
-    // while(1) {
-    //     pthread_mutex_lock(&server->mutex);
-    //     bool running = server->is_running;
-    //     pthread_mutex_unlock(&server->mutex);
+    while(1) {
+        pthread_mutex_lock(&server->mutex);
+        bool running = server->is_running;
+        pthread_mutex_unlock(&server->mutex);
 
-    //     if (!running) break;
+        if (!running) break;
 
-    //     // Non blocking read-write
+        // 4. Non-blocking read/write (timeout = 10ms) best use 1ms
+        // This is async because it returns immediately if no data
+        if (!dbus_connection_read_write_dispatch(server->connection, 10)) {
+            DBUS_ERROR("Failed to read/write to D-Bus connection");
+            break;
+        }
 
-    // }
+        // 5. Process ONE message at a time (non-blocking)
+        DBusMessage *msg = dbus_connection_pop_message(server->connection);
+        if (msg) {
+            DBUS_DEBUG("Received D-Bus message (no callback set)");
+            // Default handling
+            if (dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
+                const char *introspection_data = 
+                        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" "
+                        "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+                        "<node>\n"
+                        "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
+                        "    <method name=\"Introspect\">\n"
+                        "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
+                        "    </method>\n"
+                        "  </interface>\n"
+                        "</node>";
+                    
+                DBusMessage *reply = dbus_message_new_method_return(msg);
+                dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_data, DBUS_TYPE_INVALID);
+                dbus_connection_send(server->connection, reply, NULL);
+                dbus_message_unref(reply);
+            }
+            
+            dbus_message_unref(msg);
+        } else {
+            // No message, sleep briefly to avoid busy-waiting
+            sleep(0.1); // 100ms
+        }
+    }
 
     /* Mark thread as finished */
     pthread_mutex_lock(&server->mutex);
