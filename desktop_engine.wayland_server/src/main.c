@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include <dbus-server.h>
+#include <dbus-server/server.h>
 
 // TODO: Сделать dbus-server в отдельном потоке и не интегрировать с event loop.
 
