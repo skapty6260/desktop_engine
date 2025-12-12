@@ -122,16 +122,16 @@ static void *dbus_main_loop_thread(void *arg) {
     // TODO: Filter
     dbus_connection_add_filter(server->connection, NULL, NULL, NULL);
 
-    while(1) {
-        pthread_mutex_lock(&server->mutex);
-        bool running = server->is_running;
-        pthread_mutex_unlock(&server->mutex);
+    // while(1) {
+    //     pthread_mutex_lock(&server->mutex);
+    //     bool running = server->is_running;
+    //     pthread_mutex_unlock(&server->mutex);
 
-        if (!running) break;
+    //     if (!running) break;
 
-        // Non blocking read-write
+    //     // Non blocking read-write
 
-    }
+    // }
 }
 
 int dbus_start_main_loop(struct dbus_server *server) {
