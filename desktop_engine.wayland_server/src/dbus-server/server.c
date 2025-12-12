@@ -132,6 +132,12 @@ static void *dbus_main_loop_thread(void *arg) {
     //     // Non blocking read-write
 
     // }
+
+    /* Mark thread as finished */
+    pthread_mutex_lock(&server->mutex);
+    server->thread_id = 0;
+    pthread_mutex_unlock(&server->mutex);
+
     return NULL;
 }
 
@@ -195,13 +201,27 @@ void dbus_server_cleanup(struct dbus_server *server) {
     if (!server) return;
 
     dbus_stop_main_loop(server);
-    sleep(1); // Give thread time to stop
+    for (int i = 0; i < 10; i++) {
+        pthread_mutex_lock(&server->mutex);
+        bool thread_done = (server->thread_id == 0);
+        pthread_mutex_unlock(&server->mutex);
+            
+        if (thread_done) break;
+            
+        DBUS_DEBUG("Waiting for D-Bus thread to exit...");
+        sleep(1);
+    }
 
-    release_bus_name(server->connection, server->bus_name);
-    free(server->bus_name);
-    server->bus_name = NULL;
-    dbus_connection_unref(server->connection);
-    server->connection = NULL;
+    if (server->bus_name) {
+        release_bus_name(server->connection, server->bus_name);
+        free(server->bus_name);
+        server->bus_name = NULL;
+    }
+
+    if (server->connection) {
+        dbus_connection_unref(server->connection);
+        server->connection = NULL;
+    }
     
     pthread_mutex_destroy(&server->mutex);
     free(server);

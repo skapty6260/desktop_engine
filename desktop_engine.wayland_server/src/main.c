@@ -74,7 +74,6 @@ int main(int argc, char **argv) {
     }
 
     if (!dbus_start_main_loop(dbus_server)) {
-        dbus_server_cleanup(dbus_server);
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
     // struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
