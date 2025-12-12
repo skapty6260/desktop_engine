@@ -23,7 +23,7 @@ static DBusConnection *create_dbus_connection() {
 }
 
 static int request_bus_name(DBusConnection *conn, char *name) {
-    if (!conn || !name) return;
+    if (!conn || !name) return -1;
 
     DBusError err;
     int ret;
