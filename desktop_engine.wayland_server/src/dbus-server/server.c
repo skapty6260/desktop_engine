@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
 
 static DBusConnection *create_dbus_connection() {
     DBusError err;
@@ -78,6 +81,10 @@ static void release_bus_name(DBusConnection *conn, const char *name) {
 
 struct dbus_server *dbus_create_server(char *bus_name) {
     struct dbus_server *server = calloc(1, sizeof(struct dbus_server));
+    if (!server) {
+        DBUS_ERROR("Failed to calloc dbus_server");
+        return NULL;
+    }
 
     server->connection = create_dbus_connection();
     if (!server->connection) {
@@ -91,13 +98,76 @@ struct dbus_server *dbus_create_server(char *bus_name) {
     }
     server->bus_name = strdup(bus_name);
 
-    DBUS_INFO("D-Bus server created with name: %s", bus_name);
     return server;
+}
+
+static void *dbus_main_loop_thread() {}
+
+int dbus_start_main_loop(struct dbus_server *server) {
+    if (!server || !server->connection) {
+        DBUS_ERROR("Can't start dbus main loop: server not connected");
+        return -1;
+    }
+
+    pthread_mutex_lock(&server->mutex);
+    if (server->is_running) {
+        pthread_mutex_unlock(&server->mutex);
+        DBUS_INFO("Main loop is already running");
+        return 0;
+    }
+
+    server->is_running = true;
+    pthread_mutex_unlock(&server->mutex);
+
+    /* Create thread */
+    int result = pthread_create(&server->thread_id, NULL, dbus_main_loop_thread, server);
+    if (result != 0) {
+        DBUS_ERROR("Failed to create D-Bus thread: %s", strerror(result));
+        pthread_mutex_lock(&server->mutex);
+        server->is_running = false;
+        pthread_mutex_unlock(&server->mutex);
+        return -1;
+    }
+
+    /* Detach the thread so it cleans up automatically */
+    pthread_detach(server->thread_id);
+
+    DBUS_INFO("D-Bus main loop started in separate thread: %d", server->thread_id);
+    return 0;
+}
+
+static int dbus_stop_main_loop(struct dbus_server *server) {
+    if (!server) {
+        return -1;
+    }
+    
+    pthread_mutex_lock(&server->mutex);
+    if (!server->is_running) {
+        pthread_mutex_unlock(&server->mutex);
+        return 0;
+    }
+    
+    server->is_running = false;
+    pthread_mutex_unlock(&server->mutex);
+    
+    DBUS_INFO("Stopping D-Bus main loop...");
+    
+    // Wait a bit for the thread to exit
+    // Note: Since we used pthread_detach(), we don't join
+    // The thread will clean up automatically
+    
+    return 0;
 }
 
 void dbus_server_cleanup(struct dbus_server *server) {
     if (!server) return;
 
+    dbus_stop_main_loop(server);
+
     release_bus_name(server->connection, server->bus_name);
+    free(server->bus_name);
     dbus_connection_unref(server->connection);
+    server->connection = NULL;
+    
+    free(server);
 }

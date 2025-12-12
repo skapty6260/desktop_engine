@@ -72,6 +72,11 @@ int main(int argc, char **argv) {
     if (!dbus_server) {
         EXIT_AND_ERROR("Failed to create dbus server");
     }
+
+    if (!dbus_start_main_loop(dbus_server)) {
+        dbus_server_cleanup(dbus_server);
+        EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
+    }
     // struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
     // struct dbus_server *dbus_server = dbus_server_create();
 
@@ -96,6 +101,7 @@ int main(int argc, char **argv) {
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
     // dbus_server_cleanup(dbus_server, dbus_wayland_integration_data);
+    dbus_server_cleanup(dbus_server);
     server_cleanup(&server);
     logger_cleanup();
 
