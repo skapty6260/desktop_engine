@@ -38,7 +38,7 @@ static int request_bus_name(DBusConnection *conn, char *name) {
     return ret;
 }
 
-struct dbus_server *create_server(char *bus_name) {
+struct dbus_server *dbus_create_server(char *bus_name) {
     struct dbus_server *server = calloc(1, sizeof(struct dbus_server));
 
     server->connection = create_dbus_connection();
