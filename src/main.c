@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown");
 
-    dbus_server_stop(dbus_server);
+    dbus_server_cleanup(dbus_server);
     server_cleanup(&server);
     logger_cleanup();
 

@@ -15,7 +15,6 @@ struct dbus_server {
 
 struct dbus_server *dbus_create_server(char *bus_name);
 void dbus_server_cleanup(struct dbus_server *server);
-void dbus_server_stop(struct dbus_server *server);
 int dbus_start_main_loop(struct dbus_server *server);
 
 void release_bus_name(DBusConnection *conn, const char *name);
