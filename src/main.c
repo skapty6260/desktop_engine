@@ -74,7 +74,16 @@ int main(int argc, char **argv) {
     }
 
     if (!dbus_start_main_loop(dbus_server)) {
-        dbus_server_cleanup(dbus_server); // This cleanup doesn't work properly
+        if (dbus_server->bus_name) {
+            release_bus_name(dbus_server, dbus_server->bus_name);
+            free(dbus_server->bus_name);
+            dbus_server->bus_name = NULL;    
+        }
+        if (dbus_server->connection) {
+            dbus_connection_unref(dbus_server->connection);
+            dbus_server->connection = NULL;
+        }
+        free(server);
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
 

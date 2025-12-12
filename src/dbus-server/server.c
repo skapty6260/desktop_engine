@@ -63,7 +63,7 @@ static int request_bus_name(DBusConnection *conn, char *name) {
     }
 }
 
-static void release_bus_name(DBusConnection *conn, const char *name) {
+void release_bus_name(DBusConnection *conn, const char *name) {
     if (!conn || !name) return;
     
     DBusError err;
@@ -220,7 +220,7 @@ int dbus_start_main_loop(struct dbus_server *server) {
     return 0;
 }
 
-void dbus_server_stop(struct dbus_server *server) {
+void dbus_server_cleanup(struct dbus_server *server) {
     if (!server) return;
 
     dbus_stop_main_loop(server);
@@ -235,13 +235,6 @@ void dbus_server_stop(struct dbus_server *server) {
         sleep(1);
     }
 
-    pthread_mutex_destroy(&server->mutex);
-    dbus_server_cleanup(server);
-}
-
-void dbus_server_cleanup(struct dbus_server *server) {
-    if (!server) return;
-
     if (server->bus_name) {
         release_bus_name(server->connection, server->bus_name);
         free(server->bus_name);
@@ -252,7 +245,8 @@ void dbus_server_cleanup(struct dbus_server *server) {
         dbus_connection_unref(server->connection);
         server->connection = NULL;
     }
-
+    
+    pthread_mutex_destroy(&server->mutex);
     free(server);
 
     DBUS_INFO("D-Bus server cleaned up");
