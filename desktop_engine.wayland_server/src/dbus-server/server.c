@@ -51,6 +51,7 @@ struct dbus_server *create_server(const char *bus_name) {
     server->bus_name = bus_name;
 
     DBUS_INFO("D-Bus server created with name: %s", bus_name);
+    return server;
 }
 
 void dbus_server_cleanup(struct dbus_server *server) {
