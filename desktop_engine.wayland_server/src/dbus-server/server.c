@@ -86,14 +86,22 @@ struct dbus_server *dbus_create_server(char *bus_name) {
         return NULL;
     }
 
+    if (pthread_mutex_init(&server->mutex, NULL) != 0) {
+        DBUS_ERROR("Failed to initialize mutext");
+        free(server);
+        return NULL;
+    }
+
     server->connection = create_dbus_connection();
     if (!server->connection) {
         DBUS_ERROR("Failed to get session bus connection");
+        free(server);
         return NULL;
     }
 
     if (request_bus_name(server->connection, bus_name) != 0) {
         dbus_connection_unref(server->connection);
+        free(server);
         return NULL;
     }
     server->bus_name = strdup(bus_name);
@@ -101,7 +109,30 @@ struct dbus_server *dbus_create_server(char *bus_name) {
     return server;
 }
 
-static void *dbus_main_loop_thread() {}
+static void *dbus_main_loop_thread(void *arg) {
+    struct dbus_server *server = (struct dbus_server *)arg;
+
+    if (!server || !server->connection) {
+        DBUS_ERROR("Invalid server parameter in thread");
+        return NULL;
+    }
+
+    DBUS_INFO("D-Bus main loop thread started");
+
+    // TODO: Filter
+    dbus_connection_add_filter(server->connection, NULL, NULL, NULL);
+
+    while(1) {
+        pthread_mutex_lock(&server->mutex);
+        bool running = server->is_running;
+        pthread_mutex_unlock(&server->mutex);
+
+        if (!running) break;
+
+        // Non blocking read-write
+
+    }
+}
 
 int dbus_start_main_loop(struct dbus_server *server) {
     if (!server || !server->connection) {
@@ -163,11 +194,16 @@ void dbus_server_cleanup(struct dbus_server *server) {
     if (!server) return;
 
     dbus_stop_main_loop(server);
+    sleep(1); // Give thread time to stop
 
     release_bus_name(server->connection, server->bus_name);
     free(server->bus_name);
+    server->bus_name = NULL;
     dbus_connection_unref(server->connection);
     server->connection = NULL;
     
+    pthread_mutex_destroy(&server->mutex);
     free(server);
+
+    DBUS_INFO("D-Bus server cleaned up");
 }
