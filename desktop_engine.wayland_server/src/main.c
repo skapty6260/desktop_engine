@@ -69,6 +69,9 @@ int main(int argc, char **argv) {
 
     /* Run D-Bus server */
     struct dbus_server *dbus_server = dbus_create_server("org.skapty6260.DesktopEngine");
+    if (!dbus_server) {
+        EXIT_AND_ERROR("Failed to create dbus server");
+    }
     // struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
     // struct dbus_server *dbus_server = dbus_server_create();
 
