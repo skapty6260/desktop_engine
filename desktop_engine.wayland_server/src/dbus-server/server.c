@@ -120,7 +120,7 @@ static void *dbus_main_loop_thread(void *arg) {
     DBUS_INFO("D-Bus main loop thread started");
 
     // TODO: Filter
-    dbus_connection_add_filter(server->connection, NULL, NULL, NULL);
+    // dbus_connection_add_filter(server->connection, NULL, NULL, NULL);
 
     // while(1) {
     //     pthread_mutex_lock(&server->mutex);
