@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include <dbus-ipc/dbus-server.h>
-#include <dbus-ipc/dbus-wayland-integration.h>
-#include <dbus-ipc/dbus-core.h>
+#include <dbus-server.h>
+
+// TODO: Сделать dbus-server в отдельном потоке и не интегрировать с event loop.
 
 #define EXIT_AND_ERROR(msg) \
     do { \
@@ -68,14 +68,15 @@ int main(int argc, char **argv) {
     setenv("WAYLAND_DISPLAY", server.socket, true);
 
     /* Run D-Bus server */
-    struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
-    struct dbus_server *dbus_server = dbus_server_create();
+    struct dbus_server *dbus_server = dbus_create_server("org.skapty6260.DesktopEngine");
+    // struct dbus_wayland_integration_data *dbus_wayland_integration_data = dbus_wayland_integration_create(server.display);
+    // struct dbus_server *dbus_server = dbus_server_create();
 
-    if (!dbus_server_init(dbus_server, dbus_wayland_integration_data)) {
-        dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
-        dbus_core_cleanup(dbus_server);
-        EXIT_AND_ERROR("Failed to init dbus server");
-    }
+    // if (!dbus_server_init(dbus_server, dbus_wayland_integration_data)) {
+    //     dbus_wayland_integration_cleanup(dbus_wayland_integration_data);
+    //     dbus_core_cleanup(dbus_server);
+    //     EXIT_AND_ERROR("Failed to init dbus server");
+    // }
 
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
 
     LOG_INFO(LOG_MODULE_CORE, "DesktopEngine server shutdown complete");
 
-    dbus_server_cleanup(dbus_server, dbus_wayland_integration_data);
+    // dbus_server_cleanup(dbus_server, dbus_wayland_integration_data);
     server_cleanup(&server);
     logger_cleanup();
 

@@ -20,13 +20,12 @@ int dbus_wayland_fd_callback(int fd, uint32_t mask, void *data) {
         return 0;
     }
 
-    /* Handle D-Bus incoming messages */
-    // dbus_connection_read_write(server->connection, 0);
-    // while (dbus_connection_get_dispatch_status(server->connection) == DBUS_DISPATCH_DATA_REMAINS) {
-    //     dbus_connection_dispatch(server->connection);
-    // }
+    if (mask & WL_EVENT_READABLE) {
+        DBUS_DEBUG("Readable wayland-dbus event received");
+        dbus_connection_read_write(server->connection, 0);
 
-    dbus_connection_read_write_dispatch(server->connection, 0);  // 0 = non-blocking
+        while (dbus_connection_get_dispatch_status(server->connection))
+    }
 
     return 1; // 0
 }

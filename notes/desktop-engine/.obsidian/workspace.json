@@ -8,20 +8,20 @@
         "type": "tabs",
         "children": [
           {
-            "id": "273a28753e7659ce",
+            "id": "531b1446c3c61756",
             "type": "leaf",
             "state": {
               "type": "canvas",
               "state": {
-                "file": "Architecture/Main scheme.canvas",
+                "file": "Remote rendering scheme.canvas",
                 "viewState": {
-                  "x": -555.7562037814712,
-                  "y": 620.5971746494193,
-                  "zoom": -1.2708992865745163
+                  "x": 306.158494320087,
+                  "y": 290.4290274475685,
+                  "zoom": -1.0468662330344167
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "Main scheme"
+              "title": "Remote rendering scheme"
             }
           }
         ]
@@ -186,13 +186,16 @@
       "bases:Create new base": false
     }
   },
-  "active": "273a28753e7659ce",
+  "active": "531b1446c3c61756",
   "lastOpenFiles": [
-    "Architecture/communication/DBUS.md",
-    "Смысл и устройство проекта.md",
-    "Untitled.base",
+    "D-Bus scheme.canvas",
+    "Remote rendering scheme.canvas",
     "Architecture/Main scheme.canvas",
+    "Dbus scheme.md",
     "readme.md",
+    "Смысл и устройство проекта.md",
+    "Architecture/communication/DBUS.md",
+    "Untitled.base",
     "Architecture/window_server/architecture.md",
     "Architecture/window_server/window_server.md",
     "Architecture/Communication system scheme.canvas",

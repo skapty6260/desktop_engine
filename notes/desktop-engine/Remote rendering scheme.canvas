@@ -1,0 +1,24 @@
+{
+	"nodes":[
+		{"id":"d51e2ef60abd0c95","x":-125,"y":-30,"width":250,"height":130,"type":"text","text":"**Wayland server** (Thread)\nReceives data from windows\nWindow size, position, render buffers"},
+		{"id":"cf1a32bbbd704ef6","x":-125,"y":180,"width":250,"height":180,"type":"text","text":"**D-Bus client** (Thread)\nWill send data from wayland server to main D-Bus server"},
+		{"id":"f90340b36592059f","x":300,"y":340,"width":250,"height":160,"type":"text","text":"**D-Bus server** (Thread)\n\nGet data from dbus clients and send it to other clients\nOnly routing, and async"},
+		{"id":"ddb3bd1e92eddc39","x":50,"y":600,"width":250,"height":220,"type":"text","text":"**D-Bus to TCP module** (Thread)\n\nWill get data from local dbus and send it to remote desktop via TCP (Ethernet)"},
+		{"id":"dcca0d16d0fd55d4","x":50,"y":938,"width":250,"height":142,"type":"text","text":"**TCP server**\nReceives data via ethernet and pass it to renderer"},
+		{"id":"4cdedb62a4ff6f49","x":-200,"y":1240,"width":311,"height":311,"type":"text","text":"**Vulkan renderer** (Multi thread)\nGet windows data and according to rendering scene render this windows and other shell elements"},
+		{"id":"8a0f0586498b9a8b","x":425,"y":820,"width":250,"height":260,"type":"text","text":"**TCP server** (Thread)\n\nWill receive data from remote to host machine and call dbus methods"},
+		{"id":"b7ef26a0f6617c1e","x":425,"y":1240,"width":250,"height":200,"type":"text","text":"**Input events** Thread\n\nReceives input events from keyboard or mouse (GLFW window input events)"},
+		{"id":"e0beb77a3029c8cf","x":-125,"y":-220,"width":250,"height":60,"type":"text","text":"**Window**"}
+	],
+	"edges":[
+		{"id":"89490750e70fde5f","fromNode":"d51e2ef60abd0c95","fromSide":"bottom","toNode":"cf1a32bbbd704ef6","toSide":"top"},
+		{"id":"2f2a15628299d128","fromNode":"cf1a32bbbd704ef6","fromSide":"bottom","toNode":"f90340b36592059f","toSide":"left"},
+		{"id":"0d6ffab45706852a","fromNode":"f90340b36592059f","fromSide":"bottom","toNode":"ddb3bd1e92eddc39","toSide":"top"},
+		{"id":"1052b3354bf86814","fromNode":"ddb3bd1e92eddc39","fromSide":"bottom","toNode":"dcca0d16d0fd55d4","toSide":"top"},
+		{"id":"043bd5d885953247","fromNode":"dcca0d16d0fd55d4","fromSide":"bottom","toNode":"4cdedb62a4ff6f49","toSide":"top"},
+		{"id":"4653bc0791a7df9c","fromNode":"dcca0d16d0fd55d4","fromSide":"top","toNode":"ddb3bd1e92eddc39","toSide":"bottom"},
+		{"id":"7e0133831ec3d9ca","fromNode":"b7ef26a0f6617c1e","fromSide":"top","toNode":"8a0f0586498b9a8b","toSide":"bottom"},
+		{"id":"0ff86866d902e933","fromNode":"8a0f0586498b9a8b","fromSide":"top","toNode":"f90340b36592059f","toSide":"bottom"},
+		{"id":"37906f683dea60b3","fromNode":"e0beb77a3029c8cf","fromSide":"bottom","toNode":"d51e2ef60abd0c95","toSide":"top"}
+	]
+}
