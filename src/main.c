@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
     if (!dbus_start_main_loop(dbus_server)) {
         if (dbus_server->bus_name) {
-            release_bus_name(dbus_server, dbus_server->bus_name);
+            release_bus_name(dbus_server->connection, dbus_server->bus_name);
             free(dbus_server->bus_name);
             dbus_server->bus_name = NULL;    
         }
