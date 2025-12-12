@@ -24,7 +24,7 @@ int dbus_wayland_fd_callback(int fd, uint32_t mask, void *data) {
         DBUS_DEBUG("Readable wayland-dbus event received");
         dbus_connection_read_write(server->connection, 0);
 
-        while (dbus_connection_get_dispatch_status(server->connection))
+        while (dbus_connection_get_dispatch_status(server->connection)) {}
     }
 
     return 1; // 0

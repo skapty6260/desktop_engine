@@ -40,10 +40,7 @@ src_files = [
     'src/xdg-shell/xdg.c',
     'src/logger.c',
     'src/config.c',
-    'src/dbus-ipc/dbus-core.c',
-    'src/dbus-ipc/dbus-server.c',
-    'src/dbus-ipc/dbus-module.c',
-    'src/dbus-ipc/dbus-wayland-integration.c',
+    'src/dbus-server/server.c',
     test_module_sources,
     wl_protos_src,
 ]
