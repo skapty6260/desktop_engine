@@ -132,6 +132,7 @@ static void *dbus_main_loop_thread(void *arg) {
     //     // Non blocking read-write
 
     // }
+    return NULL;
 }
 
 int dbus_start_main_loop(struct dbus_server *server) {
