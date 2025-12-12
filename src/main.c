@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
             dbus_connection_unref(dbus_server->connection);
             dbus_server->connection = NULL;
         }
-        free(server);
+        free(dbus_server);
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
 
