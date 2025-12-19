@@ -34,18 +34,15 @@ typedef struct dbus_server_module {
 /* Generate introspect XML for module */
 char *module_generate_introspection_xml(DBUS_MODULE *module, const char *object_path);
 
-/* Operations with modules list */
-
 /* Module operations */
 DBUS_MODULE *module_create(char *name);
 void module_destroy(DBUS_MODULE *module);
 
 /* Interface operations */ // TODO: Add object path and other features
-DBUS_INTERFACE *module_add_interface(DBUS_MODULE *module, char *iface_name);
+DBUS_INTERFACE *module_add_interface(DBUS_MODULE *module, char *iface_name, char *object_path);
 
 /* Method operations */
-DBUS_METHOD *interface_add_method(DBUS_INTERFACE *iface, char *method_name);
+DBUS_METHOD *interface_add_method(DBUS_INTERFACE *iface, char *method_name, char *signature, char *return_signature, DBUS_METHOD_HANDLER handler, void *user_data);
 DBUS_METHOD *module_find_method(DBUS_MODULE *module, const char *interface_name, const char *method_name, const char *object_path);
-
 
 #endif

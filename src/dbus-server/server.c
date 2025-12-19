@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "../../dbus_lib/dbus_module_lib.h"
+
 /* Init dbus connection */
 static DBusConnection *create_dbus_connection() {
     DBusError err;
@@ -65,14 +67,18 @@ static int request_bus_name(DBusConnection *conn, char *name) {
     }
 }
 
-/* Handle introspect call */
+/* Handle introspect call */ // TODO: Refactor
 static void handle_introspect(struct dbus_server *server, DBusMessage *msg, const char *path) {
     char *introspection_data = NULL;
+
+    DBUS_DEBUG("=== INTROSPECT START ===");
+    DBUS_DEBUG("Requested path: %s", path);
 
     /* Generate dynamic XML */
     pthread_mutex_lock(&server->mutex);
 
     if (strcmp(path, "/") == 0) {
+        DBUS_DEBUG("Root path - returning basic introspection");
         /* Root path - generate list of all objects */
         introspection_data = strdup(
             "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
@@ -86,14 +92,40 @@ static void handle_introspect(struct dbus_server *server, DBusMessage *msg, cons
             "</node>\n"
         );
     } else {
-        /* Search for module by path */
+        DBUS_DEBUG("Searching for module matching path: %s", path);
+        
+        /* Правильный поиск: ищем интерфейс с соответствующим object_path */
         DBUS_MODULE *module = server->modules;
+        int module_index = 0;
+        
         while (module) {
-            if (strstr(path, module->name) != NULL) {
-                introspection_data = module_generate_introspection_xml(module, path);
-                break;
+            module_index++;
+            DBUS_DEBUG("Checking module [%d]: %s", module_index, module->name);
+            
+            DBUS_INTERFACE *iface = module->interfaces;
+            int iface_index = 0;
+            
+            while (iface) {
+                iface_index++;
+                DBUS_DEBUG("  Interface [%d]: %s (path: %s)", 
+                          iface_index, iface->name, 
+                          iface->object_path ? iface->object_path : "(null)");
+                
+                /* Сравниваем точный object_path */
+                if (iface->object_path && strcmp(iface->object_path, path) == 0) {
+                    DBUS_DEBUG("  FOUND! Generating introspection XML");
+                    introspection_data = module_generate_introspection_xml(module, path);
+                    break;
+                }
+                iface = iface->next;
             }
+            
+            if (introspection_data) break;
             module = module->next;
+        }
+        
+        if (!introspection_data) {
+            DBUS_DEBUG("No module found for path: %s", path);
         }
     }
         
@@ -101,6 +133,7 @@ static void handle_introspect(struct dbus_server *server, DBusMessage *msg, cons
         
     /* If found nothing, return default data */
     if (!introspection_data) {
+        DBUS_DEBUG("Returning default introspection XML");
         introspection_data = strdup(
             "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
             "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
@@ -112,6 +145,8 @@ static void handle_introspect(struct dbus_server *server, DBusMessage *msg, cons
             "  </interface>\n"
             "</node>\n"
         );
+    } else {
+        DBUS_DEBUG("Generated custom introspection XML");
     }
         
     /* Send reply */
@@ -119,12 +154,15 @@ static void handle_introspect(struct dbus_server *server, DBusMessage *msg, cons
     if (reply && introspection_data) {
         dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_data, DBUS_TYPE_INVALID);
         dbus_connection_send(server->connection, reply, NULL);
+        DBUS_DEBUG("Introspect reply sent successfully");
     } else {
         DBUS_ERROR("Failed to create Introspect reply");
     }
         
     if (reply) dbus_message_unref(reply);
     if (introspection_data) free(introspection_data);
+    
+    DBUS_DEBUG("=== INTROSPECT END ===");
 }
 
 /* Handle method call */

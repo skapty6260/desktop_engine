@@ -6,8 +6,7 @@
 #include <signal.h>
 
 #include <dbus-server/server.h>
-
-// TODO: Сделать dbus-server в отдельном потоке и не интегрировать с event loop.
+#include <dbus-server/modules/buffer_module.h>
 
 #define EXIT_AND_ERROR(msg) \
     do { \
@@ -20,12 +19,9 @@ static struct server *global_server = NULL;
 static volatile sig_atomic_t g_shutdown_requested = 0;
 
 static void signal_handler(int signal) {
-    (void)signal; // Shut up compiler
+    (void)signal;
     g_shutdown_requested = 1;
     g_logger_graceful_shutdown = 1;
-    
-    // const char* msg = "terminated\n";
-    // write(STDOUT_FILENO, msg, strlen(msg));
     
     if (global_server && global_server->display) {
         wl_display_terminate(global_server->display);
@@ -73,6 +69,15 @@ int main(int argc, char **argv) {
         EXIT_AND_ERROR("Failed to create dbus server");
     }
 
+    /* Создание и добавление тестового модуля */
+    DBUS_MODULE *test_module = create_test_module();
+    if (test_module) {
+        dbus_server_add_module(dbus_server, test_module);
+        LOG_INFO(LOG_MODULE_CORE, "Test module registered to D-Bus server");
+    } else {
+        LOG_WARN(LOG_MODULE_CORE, "Failed to create test module");
+    }
+
     if (dbus_start_main_loop(dbus_server) != 0) {
         if (dbus_server->bus_name) {
             release_bus_name(dbus_server->connection, dbus_server->bus_name);
@@ -86,6 +91,17 @@ int main(int argc, char **argv) {
         free(dbus_server);
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
+
+    /* Вывод информации для тестирования */
+    printf("\n=== D-Bus Server Ready ===\n");
+    printf("Bus name: org.skapty6260.DesktopEngine\n");
+    printf("Test interface: org.skapty6260.DesktopEngine.Test\n");
+    printf("Test object path: /org/skapty6260/DesktopEngine/Test\n");
+    printf("Test method: Hello (returns string)\n\n");
+    printf("Test with:\n");
+    printf("  gdbus call --session --dest org.skapty6260.DesktopEngine \\\n");
+    printf("    --object-path /org/skapty6260/DesktopEngine/Test \\\n");
+    printf("    --method org.skapty6260.DesktopEngine.Test.Hello\n\n");
 
     /* Test bed (test client) */
     if (server_config.startup_cmd) {

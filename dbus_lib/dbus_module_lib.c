@@ -150,6 +150,7 @@ static DBUS_INTERFACE *interface_create(const char *name) {
         return NULL;
     }
     
+    iface->object_path = NULL;
     iface->methods = NULL;
     iface->next = NULL;
     return iface;
@@ -201,11 +202,19 @@ void module_destroy(DBUS_MODULE *module) {
 }
 
 /* Add interface to module */
-DBUS_INTERFACE *module_add_interface(DBUS_MODULE *module, char *iface_name) {
-    if (!module || !iface_name) return NULL;
+DBUS_INTERFACE *module_add_interface(DBUS_MODULE *module, char *iface_name, char *object_path) {
+    if (!module || !iface_name || !object_path) return NULL;
     
     DBUS_INTERFACE *new_iface = interface_create(iface_name);
     if (!new_iface) return NULL;
+    
+    /* Set object path */
+    new_iface->object_path = strdup(object_path);
+    if (!new_iface->object_path) {
+        free(new_iface->name);
+        free(new_iface);
+        return NULL;
+    }
     
     /* Add to list HEAD */
     new_iface->next = module->interfaces;
@@ -215,11 +224,17 @@ DBUS_INTERFACE *module_add_interface(DBUS_MODULE *module, char *iface_name) {
 }
 
 /* Add method to interface */
-DBUS_METHOD *interface_add_method(DBUS_INTERFACE *iface, char *method_name) {
+DBUS_METHOD *interface_add_method(DBUS_INTERFACE *iface, char *method_name, char *signature, char *return_signature, DBUS_METHOD_HANDLER handler, void *user_data) {
     if (!iface || !method_name) return NULL;
     
     DBUS_METHOD *new_method = method_create(method_name);
     if (!new_method) return NULL;
+    
+    /* Set method properties */
+    new_method->signature = signature ? strdup(signature) : NULL;
+    new_method->return_signature = return_signature ? strdup(return_signature) : NULL;
+    new_method->handler = handler;
+    new_method->user_data = user_data;
     
     /* Add to list HEAD */
     new_method->next = iface->methods;
