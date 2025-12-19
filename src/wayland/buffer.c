@@ -6,16 +6,6 @@ enum pixel_format wl_shm_format_to_pixel_format(uint32_t wl_format) {
     switch (wl_format) {
         case WL_SHM_FORMAT_ARGB8888: return PIXEL_FORMAT_ARGB8888;
         case WL_SHM_FORMAT_XRGB8888: return PIXEL_FORMAT_XRGB8888;
-        case WL_SHM_FORMAT_ABGR8888: return PIXEL_FORMAT_ABGR8888;
-        case WL_SHM_FORMAT_XBGR8888: return PIXEL_FORMAT_XBGR8888;
-        case WL_SHM_FORMAT_RGBA8888: return PIXEL_FORMAT_RGBA8888;
-        case WL_SHM_FORMAT_BGRA8888: return PIXEL_FORMAT_BGRA8888;
-        case WL_SHM_FORMAT_RGB565:   return PIXEL_FORMAT_RGB565;
-        case WL_SHM_FORMAT_BGR565:   return PIXEL_FORMAT_BGR565;
-        case WL_SHM_FORMAT_ARGB2101010: return PIXEL_FORMAT_ARGB2101010;
-        case WL_SHM_FORMAT_XRGB2101010: return PIXEL_FORMAT_XRGB2101010;
-        case WL_SHM_FORMAT_ABGR2101010: return PIXEL_FORMAT_ABGR2101010;
-        case WL_SHM_FORMAT_XBGR2101010: return PIXEL_FORMAT_XBGR2101010;
         default: return PIXEL_FORMAT_UNKNOWN;
     }
 }
@@ -24,20 +14,6 @@ enum pixel_format drm_format_to_pixel_format(uint32_t drm_format) {
     switch (drm_format) {
         case DRM_FORMAT_ARGB8888: return PIXEL_FORMAT_ARGB8888;
         case DRM_FORMAT_XRGB8888: return PIXEL_FORMAT_XRGB8888;
-        case DRM_FORMAT_ABGR8888: return PIXEL_FORMAT_ABGR8888;
-        case DRM_FORMAT_XBGR8888: return PIXEL_FORMAT_XBGR8888;
-        case DRM_FORMAT_RGBA8888: return PIXEL_FORMAT_RGBA8888;
-        case DRM_FORMAT_BGRA8888: return PIXEL_FORMAT_BGRA8888;
-        case DRM_FORMAT_RGB565:   return PIXEL_FORMAT_RGB565;
-        case DRM_FORMAT_BGR565:   return PIXEL_FORMAT_BGR565;
-        case DRM_FORMAT_ARGB2101010: return PIXEL_FORMAT_ARGB2101010;
-        case DRM_FORMAT_XRGB2101010: return PIXEL_FORMAT_XRGB2101010;
-        case DRM_FORMAT_ABGR2101010: return PIXEL_FORMAT_ABGR2101010;
-        case DRM_FORMAT_XBGR2101010: return PIXEL_FORMAT_XBGR2101010;
-        case DRM_FORMAT_NV12:     return PIXEL_FORMAT_NV12;
-        case DRM_FORMAT_NV21:     return PIXEL_FORMAT_NV21;
-        case DRM_FORMAT_YUV420:   return PIXEL_FORMAT_YUV420;
-        case DRM_FORMAT_YVU420:   return PIXEL_FORMAT_YVU420;
         default: return PIXEL_FORMAT_UNKNOWN;
     }
 }

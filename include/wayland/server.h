@@ -21,23 +21,6 @@ struct surface {
     struct wl_resource *xdg_toplevel; 
     struct server *server;
     struct wl_list link;
-
-    // // Active state
-    // struct wl_resource *buffer;
-    // int width, height;
-    // int x,y;
-
-    // // Pending state
-    // struct wl_resource *pending_buffer;
-    // int pending_width, pending_height;
-    // int pending_x, pending_y;
-
-    // struct {
-    //     bool attach : 1;
-    //     bool damage : 1;
-    //     bool transform : 1;
-    //     bool scale : 1;
-    // } pending_changes;
 };
 
 typedef struct server_config {

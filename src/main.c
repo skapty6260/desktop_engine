@@ -70,13 +70,13 @@ int main(int argc, char **argv) {
     }
 
     /* Создание и добавление тестового модуля */
-    DBUS_MODULE *test_module = create_test_module();
-    if (test_module) {
-        dbus_server_add_module(dbus_server, test_module);
-        LOG_INFO(LOG_MODULE_CORE, "Test module registered to D-Bus server");
-    } else {
-        LOG_WARN(LOG_MODULE_CORE, "Failed to create test module");
-    }
+    // DBUS_MODULE *test_module = create_test_module();
+    // if (test_module) {
+    //     dbus_server_add_module(dbus_server, test_module);
+    //     LOG_INFO(LOG_MODULE_CORE, "Test module registered to D-Bus server");
+    // } else {
+    //     LOG_WARN(LOG_MODULE_CORE, "Failed to create test module");
+    // }
 
     if (dbus_start_main_loop(dbus_server) != 0) {
         if (dbus_server->bus_name) {

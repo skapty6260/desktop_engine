@@ -25,7 +25,7 @@ void server_init(struct server *server) {
     server->xdg_wm_base_global = wl_global_create(
         server->display,
         &xdg_wm_base_interface,
-        1, server, bind_xdg_wm_base
+        3, server, bind_xdg_wm_base
     );
 
     server->shm_global = wl_global_create(

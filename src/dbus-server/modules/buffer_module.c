@@ -1,53 +1,25 @@
 #include <dbus-server/modules/buffer_module.h>
 #include <logger.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
-DBusHandlerResult test_handler(DBusConnection *conn,
-                                      DBusMessage *msg,
-                                      void *user_data) {
-    (void)user_data; /* Не используется */
-    
-    LOG_INFO(LOG_MODULE_CORE, "Test method called!");
-    
-    /* Простой ответ */
-    const char *response = "Hello from test module!";
-    DBusMessage *reply = dbus_message_new_method_return(msg);
-    dbus_message_append_args(reply, DBUS_TYPE_STRING, &response, DBUS_TYPE_INVALID);
-    dbus_connection_send(conn, reply, NULL);
-    dbus_message_unref(reply);
-    
-    return DBUS_HANDLER_RESULT_HANDLED;
-}
-
-/* Создание тестового модуля */
-DBUS_MODULE *create_test_module(void) {
-    /* Создаем модуль */
-    DBUS_MODULE *module = module_create("TestModule");
-    if (!module) return NULL;
-    
-    /* Добавляем один интерфейс */
-    DBUS_INTERFACE *iface = module_add_interface(
-        module,
-        "org.skapty6260.DesktopEngine.Test",
-        "/org/skapty6260/DesktopEngine/Test"
-    );
-
-    iface->object_path = strdup("/org/skapty6260/DesktopEngine/Test");
-    
-    if (!iface) {
-        module_destroy(module);
-        return NULL;
+/* Convert pixel_format to string */
+const char *pixel_format_to_string(enum pixel_format format) {
+    switch (format) {
+        case PIXEL_FORMAT_ARGB8888: return "ARGB8888";
+        case PIXEL_FORMAT_XRGB8888: return "XRGB8888";
+        default: return "UNKNOWN";
     }
-    
-    /* Добавляем один метод */
-    interface_add_method(iface,
-        "Hello",        /* Имя метода */
-        "",             /* Нет входных аргументов */
-        "s",            /* Возвращает строку */
-        test_handler,   /* Обработчик */
-        NULL            /* Нет пользовательских данных */
-    );
-    
-    LOG_INFO(LOG_MODULE_CORE, "Test module created with 1 interface, 1 method");
-    
-    return module;
 }
+
+/* Convert string to pixel_format */
+enum pixel_format string_to_pixel_format(const char *str) {
+    if (!str) return PIXEL_FORMAT_UNKNOWN;
+    if (strcmp(str, "ARGB8888") == 0) return PIXEL_FORMAT_ARGB8888;
+    if (strcmp(str, "XRGB8888") == 0) return PIXEL_FORMAT_XRGB8888;
+    return PIXEL_FORMAT_UNKNOWN;
+}
+
+
