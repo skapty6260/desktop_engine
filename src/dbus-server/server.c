@@ -65,15 +65,17 @@ static int request_bus_name(DBusConnection *conn, char *name) {
     }
 }
 
-/* Process dbus message */
-static void proccess_message(struct dbus_server *server, DBusMessage *msg) {
-    const char *path = dbus_message_get_path(msg);
-    DBUS_DEBUG("Received message for path: %s", path ? path : "/");
+/* Handle introspect call */
+static void handle_introspect(struct dbus_server *server, DBusMessage *msg, const char *path) {
+    char *introspection_data = NULL;
 
-    // Default handling
-    if (dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
-        const char *introspection_data = 
-            "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" "
+    /* Generate dynamic XML */
+    pthread_mutex_lock(&server->mutex);
+
+    if (strcmp(path, "/") == 0) {
+        /* Root path - generate list of all objects */
+        introspection_data = strdup(
+            "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
             "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
             "<node>\n"
             "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
@@ -81,14 +83,118 @@ static void proccess_message(struct dbus_server *server, DBusMessage *msg) {
             "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
             "    </method>\n"
             "  </interface>\n"
-            "</node>";
-                    
-        DBusMessage *reply = dbus_message_new_method_return(msg);
+            "</node>\n"
+        );
+    } else {
+        /* Search for module by path */
+        DBUS_MODULE *module = server->modules;
+        while (module) {
+            if (strstr(path, module->name) != NULL) {
+                introspection_data = module_generate_introspection_xml(module, path);
+                break;
+            }
+            module = module->next;
+        }
+    }
+        
+    pthread_mutex_unlock(&server->mutex);
+        
+    /* If found nothing, return default data */
+    if (!introspection_data) {
+        introspection_data = strdup(
+            "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
+            "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+            "<node>\n"
+            "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
+            "    <method name=\"Introspect\">\n"
+            "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
+            "    </method>\n"
+            "  </interface>\n"
+            "</node>\n"
+        );
+    }
+        
+    /* Send reply */
+    DBusMessage *reply = dbus_message_new_method_return(msg);
+    if (reply && introspection_data) {
         dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_data, DBUS_TYPE_INVALID);
         dbus_connection_send(server->connection, reply, NULL);
-        dbus_message_unref(reply);
+    } else {
+        DBUS_ERROR("Failed to create Introspect reply");
     }
+        
+    if (reply) dbus_message_unref(reply);
+    if (introspection_data) free(introspection_data);
+}
+
+/* Handle method call */
+static void handle_method_call(struct dbus_server *server, DBusMessage *msg, const char *interface, const char *method_name, const char *path) {
+    DBusHandlerResult result = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    
+    pthread_mutex_lock(&server->mutex);
+
+    /* Search through all modules for matching method */
+    DBUS_MODULE *module = server->modules;
+    while (module && result == DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
+        DBUS_METHOD *method = module_find_method(module, interface, method_name, path);
+        if (method && method->handler) {
+            /* Found handler - unlock mutex while calling handler */
+            pthread_mutex_unlock(&server->mutex);
             
+            result = method->handler(server->connection, msg, method->user_data);
+            
+            /* Re-lock if we need to continue searching */
+            if (result == DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
+                pthread_mutex_lock(&server->mutex);
+            }
+        } else {
+            module = module->next;
+        }
+    }
+
+    pthread_mutex_unlock(&server->mutex);
+
+    /* If no handler found, send error */
+    if (result == DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
+        DBUS_DEBUG("No handler found for %s.%s on path %s", interface, method_name, path);
+        
+        /* Send UnknownMethod error */
+        DBusMessage *reply = dbus_message_new_error(
+            msg,
+            DBUS_ERROR_UNKNOWN_METHOD,
+            "Method does not exist"
+        );
+        if (reply) {
+            dbus_connection_send(server->connection, reply, NULL);
+            dbus_message_unref(reply);
+        }
+    }
+}
+
+/* Process dbus message */
+static void proccess_message(struct dbus_server *server, DBusMessage *msg) {
+    const char *path = dbus_message_get_path(msg);
+    const char *interface = dbus_message_get_interface(msg);
+    const char *method_name = dbus_message_get_member(msg);
+    
+    DBUS_DEBUG("Received message: path=%s, interface=%s, method=%s", path ? path : "/", interface ? interface : "(null)", method_name ? method_name : "(null)");
+
+    /* Handle introspect */
+    if (dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
+        handle_introspect(server, msg, path);
+        dbus_message_unref(msg);
+        return;
+    }
+
+    /* Check if it's a method call */
+    if (!interface || !method_name) {
+        DBUS_DEBUG("Not a method call, ignoring");
+        dbus_message_unref(msg);
+        return;
+    }
+
+    handle_method_call(server, msg, interface, method_name, path);
+
     dbus_message_unref(msg);
 }
 

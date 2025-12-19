@@ -1,4 +1,4 @@
-#include <dbus-server/module.h>
+#include "dbus_module_lib.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -24,7 +24,7 @@ static char *str_append(char *dest, const char *src) {
 }
 
 /* Generate interface introspection (Just for Refactor) */
-static char *generate_interface_introspection(DBUS_INTERFACE *iface, char *object_path) {
+static char *generate_interface_introspection(DBUS_INTERFACE *iface, const char *object_path) {
     char *xml = NULL;
 
     // Validate object path
@@ -67,7 +67,7 @@ static char *generate_interface_introspection(DBUS_INTERFACE *iface, char *objec
 }
 
 /* Generate XML Introspect for module */
-char *module_generate_introspection_xml(DBUS_MODULE *module, char *object_path) {
+char *module_generate_introspection_xml(DBUS_MODULE *module, const char *object_path) {
     char *xml = NULL;
 
     /* Header XML */
@@ -109,16 +109,30 @@ static DBUS_METHOD *method_create(const char *name) {
         return NULL;
     }
     
+    method->handler = NULL;
+    method->user_data = NULL;
     method->next = NULL;
+    method->signature = NULL;
+    method->return_signature = NULL;
+
     return method;
+}
+
+/* Destroy method*/
+static void method_destroy(DBUS_METHOD *method) {
+    if (!method) return;
+    
+    free(method->name);
+    free(method->signature);
+    free(method->return_signature);
+    free(method);
 }
 
 /* Destroy methods chain */
 static void methods_chain_destroy(DBUS_METHOD *method) {
     while (method) {
         DBUS_METHOD *next = method->next;
-        free(method->name);
-        free(method);
+        method_destroy(method);
         method = next;
     }
 }
@@ -212,4 +226,30 @@ DBUS_METHOD *interface_add_method(DBUS_INTERFACE *iface, char *method_name) {
     iface->methods = new_method;
     
     return new_method;
+}
+
+/* Find method in module */
+DBUS_METHOD *module_find_method(DBUS_MODULE *module, const char *interface_name, const char *method_name, const char *object_path) {
+    if (!module || !interface_name || !method_name || !object_path) {
+        return NULL;
+    }
+    
+    DBUS_INTERFACE *iface = module->interfaces;
+    while (iface) {
+        /* Check interface name and object path */
+        if (strcmp(iface->name, interface_name) == 0 &&
+            iface->object_path && strcmp(iface->object_path, object_path) == 0) {
+            
+            DBUS_METHOD *method = iface->methods;
+            while (method) {
+                if (strcmp(method->name, method_name) == 0) {
+                    return method;
+                }
+                method = method->next;
+            }
+        }
+        iface = iface->next;
+    }
+    
+    return NULL;
 }
