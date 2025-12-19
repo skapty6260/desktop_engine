@@ -7,8 +7,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
-
-#include "../../dbus_lib/dbus_module_lib.h"
+#include <poll.h> 
 
 /* Init dbus connection */
 static DBusConnection *create_dbus_connection() {
@@ -67,102 +66,129 @@ static int request_bus_name(DBusConnection *conn, char *name) {
     }
 }
 
+/* String concat helper */
+static char *str_append(char *dest, const char *src) {
+    if (!src) return dest;
+    
+    size_t dest_len = dest ? strlen(dest) : 0;
+    size_t src_len = strlen(src);
+    
+    char *new_str = realloc(dest, dest_len + src_len + 1);
+    if (!new_str) {
+        free(dest);
+        return NULL;
+    }
+    
+    memcpy(new_str + dest_len, src, src_len + 1);
+    return new_str;
+}
+
+/* Generate introspect xml for root path (Overview for all interfaces and nodes, and root methods) */
+static char *generate_root_introsperction_xml(struct dbus_server *server) {
+    char *introspection_data = NULL;
+    DBUS_MODULE *module = server->modules;
+    
+    /* Start with XML header */
+    introspection_data = str_append(introspection_data, 
+        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
+        "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+        "<node>\n");
+    
+    /* Add standard Introspectable interface */
+    introspection_data = str_append(introspection_data,
+        "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
+        "    <method name=\"Introspect\">\n"
+        "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
+        "    </method>\n"
+        "  </interface>\n");
+    
+    /* Simple array to track seen nodes (max 100 nodes) */
+    const char *seen_nodes[100];
+    int seen_count = 0;
+    
+    while (module) {
+        DBUS_INTERFACE *iface = module->interfaces;
+        
+        while (iface) {
+            if (iface->object_path && strlen(iface->object_path) > 0) {
+                /* Extract the last component as node name */
+                const char *path = iface->object_path;
+                const char *last_slash = strrchr(path, '/');
+                
+                if (last_slash && *(last_slash + 1) != '\0') {
+                    const char *node_name = last_slash + 1;
+                    
+                    /* Check if we've already seen this node */
+                    int already_seen = 0;
+                    for (int i = 0; i < seen_count; i++) {
+                        if (strcmp(seen_nodes[i], node_name) == 0) {
+                            already_seen = 1;
+                            break;
+                        }
+                    }
+                    
+                    if (!already_seen && seen_count < 100) {
+                        seen_nodes[seen_count++] = node_name;
+                        
+                        /* Add node element */
+                        introspection_data = str_append(introspection_data, "  <node name=\"");
+                        introspection_data = str_append(introspection_data, node_name);
+                        introspection_data = str_append(introspection_data, "\"/>\n");
+                    }
+                }
+            }
+            iface = iface->next;
+        }
+        module = module->next;
+    }
+    
+    /* Close the root node */
+    introspection_data = str_append(introspection_data, "</node>\n");
+    
+    return introspection_data;
+}
+
 /* Handle introspect call */ // TODO: Refactor
 static void handle_introspect(struct dbus_server *server, DBusMessage *msg, const char *path) {
     char *introspection_data = NULL;
 
-    DBUS_DEBUG("=== INTROSPECT START ===");
-    DBUS_DEBUG("Requested path: %s", path);
-
     /* Generate dynamic XML */
     pthread_mutex_lock(&server->mutex);
 
-    if (strcmp(path, "/") == 0) {
-        DBUS_DEBUG("Root path - returning basic introspection");
-        /* Root path - generate list of all objects */
-        introspection_data = strdup(
-            "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
-            "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
-            "<node>\n"
-            "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
-            "    <method name=\"Introspect\">\n"
-            "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
-            "    </method>\n"
-            "  </interface>\n"
-            "</node>\n"
-        );
-    } else {
-        DBUS_DEBUG("Searching for module matching path: %s", path);
+    /* First try to find a match */
+    DBUS_MODULE *module = server->modules;
+    while (module) {
+        DBUS_INTERFACE *iface = module->interfaces;
         
-        /* Правильный поиск: ищем интерфейс с соответствующим object_path */
-        DBUS_MODULE *module = server->modules;
-        int module_index = 0;
-        
-        while (module) {
-            module_index++;
-            DBUS_DEBUG("Checking module [%d]: %s", module_index, module->name);
-            
-            DBUS_INTERFACE *iface = module->interfaces;
-            int iface_index = 0;
-            
-            while (iface) {
-                iface_index++;
-                DBUS_DEBUG("  Interface [%d]: %s (path: %s)", 
-                          iface_index, iface->name, 
-                          iface->object_path ? iface->object_path : "(null)");
-                
-                /* Сравниваем точный object_path */
-                if (iface->object_path && strcmp(iface->object_path, path) == 0) {
-                    DBUS_DEBUG("  FOUND! Generating introspection XML");
-                    introspection_data = module_generate_introspection_xml(module, path);
-                    break;
-                }
-                iface = iface->next;
+        while (iface) {
+            if (iface->object_path && strcmp(iface->object_path, path) == 0) {
+                introspection_data = module_generate_introspection_xml(module, path);
+                break;
             }
-            
-            if (introspection_data) break;
-            module = module->next;
+            iface = iface->next;
         }
         
-        if (!introspection_data) {
-            DBUS_DEBUG("No module found for path: %s", path);
-        }
+        if (introspection_data) break;
+        module = module->next;
+    }
+
+    /* If no match found, sending root path */
+    if (!introspection_data) {
+        introspection_data = generate_root_introsperction_xml(server);
     }
         
     pthread_mutex_unlock(&server->mutex);
-        
-    /* If found nothing, return default data */
-    if (!introspection_data) {
-        DBUS_DEBUG("Returning default introspection XML");
-        introspection_data = strdup(
-            "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
-            "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
-            "<node>\n"
-            "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
-            "    <method name=\"Introspect\">\n"
-            "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
-            "    </method>\n"
-            "  </interface>\n"
-            "</node>\n"
-        );
-    } else {
-        DBUS_DEBUG("Generated custom introspection XML");
-    }
         
     /* Send reply */
     DBusMessage *reply = dbus_message_new_method_return(msg);
     if (reply && introspection_data) {
         dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_data, DBUS_TYPE_INVALID);
         dbus_connection_send(server->connection, reply, NULL);
-        DBUS_DEBUG("Introspect reply sent successfully");
     } else {
         DBUS_ERROR("Failed to create Introspect reply");
     }
         
-    if (reply) dbus_message_unref(reply);
     if (introspection_data) free(introspection_data);
-    
-    DBUS_DEBUG("=== INTROSPECT END ===");
 }
 
 /* Handle method call */
@@ -193,10 +219,7 @@ static void handle_method_call(struct dbus_server *server, DBusMessage *msg, con
     pthread_mutex_unlock(&server->mutex);
 
     /* If no handler found, send error */
-    if (result == DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
-        DBUS_DEBUG("No handler found for %s.%s on path %s", interface, method_name, path);
-        
-        /* Send UnknownMethod error */
+    if (result == DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {        
         DBusMessage *reply = dbus_message_new_error(
             msg,
             DBUS_ERROR_UNKNOWN_METHOD,
@@ -210,15 +233,9 @@ static void handle_method_call(struct dbus_server *server, DBusMessage *msg, con
 }
 
 /* Process dbus message */
-static void proccess_message(struct dbus_server *server, DBusMessage *msg) {
-    const char *path = dbus_message_get_path(msg);
-    const char *interface = dbus_message_get_interface(msg);
-    const char *method_name = dbus_message_get_member(msg);
-    
-    DBUS_DEBUG("Received message: path=%s, interface=%s, method=%s", path ? path : "/", interface ? interface : "(null)", method_name ? method_name : "(null)");
-
+static void proccess_message(struct dbus_server *server, DBusMessage *msg, const char *path, const char *interface, const char *method_name) {    
     /* Handle introspect */
-    if (dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
+    if (interface && method_name && strcmp(interface, DBUS_INTERFACE_INTROSPECTABLE) == 0 && strcmp(method_name, "Introspect") == 0) {
         handle_introspect(server, msg, path);
         dbus_message_unref(msg);
         return;
@@ -226,14 +243,11 @@ static void proccess_message(struct dbus_server *server, DBusMessage *msg) {
 
     /* Check if it's a method call */
     if (!interface || !method_name) {
-        DBUS_DEBUG("Not a method call, ignoring");
         dbus_message_unref(msg);
         return;
     }
 
     handle_method_call(server, msg, interface, method_name, path);
-
-    dbus_message_unref(msg);
 }
 
 /* Release bus name */
@@ -270,8 +284,15 @@ static void *dbus_main_loop_thread(void *arg) {
     /* Enable async dispatch (This tells D-Bus to queue messages instead of dispatching immediately) */
     dbus_connection_set_dispatch_status_function(server->connection, NULL, NULL, NULL);
     
-    // TODO: Filter
-    // dbus_connection_add_filter(server->connection, NULL, NULL, NULL);
+    /* Add filter to intercept our messages */
+
+    /* Get dbus fd for polling */
+    int fd = -1;
+    if (!dbus_connection_get_unix_fd(server->connection, &fd)) {
+        DBUS_ERROR("Failed to get D-Bus connection file descriptor");
+        // dbus_connection_remove_filter(server->connection, message_filter, server);
+        return NULL;
+    }
 
     while(1) {
         pthread_mutex_lock(&server->mutex);
@@ -280,19 +301,46 @@ static void *dbus_main_loop_thread(void *arg) {
 
         if (!running) break;
 
-        // 4. Non-blocking read/write (timeout = 10ms) best use 1ms
-        // This is async because it returns immediately if no data
-        if (!dbus_connection_read_write_dispatch(server->connection, 10)) {
-            DBUS_ERROR("Failed to read/write to D-Bus connection");
+        /* Use poll() to wait for data on the connection */
+        struct pollfd pfd = {
+            .fd = fd,
+            .events = POLLIN,
+            .revents = 0
+        };
+        
+        /* Poll with 100ms timeout (non-blocking) */
+        int ret = poll(&pfd, 1, 100);
+        
+        if (ret < 0) {
+            if (errno == EINTR) continue; /* Interrupted by signal */
+            DBUS_ERROR("poll() failed: %s", strerror(errno));
             break;
         }
+        
+        if (ret == 0) {
+            continue;
+        }
 
-        // 5. Process ONE message at a time (non-blocking)
-        DBusMessage *msg = dbus_connection_pop_message(server->connection);
-        if (msg) {
-            proccess_message(server, msg);
-        } else {
-            sleep(0.1); // No message, sleep briefly to avoid busy-waiting (100ms) better to set one ms
+        /* Check if connection has data */
+        if (pfd.revents & POLLIN) {
+            /* Process ALL messages in queue NON-BLOCKING */
+            dbus_connection_read_write(server->connection, 0);
+    
+            DBusMessage *msg;
+            while ((msg = dbus_connection_pop_message(server->connection))) {
+                const char *path = dbus_message_get_path(msg);
+                const char *interface = dbus_message_get_interface(msg);
+                const char *dest = dbus_message_get_destination(msg);
+
+                /* If destination is not us, continue*/
+                if (dest && server->bus_name && strcmp(dest, server->bus_name) != 0) {
+                    dbus_message_unref(msg);
+                    continue;
+                }
+
+                const char *method_name = dbus_message_get_member(msg);
+                proccess_message(server, msg, path, interface, method_name);
+            }
         }
     }
 
@@ -428,6 +476,7 @@ void dbus_server_remove_all_modules(struct dbus_server *server) {
     DBUS_MODULE *current = server->modules;
     while (current) {
         DBUS_MODULE *next = current->next;
+        DBUS_DEBUG("Destroying module %s", current->name);
         module_destroy(current);
         current = next;
     }
@@ -522,6 +571,10 @@ void dbus_server_cleanup(struct dbus_server *server) {
             
         DBUS_DEBUG("Waiting for D-Bus thread to exit...");
         sleep(1);
+    }
+
+    if (server->modules) {
+        dbus_server_remove_all_modules(server);
     }
 
     if (server->bus_name) {

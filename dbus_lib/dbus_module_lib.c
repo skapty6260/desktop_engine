@@ -3,9 +3,6 @@
 #include <string.h>
 #include <stdio.h>
 
-// This should be static library to import this into and module and create modules also as static lib and connect via dbus to server.
-// So server should have default request to connect and control other methods
-
 /* String concat helper */
 static char *str_append(char *dest, const char *src) {
     if (!src) return dest;

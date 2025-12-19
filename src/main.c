@@ -92,17 +92,6 @@ int main(int argc, char **argv) {
         EXIT_AND_ERROR("Failed to run dbus main loop in different thread");
     }
 
-    /* Вывод информации для тестирования */
-    printf("\n=== D-Bus Server Ready ===\n");
-    printf("Bus name: org.skapty6260.DesktopEngine\n");
-    printf("Test interface: org.skapty6260.DesktopEngine.Test\n");
-    printf("Test object path: /org/skapty6260/DesktopEngine/Test\n");
-    printf("Test method: Hello (returns string)\n\n");
-    printf("Test with:\n");
-    printf("  gdbus call --session --dest org.skapty6260.DesktopEngine \\\n");
-    printf("    --object-path /org/skapty6260/DesktopEngine/Test \\\n");
-    printf("    --method org.skapty6260.DesktopEngine.Test.Hello\n\n");
-
     /* Test bed (test client) */
     if (server_config.startup_cmd) {
         LOG_DEBUG(LOG_MODULE_CORE, "TESTBED startup cmd: %s", server_config.startup_cmd);
