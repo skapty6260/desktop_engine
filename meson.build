@@ -26,7 +26,6 @@ wayland_protocols = dependency('wayland-protocols', required: true)
 dbus = dependency('dbus-1', required: true)
 
 subdir('protocols')
-subdir('dbus_lib')
 
 src_files = [
     'src/main.c',
@@ -39,6 +38,7 @@ src_files = [
     'src/logger.c',
     'src/config.c',
     'src/dbus-server/server.c',
+    'src/dbus-server/module-lib.c',
     'src/dbus-server/modules/buffer_module.c',
     wl_protos_src,
 ]
@@ -46,13 +46,11 @@ src_files = [
 include_files = [
     include_directories('protocols'), 
     include_directories('include'), 
-    include_directories('dbus_lib')
 ]
 
 executable('desktop_engine_wayland_server',
     sources: src_files,
     dependencies: [wayland_server, wayland_protocols, dbus],
-    link_with: [dbus_module_lib],
     include_directories: include_files,
     install: true
 )

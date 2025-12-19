@@ -1,10 +1,10 @@
-#include "dbus_module_lib.h"
+#include <dbus-server/module-lib.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
 /* String concat helper */
-static char *str_append(char *dest, const char *src) {
+char *str_append(char *dest, const char *src) {
     if (!src) return dest;
     
     size_t dest_len = dest ? strlen(dest) : 0;

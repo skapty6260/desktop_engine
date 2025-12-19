@@ -33,7 +33,7 @@ typedef struct dbus_server_module {
 
 /* Generate introspect XML for module */
 char *module_generate_introspection_xml(DBUS_MODULE *module, const char *object_path);
-
+char *str_append(char *dest, const char *src);
 /* Module operations */
 DBUS_MODULE *module_create(char *name);
 void module_destroy(DBUS_MODULE *module);

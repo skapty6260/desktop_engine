@@ -1,4 +1,3 @@
-/* This should create struct, init dbus connection, provide cleanup */
 #include <dbus-server/server.h>
 #include <logger.h>
 #include <stdlib.h>
@@ -67,21 +66,21 @@ static int request_bus_name(DBusConnection *conn, char *name) {
 }
 
 /* String concat helper */
-static char *str_append(char *dest, const char *src) {
-    if (!src) return dest;
+// static char *str_append(char *dest, const char *src) {
+//     if (!src) return dest;
     
-    size_t dest_len = dest ? strlen(dest) : 0;
-    size_t src_len = strlen(src);
+//     size_t dest_len = dest ? strlen(dest) : 0;
+//     size_t src_len = strlen(src);
     
-    char *new_str = realloc(dest, dest_len + src_len + 1);
-    if (!new_str) {
-        free(dest);
-        return NULL;
-    }
+//     char *new_str = realloc(dest, dest_len + src_len + 1);
+//     if (!new_str) {
+//         free(dest);
+//         return NULL;
+//     }
     
-    memcpy(new_str + dest_len, src, src_len + 1);
-    return new_str;
-}
+//     memcpy(new_str + dest_len, src, src_len + 1);
+//     return new_str;
+// }
 
 /* Generate introspect xml for root path (Overview for all interfaces and nodes, and root methods) */
 static char *generate_root_introsperction_xml(struct dbus_server *server) {
@@ -250,23 +249,6 @@ static void proccess_message(struct dbus_server *server, DBusMessage *msg, const
     handle_method_call(server, msg, interface, method_name, path);
 }
 
-/* Release bus name */
-void release_bus_name(DBusConnection *conn, const char *name) {
-    if (!conn || !name) return;
-    
-    DBusError err;
-    dbus_error_init(&err);
-
-    dbus_bus_release_name(conn, name, &err);
-    
-    if (dbus_error_is_set(&err)) {
-        DBUS_ERROR("Failed to release bus name '%s': %s", name, err.message);
-        dbus_error_free(&err);
-    } else {
-        DBUS_DEBUG("Released bus name: %s", name);
-    }
-}
-
 /* Create dbus event loop thread */
 static void *dbus_main_loop_thread(void *arg) {
     struct dbus_server *server = (struct dbus_server *)arg;
@@ -394,6 +376,23 @@ static int dbus_stop_main_loop(struct dbus_server *server) {
     }
     
     return -1;
+}
+
+/* Release bus name */
+void release_bus_name(DBusConnection *conn, const char *name) {
+    if (!conn || !name) return;
+    
+    DBusError err;
+    dbus_error_init(&err);
+
+    dbus_bus_release_name(conn, name, &err);
+    
+    if (dbus_error_is_set(&err)) {
+        DBUS_ERROR("Failed to release bus name '%s': %s", name, err.message);
+        dbus_error_free(&err);
+    } else {
+        DBUS_DEBUG("Released bus name: %s", name);
+    }
 }
 
 /* Add module to list end */

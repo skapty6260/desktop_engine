@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include <dbus_module_lib.h>
+#include <dbus-server/module-lib.h>
 
 typedef struct dbus_server_module DBUS_MODULE;
 
