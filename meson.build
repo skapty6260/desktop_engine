@@ -41,6 +41,7 @@ src_files = [
     'src/logger.c',
     'src/config.c',
     'src/dbus-server/server.c',
+    'src/dbus-server/module.c',
     # test_module_sources,
     wl_protos_src,
 ]

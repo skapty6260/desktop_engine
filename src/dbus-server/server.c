@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+/* Init dbus connection */
 static DBusConnection *create_dbus_connection() {
     DBusError err;
     DBusConnection *conn;
@@ -25,6 +26,7 @@ static DBusConnection *create_dbus_connection() {
     return conn;
 }
 
+/* Request bus name */
 static int request_bus_name(DBusConnection *conn, char *name) {
     if (!conn || !name) return -1;
 
@@ -63,6 +65,34 @@ static int request_bus_name(DBusConnection *conn, char *name) {
     }
 }
 
+/* Process dbus message */
+static void proccess_message(struct dbus_server *server, DBusMessage *msg) {
+    const char *path = dbus_message_get_path(msg);
+    DBUS_DEBUG("Received message for path: %s", path ? path : "/");
+
+    // Default handling
+    if (dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
+        const char *introspection_data = 
+            "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" "
+            "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+            "<node>\n"
+            "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
+            "    <method name=\"Introspect\">\n"
+            "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
+            "    </method>\n"
+            "  </interface>\n"
+            "</node>";
+                    
+        DBusMessage *reply = dbus_message_new_method_return(msg);
+        dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_data, DBUS_TYPE_INVALID);
+        dbus_connection_send(server->connection, reply, NULL);
+        dbus_message_unref(reply);
+    }
+            
+    dbus_message_unref(msg);
+}
+
+/* Release bus name */
 void release_bus_name(DBusConnection *conn, const char *name) {
     if (!conn || !name) return;
     
@@ -79,6 +109,7 @@ void release_bus_name(DBusConnection *conn, const char *name) {
     }
 }
 
+/* Create dbus event loop thread */
 static void *dbus_main_loop_thread(void *arg) {
     struct dbus_server *server = (struct dbus_server *)arg;
 
@@ -115,30 +146,9 @@ static void *dbus_main_loop_thread(void *arg) {
         // 5. Process ONE message at a time (non-blocking)
         DBusMessage *msg = dbus_connection_pop_message(server->connection);
         if (msg) {
-            DBUS_DEBUG("Received D-Bus message (no callback set)");
-            // Default handling
-            if (dbus_message_is_method_call(msg, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
-                const char *introspection_data = 
-                        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" "
-                        "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
-                        "<node>\n"
-                        "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
-                        "    <method name=\"Introspect\">\n"
-                        "      <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
-                        "    </method>\n"
-                        "  </interface>\n"
-                        "</node>";
-                    
-                DBusMessage *reply = dbus_message_new_method_return(msg);
-                dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_data, DBUS_TYPE_INVALID);
-                dbus_connection_send(server->connection, reply, NULL);
-                dbus_message_unref(reply);
-            }
-            
-            dbus_message_unref(msg);
+            proccess_message(server, msg);
         } else {
-            // No message, sleep briefly to avoid busy-waiting
-            sleep(0.1); // 100ms
+            sleep(0.1); // No message, sleep briefly to avoid busy-waiting (100ms) better to set one ms
         }
     }
 
@@ -150,6 +160,7 @@ static void *dbus_main_loop_thread(void *arg) {
     return NULL;
 }
 
+/* Stop dbus event loop */
 static int dbus_stop_main_loop(struct dbus_server *server) {
     if (!server) {
         return -1;
@@ -193,6 +204,97 @@ static int dbus_stop_main_loop(struct dbus_server *server) {
     return -1;
 }
 
+/* Add module to list end */
+void dbus_server_add_module(struct dbus_server *server, DBUS_MODULE *module) {
+    if (!server || !module) return;
+
+    pthread_mutex_lock(&server->mutex);
+    
+    module->next = NULL;
+
+    if (!server->modules) {
+        // First module
+        server->modules = module;
+        server->modules_tail = module;
+    } else {
+        server->modules_tail->next = module;
+        server->modules_tail = module;
+    }
+
+    pthread_mutex_unlock(&server->mutex);
+}
+
+/* Search for module by name */
+DBUS_MODULE *dbus_server_find_module(struct dbus_server *server, char *name) {
+    if (!server || !name) return NULL;
+    
+    pthread_mutex_lock(&server->mutex);
+    
+    DBUS_MODULE *current = server->modules;
+    while (current) {
+        if (strcmp(current->name, name) == 0) {
+            pthread_mutex_unlock(&server->mutex);
+            return current;
+        }
+        current = current->next;
+    }
+    
+    pthread_mutex_unlock(&server->mutex);
+    return NULL;
+}
+
+/* Remove module from list and destroy */
+void dbus_server_remove_module(struct dbus_server *server, char *name) {
+    if (!server || !name) return;
+    
+    pthread_mutex_lock(&server->mutex);
+    
+    DBUS_MODULE *current = server->modules;
+    DBUS_MODULE *prev = NULL;
+    
+    while (current) {
+        if (strcmp(current->name, name) == 0) {
+            if (prev) {
+                prev->next = current->next;
+            } else {
+                server->modules = current->next;
+            }
+            
+            if (current == server->modules_tail) {
+                server->modules_tail = prev;
+            }
+            
+            module_destroy(current);
+            pthread_mutex_unlock(&server->mutex);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+    
+    pthread_mutex_unlock(&server->mutex);
+}
+
+/* Destroy all modules */
+void dbus_server_remove_all_modules(struct dbus_server *server) {
+    if (!server) return;
+    
+    pthread_mutex_lock(&server->mutex);
+    
+    DBUS_MODULE *current = server->modules;
+    while (current) {
+        DBUS_MODULE *next = current->next;
+        module_destroy(current);
+        current = next;
+    }
+    
+    server->modules = NULL;
+    server->modules_tail = NULL;
+    
+    pthread_mutex_unlock(&server->mutex);
+}
+
+/* Server constructor */
 struct dbus_server *dbus_create_server(char *bus_name) {
     struct dbus_server *server = calloc(1, sizeof(struct dbus_server));
     if (!server) {
@@ -222,10 +324,13 @@ struct dbus_server *dbus_create_server(char *bus_name) {
 
     server->thread_id = 0;
     server->is_running = false;
+    server->modules = NULL;
+    server->modules_tail = NULL;
 
     return server;
 }
 
+/* Run main loop (Create async thread, set server running state)*/
 int dbus_start_main_loop(struct dbus_server *server) {
     if (!server || !server->connection) {
         DBUS_ERROR("Can't start dbus main loop: server not connected");
@@ -259,6 +364,7 @@ int dbus_start_main_loop(struct dbus_server *server) {
     return 0;
 }
 
+/* Server cleanup */
 void dbus_server_cleanup(struct dbus_server *server) {
     if (!server) return;
 
