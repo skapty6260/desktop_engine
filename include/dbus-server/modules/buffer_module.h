@@ -18,6 +18,8 @@ typedef struct {
     size_t size;
     bool has_data;
     enum wl_buffer_type type;  /* WL_BUFFER_SHM, WL_BUFFER_DMA_BUF, WL_BUFFER_EGL */
+
+    void *data;
 } BufferInfo;
 
 /* Create module */

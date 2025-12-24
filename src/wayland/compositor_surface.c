@@ -167,7 +167,7 @@ static void surface_headless_attach(struct wl_client *client, struct wl_resource
             };
             
             // Отправляем сигнал
-            // buffer_module_send_update_signal(conn, &info);
+            buffer_module_send_update_signal(conn, &info);
             SERVER_DEBUG("D-Bus update signal sent for buffer %dx%d", buffer->width, buffer->height);
         } else {
             SERVER_DEBUG("No D-Bus connection available");

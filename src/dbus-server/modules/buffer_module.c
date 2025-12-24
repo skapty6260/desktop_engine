@@ -72,7 +72,7 @@ DBusHandlerResult buffer_get_handler(DBusConnection *conn, DBusMessage *msg, voi
     SERVER_DEBUG("Buffer get handler called");
     
     // TODO: Get actual buffer info
-    const char *response = "Buffer info: width=400, height=300, format=XRGB8888";
+    const char *response = "Buffer info: width=0, height=0, format=UNKNOWN";
     
     DBusMessage *reply = dbus_message_new_method_return(msg);
     if (!reply) {
@@ -119,18 +119,26 @@ void buffer_module_send_update_signal(DBusConnection *conn, const BufferInfo *in
         return;
     }
 
-    SERVER_DEBUG("Sending buffer update signal: %ux%u buffer attached", info->width, info->height);
+    SERVER_DEBUG("=== SENDING BUFFER SIGNAL ===");
+    SERVER_DEBUG("Connection: %p", conn);
+    SERVER_DEBUG("Buffer info: %ux%u, stride=%u", info->width, info->height, info->stride);
+    
+    const char *signal_path = "/org/skapty6260/DesktopEngine/Buffer";
+    
+    SERVER_DEBUG("Creating signal on path: %s", signal_path);
     
     // Создаем сигнал D-Bus
     DBusMessage *signal = dbus_message_new_signal(
-        "org.skapty6260.DesktopEngine.Buffer", 
-        "/org/skapty6260/DesktopEngine/Buffer",
-        "Updated");
+        signal_path,  // Путь объекта
+        "org.skapty6260.DesktopEngine.Buffer",  // Интерфейс
+        "Updated");  // Имя сигнала
     
     if (!signal) {
-        SERVER_ERROR("Failed to create D-Bus signal");
+        SERVER_ERROR("Failed to create D-Bus signal message");
         return;
     }
+    
+    SERVER_DEBUG("Signal created successfully");
     
     // Готовим строку с информацией
     const char *type_str = "UNKNOWN";
@@ -138,45 +146,45 @@ void buffer_module_send_update_signal(DBusConnection *conn, const BufferInfo *in
         case WL_BUFFER_SHM: type_str = "SHM"; break;
         case WL_BUFFER_EGL: type_str = "EGL"; break;
         case WL_BUFFER_DMA_BUF: type_str = "DMA-BUF"; break;
+        default: type_str = "UNKNOWN"; break;
     }
     
     // Создаем строку для отправки
     char info_str[512];
     snprintf(info_str, sizeof(info_str), 
-             "Buffer updated: %ux%u, stride=%u, format=0x%x, size=%zu, has_data=%d, type=%s",
+             "Buffer updated: %ux%u, stride=%u, format=0x%x, size=%zu, type=%s",
              info->width, info->height, 
              info->stride,
              info->format,
              info->size,
-             info->has_data,
              type_str);
     
-    SERVER_DEBUG("Preparing to send D-Bus signal: %s", info_str);
+    SERVER_DEBUG("Signal payload: %s", info_str);
     
-    // Правильный вызов dbus_message_append_args
-    // Нужно передать УКАЗАТЕЛЬ на строку
-    const char *str_ptr = info_str;
-    
+    // Добавляем аргументы к сигналу
+    const char *payload = info_str;
     if (!dbus_message_append_args(signal, 
-                                 DBUS_TYPE_STRING, &str_ptr,
+                                 DBUS_TYPE_STRING, &payload,
                                  DBUS_TYPE_INVALID)) {
-        SERVER_ERROR("Failed to append arguments to D-Bus message");
+        SERVER_ERROR("Failed to append arguments to D-Bus signal");
         dbus_message_unref(signal);
         return;
     }
+    
+    SERVER_DEBUG("Arguments appended successfully");
     
     // Отправляем сигнал
     dbus_uint32_t serial = 0;
     if (!dbus_connection_send(conn, signal, &serial)) {
         SERVER_ERROR("Failed to send D-Bus signal");
     } else {
-        SERVER_DEBUG("D-Bus signal sent successfully, serial: %u", serial);
-        // Можно также вызвать dbus_connection_flush если нужно
-        // dbus_connection_flush(conn);
+        SERVER_DEBUG("D-Bus signal sent, serial: %u", serial);
+        // Важно: flush для немедленной отправки
+        dbus_connection_flush(conn);
     }
     
     // Освобождаем сообщение
     dbus_message_unref(signal);
     
-    SERVER_DEBUG("Buffer update signal sent successfully");
+    SERVER_DEBUG("=== SIGNAL SEND COMPLETE ===");
 }
