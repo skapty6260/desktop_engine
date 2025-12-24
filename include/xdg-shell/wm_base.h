@@ -1,5 +1,5 @@
-#ifndef XDG_H
-#define XDG_H
+#ifndef XDG_SHELL_WM_BASE_H
+#define XDG_SHELL_WM_BASE_H
 
 #include <stdint.h>
 #include <wayland-server.h>

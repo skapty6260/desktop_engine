@@ -592,3 +592,8 @@ void dbus_server_cleanup(struct dbus_server *server) {
 
     DBUS_INFO("D-Bus server cleaned up");
 }
+
+DBusConnection *dbus_server_get_connection(struct dbus_server *server) {
+    if (!server) return NULL;
+    return server->connection;
+}

@@ -9,7 +9,7 @@
 #include <wayland/server.h>
 #include <wayland/compositor.h>
 #include <wayland/shm.h>
-#include <xdg-shell/xdg.h>
+#include <xdg-shell/wm_base.h>
 
 void server_init(struct server *server) {
     server->display = wl_display_create();
@@ -57,4 +57,10 @@ void server_cleanup(struct server *server) {
         wl_display_destroy(server->display);
         server->display = NULL;
     }
+}
+
+void server_set_dbus(struct server *server, struct dbus_server *dbus_server) {
+    if (!server) return;
+    server->dbus_server = dbus_server;
+    SERVER_DEBUG("D-Bus server set for Wayland server: %p", dbus_server);
 }

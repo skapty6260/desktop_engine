@@ -1,0 +1,4 @@
+#ifndef XDG_SHELL_POSITIONER_H
+#define XDG_SHELL_POSITIONER_H
+
+#endif

@@ -48,6 +48,8 @@ static const struct wl_buffer_interface buffer_implementation = {
 
 static void shm_buffer_destructor(struct wl_resource *resource) {
     struct buffer *buffer = wl_resource_get_user_data(resource);
+
+    SERVER_DEBUG("SHM buffer DESTROYED callback: buffer=%p, resource=%p", buffer, resource);
     
     if (buffer) {
         SERVER_DEBUG("SHM buffer destroyed: %dx%d", buffer->width, buffer->height);

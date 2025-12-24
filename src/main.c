@@ -28,6 +28,22 @@ static void signal_handler(int signal) {
     }
 }
 
+static void init_dbus_modules(struct dbus_server *dbus_server) {
+    if (!dbus_server) return;
+    
+    LOG_DEBUG(LOG_MODULE_CORE, "Initializing D-Bus modules...");
+    
+    DBUS_MODULE *buffer_module = create_buffer_module();
+    if (buffer_module) {
+        dbus_server_add_module(dbus_server, buffer_module);
+        LOG_DEBUG(LOG_MODULE_CORE, "Buffer module added successfully");
+    } else {
+        LOG_WARN(LOG_MODULE_CORE, "Failed to create buffer module");
+    }
+    
+    LOG_INFO(LOG_MODULE_CORE, "D-Bus modules initialized");
+}
+
 int main(int argc, char **argv) {
     logger_config_t logger_config;
     server_config_t server_config;
@@ -69,14 +85,8 @@ int main(int argc, char **argv) {
         EXIT_AND_ERROR("Failed to create dbus server");
     }
 
-    /* Создание и добавление тестового модуля */
-    // DBUS_MODULE *test_module = create_test_module();
-    // if (test_module) {
-    //     dbus_server_add_module(dbus_server, test_module);
-    //     LOG_INFO(LOG_MODULE_CORE, "Test module registered to D-Bus server");
-    // } else {
-    //     LOG_WARN(LOG_MODULE_CORE, "Failed to create test module");
-    // }
+    init_dbus_modules(dbus_server);
+    server_set_dbus(&server, dbus_server);
 
     if (dbus_start_main_loop(dbus_server) != 0) {
         if (dbus_server->bus_name) {

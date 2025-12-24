@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include <wayland-server.h>
+#include <dbus-server/server.h>
 
 struct server {
     struct wl_display *display;
@@ -13,6 +14,8 @@ struct server {
 
     struct wl_list surfaces;
     struct wl_list shm_pools;
+
+    struct dbus_server *dbus_server;
 };
 
 struct surface {
@@ -30,5 +33,7 @@ typedef struct server_config {
 void server_init(struct server *server);
 void server_run(struct server *server);
 void server_cleanup(struct server *server);
+
+void server_set_dbus(struct server *server, struct dbus_server *dbus_server);
 
 #endif

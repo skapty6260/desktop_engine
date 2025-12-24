@@ -7,8 +7,6 @@
 
 #include <dbus-server/module-lib.h>
 
-typedef struct dbus_server_module DBUS_MODULE;
-
 struct dbus_server {
     DBusConnection *connection;
     char *bus_name;
@@ -33,5 +31,7 @@ struct dbus_server *dbus_create_server(char *bus_name);
 void dbus_server_cleanup(struct dbus_server *server);
 int dbus_start_main_loop(struct dbus_server *server);
 void release_bus_name(DBusConnection *conn, const char *name);
+
+DBusConnection *dbus_server_get_connection(struct dbus_server *server);
 
 #endif
