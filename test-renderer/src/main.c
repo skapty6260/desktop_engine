@@ -1,22 +1,34 @@
 #include <window.h>
 #include <vulkan.h>
-#include <buffer_fetcher.h>
+#include <buffer_mgr.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 
 void draw_callback(void) {
     draw_frame(g_vulkan);
 }
 
-int main() {
-    init_window(800, 600, "Test Renderer");
-    buffer_fetcher_init();
-    init_vulkan();
-    window_mainloop(draw_callback, device_idle);
-    buffer_fetcher_cleanup();
-    cleanup_vulkan();
-    cleanup_window();
+// static bool parse_args(int argc, char **argv) {
+//     for (int i = 1; i < argc; i++) {
+//         if (strcmp(argv[i], "--validate") == 0 && i + 1 < argc) {
+//             return false;
+//         } else return true;
+//     }
+// }
 
-    printf("Renderer finished and cleaned up");
+int main(int argc, char **argv) {
+    // bool validate_vulkan = parse_args(argc, argv);
+
+    init_window(800, 600, "Test Renderer");
+    create_buffermgr_thread();
+    init_vulkan(true);
+    window_mainloop(draw_callback, device_idle);
+    device_idle();
+    stop_buffermgr_thread();    
+    cleanup_vulkan();
+    cleanup_buffermgr();
+    cleanup_window(); 
 
     return 0;
 }

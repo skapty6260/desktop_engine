@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include <buffer_fetcher.h>
 #include <stdbool.h>
 #include <pthread.h>
 
@@ -58,34 +57,13 @@ struct vulkan {
     uint32_t enabled_layer_count;
     char *extension_names[64];
     char *enabled_layers[64];
-
-    // Поля для работы с буфером
-    VkImage buffer_image;
-    VkDeviceMemory buffer_image_memory;
-    VkImageView buffer_image_view;
-    VkSampler buffer_sampler;
-    VkDescriptorPool descriptor_pool;
-    VkDescriptorSet descriptor_set;
-    
-    // Текущий буфер данных
-    BufferData current_buffer;
-    bool buffer_needs_update;
-    pthread_mutex_t buffer_mutex;
 };
 
 extern struct vulkan *g_vulkan;
 
-void init_vulkan();
+void init_vulkan(bool validate_arg);
 void cleanup_vulkan();
 void draw_frame(struct vulkan *vulkan);
 void readFile(const char *filename, ShaderFile *shader);
 VkShaderModule create_shader_module(struct vulkan *vulkan, ShaderFile *shaderFile);
 void device_idle();
-
-void create_descriptor_resources(struct vulkan *vulkan);
-void update_vulkan_texture(struct vulkan *vulkan, BufferData *buffer_data);
-void create_vulkan_texture(struct vulkan *vulkan, BufferData *buffer_data);
-void cleanup_vulkan_texture(struct vulkan *vulkan);
-uint32_t find_memory_type(struct vulkan *vulkan, uint32_t typeFilter, VkMemoryPropertyFlags properties);
-void update_texture_data(struct vulkan *vulkan, BufferData *buffer_data);
-void create_texture_from_buffer(struct vulkan *vulkan, BufferData *buffer_data);

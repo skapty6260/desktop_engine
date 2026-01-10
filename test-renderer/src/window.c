@@ -27,40 +27,16 @@ void cleanup_window() {
     glfwTerminate();
 }
 
+
+// TODO: Интегрировать обработку буфера
+// По хорошему создать отдельный поток который будет принимать обновления буфера, а тут в каждом кадре проверять буфер на обновление через dirty
 void window_mainloop(draw_frame_callback_t draw_callback, vk_wait_idle_t vk_wait_idle) {
-    // Убедитесь, что окно создано
-    if (!g_window) {
-        fprintf(stderr, "GLFW window not initialized!\n");
-        return;
-    }
-    
-    printf("Main loop started\n");
-    printf("Window size: %dx%d\n", 800, 600);
-    
-    int frame_counter = 0;
-    
     while(!glfwWindowShouldClose(g_window)) {
         glfwPollEvents();
-        
-        // Обработка событий клавиатуры для закрытия окна
-        if (glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(g_window, GLFW_TRUE);
-        }
-        
-        // Рисуем кадр
         draw_callback();
-        
-        frame_counter++;
-        if (frame_counter % 60 == 0) {
-            printf("Frame %d\n", frame_counter);
-        }
-        
-        // Небольшая задержка для CPU
-        glfwWaitEventsTimeout(0.001);
     }
 
     vk_wait_idle();
-    printf("Main loop finished\n");
 }
 
 void create_surface(VkInstance vk_instance, VkSurfaceKHR *vk_surface) {

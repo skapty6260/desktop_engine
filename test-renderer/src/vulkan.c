@@ -760,9 +760,9 @@ static void create_sync_objects(struct vulkan *vulkan) {
     }
 }
 
-void init_vulkan() {
+void init_vulkan(bool validate_arg) {
     g_vulkan = calloc(1, sizeof(struct vulkan));
-    g_vulkan->validate = true;
+    g_vulkan->validate = validate_arg;
 
     create_vulkan_instance(g_vulkan);
     create_surface(g_vulkan->instance, &g_vulkan->surface);
@@ -793,7 +793,7 @@ static void cleanup_swapchain(struct vulkan *vulkan) {
 }
 
 void cleanup_vulkan() {
-    printf("Cleanup started");
+    printf("\n\nVulkan Cleanup started\n\n");
 
     cleanup_swapchain(g_vulkan);
     

@@ -26,7 +26,7 @@ src_files = [
     'src/main.c',
     'src/window.c',
     'src/vulkan.c',
-    'src/buffer_fetcher.c'
+    'src/buffer_mgr.c'
 ]
 
 subdir('shaders')
