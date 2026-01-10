@@ -18,25 +18,28 @@ enum pixel_format drm_format_to_pixel_format(uint32_t drm_format) {
     }
 }
 
-struct buffer *buffer_create_shm(struct wl_resource *resource, void *pool_data, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) {
+struct buffer *buffer_create_shm(struct wl_resource *resource, 
+                                 uint32_t id, int32_t offset, int32_t width, 
+                                 int32_t height, int32_t stride, uint32_t format,
+                                 int fd) {  // Добавляем fd параметр
     struct buffer *buf = calloc(1, sizeof(struct buffer));
-    if (!buf) return NULL;
+    if (!buf) {
+        SERVER_ERROR("Failed to allocate buffer");
+        return NULL;
+    }
     
     buf->type = WL_BUFFER_SHM;
     buf->width = width;
     buf->height = height;
     buf->resource = resource;
-    
     buf->shm.stride = stride;
-    
-    if (pool_data) {
-        buf->shm.data = (unsigned char*)pool_data + offset;
-    } else {
-        buf->shm.data = NULL;
-    }
+    buf->shm.fd = fd;
     
     buf->size = buf->shm.stride * buf->height;
     buf->format = wl_shm_format_to_pixel_format(format);
+    
+    SERVER_DEBUG("SHM buffer created: %dx%d, stride=%d, fd=%d, data=%p, size=%zu", 
+                width, height, stride, fd, buf->shm.data, buf->size);
     
     return buf;
 }

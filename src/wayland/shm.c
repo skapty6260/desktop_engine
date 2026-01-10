@@ -99,7 +99,8 @@ static void shm_pool_create_buffer(struct wl_client *client, struct wl_resource 
         return;
     }
 
-    struct buffer *buffer = buffer_create_shm(buffer_resource, pool->data, id, offset, width, height, stride, format);
+    int fd = pool->fd;
+    struct buffer *buffer = buffer_create_shm(buffer_resource, id, offset, width, height, stride, format, fd);
     if (!buffer) {
         wl_client_post_no_memory(client);
         wl_resource_destroy(buffer_resource);

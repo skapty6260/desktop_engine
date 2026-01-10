@@ -162,8 +162,8 @@ static void surface_headless_attach(struct wl_client *client, struct wl_resource
                 .format = buffer->type == WL_BUFFER_SHM ? WL_SHM_FORMAT_XRGB8888 : 0,
                 .format_str = buffer_type_to_string(buffer),
                 .size = buffer->size,
-                .has_data = (buffer->shm.data != NULL),
-                .type = buffer->type
+                .type = buffer->type,
+                .fd = buffer->shm.fd
             };
             
             // Отправляем сигнал
