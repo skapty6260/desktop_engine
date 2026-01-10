@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <buffer_mgr.h>
 
 typedef struct ShaderFile {
   size_t size;
@@ -57,6 +58,23 @@ struct vulkan {
     uint32_t enabled_layer_count;
     char *extension_names[64];
     char *enabled_layers[64];
+
+    // Для текстур из SHM буферов
+    VkImage texture_image;
+    VkDeviceMemory texture_image_memory;
+    VkImageView texture_image_view;
+    VkSampler texture_sampler;
+    VkDescriptorPool descriptor_pool;
+    VkDescriptorSet descriptor_set;
+    
+    // Для обновления текстуры
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_buffer_memory;
+    size_t staging_buffer_size;
+    
+    // Текущий буфер для отображения
+    RenderBuffer_t *current_buffer;
+    bool texture_needs_update;
 };
 
 extern struct vulkan *g_vulkan;
@@ -67,3 +85,11 @@ void draw_frame(struct vulkan *vulkan);
 void readFile(const char *filename, ShaderFile *shader);
 VkShaderModule create_shader_module(struct vulkan *vulkan, ShaderFile *shaderFile);
 void device_idle();
+
+// Textures
+void create_staging_buffer(struct vulkan *vulkan, size_t size);
+void create_texture_image(struct vulkan *vulkan, uint32_t width, uint32_t height);
+void create_texture_sampler(struct vulkan *vulkan);
+void create_descriptor_pool(struct vulkan *vulkan);
+void create_descriptor_set(struct vulkan *vulkan);
+void update_vulkan_texture_from_buffer(struct vulkan *vulkan, RenderBuffer_t *buffer);

@@ -763,6 +763,8 @@ static void create_sync_objects(struct vulkan *vulkan) {
 void init_vulkan(bool validate_arg) {
     g_vulkan = calloc(1, sizeof(struct vulkan));
     g_vulkan->validate = validate_arg;
+    g_vulkan->texture_needs_update = false;
+    g_vulkan->current_buffer = NULL;
 
     create_vulkan_instance(g_vulkan);
     create_surface(g_vulkan->instance, &g_vulkan->surface);
@@ -776,8 +778,27 @@ void init_vulkan(bool validate_arg) {
     create_command_pool(g_vulkan);
     create_command_buffers(g_vulkan);
     create_sync_objects(g_vulkan);
+    
+    // Инициализация текстурной системы
+    create_texture_sampler(g_vulkan);
+    create_descriptor_pool(g_vulkan);
+    create_descriptor_set(g_vulkan);
+    
+    // Создаем начальную текстуру (1x1 черный пиксель)
+    RenderBuffer_t initial_buffer = {
+        .width = 1,
+        .height = 1,
+        .stride = 4,
+        .size = 4,
+        .data = malloc(4),
+        .format = FORMAT_XRGB8888
+    };
+    memset(initial_buffer.data, 0, 4); // Черный цвет
+    
+    update_vulkan_texture_from_buffer(g_vulkan, &initial_buffer);
+    free(initial_buffer.data);
 
-    printf("Vulkan initialized!\nCan start rendering.\n");
+    printf("Vulkan initialized with texture support!\n");
 }
 
 static void cleanup_swapchain(struct vulkan *vulkan) {
@@ -862,55 +883,59 @@ void readFile(const char *filename, ShaderFile *shader) {
 }
 
 static void record_command_buffer(struct vulkan *vulkan, VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-  VkCommandBufferBeginInfo beginInfo = {0};
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = 0; // Optional
-  beginInfo.pInheritanceInfo = NULL; // Optional
+    VkCommandBufferBeginInfo beginInfo = {0};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = 0;
+    beginInfo.pInheritanceInfo = NULL;
 
-  if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-    printf("failed to begin recording command buffer!\n");
-    exit(13);
-  }
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        printf("failed to begin recording command buffer!\n");
+        exit(13);
+    }
 
-  VkRenderPassBeginInfo renderPassInfo = {0};
-  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vulkan->render_pass;
-  renderPassInfo.framebuffer = vulkan->swapchain_framebuffers[imageIndex];
-  renderPassInfo.renderArea.offset.x = 0;
-  renderPassInfo.renderArea.offset.y = 0;
-  renderPassInfo.renderArea.extent = vulkan->swapchain_extent;
+    VkRenderPassBeginInfo renderPassInfo = {0};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = vulkan->render_pass;
+    renderPassInfo.framebuffer = vulkan->swapchain_framebuffers[imageIndex];
+    renderPassInfo.renderArea.offset.x = 0;
+    renderPassInfo.renderArea.offset.y = 0;
+    renderPassInfo.renderArea.extent = vulkan->swapchain_extent;
 
-  VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-  renderPassInfo.clearValueCount = 1;
-  renderPassInfo.pClearValues = &clearColor;
+    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
 
-  vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-  vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan->graphics_pipeline);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan->graphics_pipeline);
+    
+    // Привязываем дескрипторный набор с текстурой
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                           vulkan->pipeline_layout, 0, 1, &vulkan->descriptor_set, 0, NULL);
 
-  VkViewport viewport = {0};
-  viewport.x = 0.0f;
-  viewport.y = 0.0f;
-  viewport.width = (float)vulkan->swapchain_extent.width;
-  viewport.height = (float)vulkan->swapchain_extent.height;
-  viewport.minDepth = 0.0f;
-  viewport.maxDepth = 1.0f;
-  vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    VkViewport viewport = {0};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)vulkan->swapchain_extent.width;
+    viewport.height = (float)vulkan->swapchain_extent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-  VkRect2D scissor= {0};
-  scissor.offset.x = 0;
-  scissor.offset.y = 0;
-  scissor.extent = vulkan->swapchain_extent;
-  vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    VkRect2D scissor = {0};
+    scissor.offset.x = 0;
+    scissor.offset.y = 0;
+    scissor.extent = vulkan->swapchain_extent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-  vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-  vkCmdEndRenderPass(commandBuffer);
+    vkCmdEndRenderPass(commandBuffer);
 
-  if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-    printf("failed to record command buffer!\n");
-    exit(14);
-  }
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        printf("failed to record command buffer!\n");
+        exit(14);
+    }
 }
 
 static void recreate_swapchain(struct vulkan *vulkan) {

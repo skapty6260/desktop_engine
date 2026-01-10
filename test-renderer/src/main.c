@@ -6,6 +6,18 @@
 #include <string.h>
 
 void draw_callback(void) {
+    if (g_buffer_mgr && g_buffer_mgr->buffers && g_buffer_mgr->buffers->dirty) {
+        RenderBuffer_t *buffer = g_buffer_mgr->buffers;
+        
+        printf("New buffer available: %ux%u\n", buffer->width, buffer->height);
+        
+        // Обновляем текстуру Vulkan
+        update_vulkan_texture_from_buffer(g_vulkan, buffer);
+        
+        // Сбрасываем флаг
+        buffer->dirty = false;
+    }
+
     draw_frame(g_vulkan);
 }
 
